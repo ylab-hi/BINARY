@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15..3.22)
+cmake_minimum_required(VERSION 3.15)
 
 project(
         "sv2nl"
@@ -9,7 +9,7 @@ project(
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
-message(STATUS "Started CMake for  ${PROJECT_NAME} v${PROJECT_VERSION}...\n")
+message(STATUS "Started CMake for  ${PROJECT_NAME} v${PROJECT_VERSION}...")
 message(STATUS "Compiler name: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Cmake Binary path: ${CMAKE_BINARY_DIR}")
 

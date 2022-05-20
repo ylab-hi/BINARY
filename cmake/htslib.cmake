@@ -1,7 +1,7 @@
 include(ExternalProject)
 
-set(htslib_PREFIX ${CMAKE_BINARY_DIR}/htslib-prefix)
-set(htslib_INSTALL ${CMAKE_BINARY_DIR}/htslib-install)
+set(htslib_PREFIX ${CMAKE_BINARY_DIR}/cmake-ext/htslib-prefix)
+set(htslib_INSTALL ${CMAKE_BINARY_DIR}/cmake-ext/htslib-install)
 
 if (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
     set(MAKE_COMMAND "$(MAKE)")
@@ -9,6 +9,7 @@ else()
     find_program(MAKE_COMMAND NAMES make gmake)
 endif()
 
+message(STATUS "Building htslib ${MAKE_COMMAND}")
 ExternalProject_Add(htslib
         PREFIX ${htslib_PREFIX}
         URL https://github.com/samtools/htslib/releases/download/1.15.1/htslib-1.15.1.tar.bz2

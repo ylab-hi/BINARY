@@ -3,6 +3,7 @@
 //
 
 #include "vcf_reader.h"
+
 namespace sv2nl {
 
 void VcfReader::init() {
@@ -22,8 +23,7 @@ void VcfReader::init() {
     std::exit(1);
   }
 }
-
-[[maybe_unused]] void VcfReader::open(std::string file_path) {
+void VcfReader::open(std::string file_path) {
   if (fp) {
     spdlog::warn("VcfReader cannot open file before {} closed", file_path_);
   }
@@ -46,6 +46,7 @@ void VcfReader::close() {
     spdlog::error("hts_close() failed");
     return;
   }
+
 }
 
 } // namespace sv2nl

@@ -1,7 +1,7 @@
 include(ExternalProject)
 
-set(zlib_PREFIX ${CMAKE_BINARY_DIR}/zlib-prefix)
-set(zlib_INSTALL ${CMAKE_BINARY_DIR}/zlib-install)
+set(zlib_PREFIX ${CMAKE_BINARY_DIR}/cmake-ext/zlib-prefix)
+set(zlib_INSTALL ${CMAKE_BINARY_DIR}/cmake-ext/zlib-install)
 
 ExternalProject_Add(zlib
         PREFIX ${zlib_PREFIX}

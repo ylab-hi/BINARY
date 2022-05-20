@@ -9,14 +9,14 @@
 
 namespace sv2nl {
 
-  class VcfReader {
+  class [[maybe_unused]] VcfReader {
   public:
-    [[maybe_unused]] explicit VcfReader(const std::string&  file_path) : file_path_{file_path} { init(); }
+    [[maybe_unused]] explicit VcfReader(std::string const&   file_path) : file_path_{file_path} { init(); }
 
-    VcfReader(const VcfReader& vcfreader) = default;
-    VcfReader& operator=(const VcfReader& vcfreader) = default;
-    VcfReader(VcfReader&& vcfreader) = default;
-    VcfReader& operator=(VcfReader&& vcfreader) = default;
+    VcfReader(VcfReader const&) = delete;
+    VcfReader(VcfReader&&)      = delete;
+    VcfReader& operator=(VcfReader const&) = delete;
+    VcfReader& operator=(VcfReader&&)      = delete;
 
     ~VcfReader() {
       bcf_destroy(line);
@@ -25,11 +25,11 @@ namespace sv2nl {
       }
     }
 
-    void init();
     [[maybe_unused]] void open(std::string file_path);
     void close();
 
   private:
+    void init();
     std::string file_path_{};
     htsFile* fp{nullptr};
     bcf_hdr_t* hdr{nullptr};
