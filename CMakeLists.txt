@@ -16,10 +16,10 @@ message(STATUS "Cmake Binary path: ${CMAKE_BINARY_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(CPM)
 find_package(Threads REQUIRED)
-find_package(ZLIB REQUIRED)
+
 # cpmaddpackage("gh:sharkdp/dbg-macro@0.4.0")
 cpmaddpackage("gh:gabime/spdlog@1.10.0")
-cpmaddpackage("gh:ericniebler/range-v3#0.11.0")
+#cpmaddpackage("gh:ericniebler/range-v3#0.11.0")
 cpmaddpackage("gh:p-ranav/argparse@2.4")
 cpmaddpackage(
         NAME thread-pool
@@ -76,13 +76,13 @@ function(target_link_libraries_system target)
         endif()
     endforeach()
 endfunction(target_link_libraries_system)
-message(STATUS "Htslib: ${HTSLIB_SRC_DIR}")
+
 add_executable(${PROJECT_NAME} src/main.cpp include/csv.h include/output_container.h src/vcf_reader.cpp include/vcf_reader.h)
 add_dependencies(${PROJECT_NAME} htslib)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wnon-virtual-dtor -pedantic)
 target_link_libraries_system(${PROJECT_NAME} PRIVATE argparse) # suppress unused parameters warning
-target_link_libraries(${PROJECT_NAME} PRIVATE range-v3 dp::thread-pool spdlog z ${HTSLIB_SRC_DIR}/libhts.a)
+target_link_libraries(${PROJECT_NAME} PRIVATE dp::thread-pool spdlog ${htslib_LIB})
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include ${dbg-macro_SOURCE_DIR})
 
 

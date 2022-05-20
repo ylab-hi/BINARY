@@ -163,8 +163,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-<<<<<<< HEAD
-=======
 ### CMake template
 CMakeLists.txt.user
 CMakeCache.txt
@@ -178,7 +176,6 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
->>>>>>> ec918ae (first commit)
 ### macOS template
 # General
 .DS_Store
@@ -207,11 +204,9 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-<<<<<<< HEAD
 #data
 data/
 build/
-=======
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -357,4 +352,3 @@ data/
 cmake-build-debug-docker/
 cmake-build-release-docker/
 .idea/
->>>>>>> ec918ae (first commit)
