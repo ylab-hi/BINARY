@@ -17,9 +17,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(CPM)
 find_package(Threads REQUIRED)
 
-# cpmaddpackage("gh:sharkdp/dbg-macro@0.4.0")
 cpmaddpackage("gh:gabime/spdlog@1.10.0")
-#cpmaddpackage("gh:ericniebler/range-v3#0.11.0")
 cpmaddpackage("gh:p-ranav/argparse@2.4")
 cpmaddpackage(
         NAME thread-pool

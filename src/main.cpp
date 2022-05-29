@@ -9,7 +9,8 @@
 using namespace std::string_literals;
 
 void read_tsv(std::string_view file_path) {
-  io::CSVReader<3, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in(std::string (file_path).data());
+  io::CSVReader<3, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in(
+      std::string(file_path).data());
   in.read_header(io::ignore_extra_column, "chr", "start", "end");
   std::string chr;
   int start;

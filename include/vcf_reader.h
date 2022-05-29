@@ -4,19 +4,16 @@
 #include <string>
 #include <utility>
 
-#include "vcf.h"
 #include "spdlog/spdlog.h"
+#include "vcf.h"
 
 namespace sv2nl {
 
   class [[maybe_unused]] VcfReader {
   public:
-    [[maybe_unused]] explicit VcfReader(std::string const&   file_path) : file_path_{file_path} { init(); }
-
-    VcfReader(VcfReader const&) = delete;
-    VcfReader(VcfReader&&)      = delete;
-    VcfReader& operator=(VcfReader const&) = delete;
-    VcfReader& operator=(VcfReader&&)      = delete;
+    [[maybe_unused]] explicit VcfReader(std::string const& file_path) : file_path_{file_path} {
+      init();
+    }
 
     ~VcfReader() {
       bcf_destroy(line);
