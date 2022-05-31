@@ -15,6 +15,11 @@ namespace sv2nl {
       init();
     }
 
+    VcfReader(VcfReader const&) = delete;
+    VcfReader& operator=(VcfReader const&) = delete;
+    VcfReader(VcfReader&&) = default;
+    VcfReader& operator=(VcfReader&&) = default;
+
     ~VcfReader() {
       bcf_destroy(line);
       if (fp) {

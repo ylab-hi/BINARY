@@ -1,10 +1,10 @@
 #include <argparse/argparse.hpp>
 #include <iostream>
 #include <string>
-#include <vector>
 
 #include "csv.h"
 #include "spdlog/spdlog.h"
+#include "vcf.h"
 
 using namespace std::string_literals;
 
@@ -18,6 +18,37 @@ void read_tsv(std::string_view file_path) {
   while (in.read_row(chr, start, end)) {
     spdlog::info("chr {} start {} ", chr, start);
   }
+}
+
+void read_vcf(std::string const& file_path) {
+  htsFile* fp = hts_open(file_path.c_str(), "r");
+  if (!fp) {
+    spdlog::error("Failed to open {}", file_path);
+    std::exit(1);
+  }
+  bcf_hdr_t* hdr = bcf_hdr_read(fp);
+  if (!hdr) {
+    spdlog::error("Failed to init bcf_hdr_read");
+    std::exit(1);
+  }
+  bcf1_t* line = bcf_init();
+  if (!line) {
+    spdlog::error("Failed to init bcf_init");
+    std::exit(1);
+  }
+  char const* sr = nullptr;
+  int32_t count = 0;
+  while (bcf_read(fp, hdr, line) >= 0) {
+    int ret = bcf_get_info_string(hdr, line, "SVTYPE", &sr, &count);
+    spdlog::info("result code: {} count: {}", ret, count);
+    if (ret >= 0) {
+      spdlog::info("SVTYPE: {}", sr);
+    }
+  }
+
+  bcf_hdr_destroy(hdr);
+  hts_close(fp);
+  bcf_destroy(line);
 }
 
 argparse::ArgumentParser parse_args(int argc, char* argv[]) {
@@ -49,5 +80,6 @@ int main(int argc, char* argv[]) {
   spdlog::info("adjacent path: {}", adjacent_path);
   spdlog::info("non-linear path: {}", nonlinear_path);
   read_tsv(segment_path);
+  read_vcf(nonlinear_path);
   return 0;
 }
