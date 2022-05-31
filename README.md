@@ -9,7 +9,7 @@
 
 Mapping Structural Variants to Non-Linear Transcripts Variants
 
-## :star Features
+## :star: Features
 
 - [ ] Fast!
 - [ ] Fast!
