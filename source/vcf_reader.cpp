@@ -4,6 +4,9 @@
 
 #include <sv2nl/vcf_reader.h>
 
+#include "spdlog/spdlog.h"
+#include "vcf.h"
+
 namespace sv2nl {
 
   void VcfReader::init() {

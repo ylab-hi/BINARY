@@ -6,10 +6,6 @@
 #define SV2NL_INCLUDE_SV2NL_TEST_H_
 #include <string>
 
-#include "csv.h"
-#include "spdlog/spdlog.h"
-#include "vcf.h"
-
 [[maybe_unused]] void test();
 
 [[maybe_unused]] void read_tsv(std::string_view file_path);

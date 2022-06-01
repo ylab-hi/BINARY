@@ -1,9 +1,10 @@
+#include <sv2nl/test.h>
+
 #include <argparse/argparse.hpp>
 #include <iostream>
 #include <string>
 
 #include "spdlog/spdlog.h"
-#include "sv2nl/test.h"
 
 using namespace std::string_literals;
 

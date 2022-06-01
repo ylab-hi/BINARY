@@ -4,9 +4,6 @@
 #include <string>
 #include <utility>
 
-#include "spdlog/spdlog.h"
-#include "vcf.h"
-
 namespace sv2nl {
 
   class [[maybe_unused]] VcfReader {
