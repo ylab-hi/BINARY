@@ -29,7 +29,6 @@ message(STATUS "Cmake Binary path: ${CMAKE_BINARY_DIR}")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(CPM)
-include(functions)
 find_package(Threads REQUIRED)
 
 
@@ -49,13 +48,15 @@ include(htslib)
 # ---- Add source files ----
 
 add_library(${PROJECT_NAME}
+    # headers
     include/sv2nl/csv.h
     include/sv2nl/output_container.h
     include/sv2nl/test.h
     include/sv2nl/utils.h
     include/sv2nl/vcf_reader.h
     # source
-    source/vcf_reader.cpp)
+    source/vcf_reader.cpp
+    source/test.cpp)
 
 add_dependencies(${PROJECT_NAME} htslib)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

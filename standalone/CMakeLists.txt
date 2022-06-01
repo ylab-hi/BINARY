@@ -14,6 +14,7 @@ include(../cmake/tools.cmake)
 # ---- Dependencies ----
 
 include(../cmake/CPM.cmake)
+include(../cmake/functions.cmake)
 cpmaddpackage("gh:p-ranav/argparse@2.4")
 cpmaddpackage(
     NAME thread-pool
