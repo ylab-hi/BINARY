@@ -2,7 +2,7 @@
 // Created by li002252 on 5/19/22.
 //
 
-#include "vcf_reader.h"
+#include "sv2nl/vcf_reader.h"
 
 namespace sv2nl {
 
