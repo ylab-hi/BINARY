@@ -17,6 +17,8 @@ namespace sv2nl {
         close();
       }
     }
+    impl(impl&&) = default;
+    impl& operator=(impl&&) = default;
 
     void init() {
       fp = hts_open(file_path_.c_str(), "r");
@@ -58,6 +60,12 @@ namespace sv2nl {
       }
       bcf_destroy(line);
     }
+    [[nodiscard]] std::string get_file_path() const {
+      if (fp)
+        return file_path_;
+      else
+        spdlog::warn("VcfReader not open");
+    }
 
     std::string file_path_;
     htsFile* fp{nullptr};
@@ -73,6 +81,7 @@ namespace sv2nl {
   void VcfReader::open(std::string file_path) { pimpl->open(std::move(file_path)); }
 
   void VcfReader::close() { pimpl->close(); }
+  std::string VcfReader::get_file_path() const { return pimpl->get_file_path(); }
 
   VcfReader::~VcfReader() = default;
 

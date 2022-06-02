@@ -24,6 +24,7 @@ namespace sv2nl {
 
     [[maybe_unused]] void open(std::string file_path);
     void close();
+    [[nodiscard]] std::string get_file_path() const;
   };
 
 }  // namespace sv2nl
