@@ -8,8 +8,10 @@
 
 #include "spdlog/spdlog.h"
 #include "vcf.h"
+
 namespace sv2nl {
-  struct VcfReader::impl {
+  class VcfReader::impl {
+  public:
     explicit impl(std::string file_path) : file_path_{std::move(file_path)} { init(); }
 
     ~impl() {
@@ -59,30 +61,30 @@ namespace sv2nl {
         spdlog::error("hts_close() failed");
       }
       bcf_destroy(line);
+      line = nullptr;
     }
-    [[nodiscard]] std::string get_file_path() const {
-      if (fp)
-        return file_path_;
-      else
-        spdlog::warn("VcfReader not open");
-    }
+    [[nodiscard]] const std::string& get_file_path() const { return file_path_; }
 
-    std::string file_path_;
+    std::string file_path_{};
     htsFile* fp{nullptr};
     bcf_hdr_t* hdr{nullptr};
     bcf1_t* line{nullptr};
   };
 
+  VcfReader::VcfReader() = default;
   VcfReader::VcfReader(std::string file_path)
-      : pimpl(std::make_unique<impl>(std::move(file_path))) {
+      : pimpl{std::make_unique<impl>(std::move(file_path))} {
     pimpl->init();
   }
+
+  VcfReader& VcfReader::operator=(VcfReader&&) noexcept = default;
+  VcfReader::VcfReader(VcfReader&&) noexcept = default;
+  VcfReader::~VcfReader() = default;
 
   void VcfReader::open(std::string file_path) { pimpl->open(std::move(file_path)); }
 
   void VcfReader::close() { pimpl->close(); }
-  std::string VcfReader::get_file_path() const { return pimpl->get_file_path(); }
-
-  VcfReader::~VcfReader() = default;
-
+  const std::string& VcfReader::get_file_path() const { return pimpl->get_file_path(); }
+  bool VcfReader::is_open() const { return pimpl->fp != nullptr; }
+  bool VcfReader::is_closed() const { return pimpl->fp == nullptr; }
 }  // namespace sv2nl
