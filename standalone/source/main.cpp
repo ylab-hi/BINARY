@@ -4,8 +4,6 @@
 #include <iostream>
 #include <string>
 
-#include "spdlog/spdlog.h"
-
 using namespace std::string_literals;
 
 argparse::ArgumentParser parse_args(int argc, char* argv[]) {
@@ -28,16 +26,15 @@ argparse::ArgumentParser parse_args(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
-  spdlog::set_level(spdlog::level::debug);
   auto program = parse_args(argc, argv);
   auto segment_path = program.get<std::string>("segment");
   auto adjacent_path = program.get<std::string>("adjacent");
   auto nonlinear_path = program.get<std::string>("non-linear");
-  spdlog::info("segment path: {}", segment_path);
-  spdlog::info("adjacent path: {}", adjacent_path);
-  spdlog::info("non-linear path: {}", nonlinear_path);
+  std::cout << "segment: " << segment_path << std::endl;
+  std::cout << "adjacent: " << adjacent_path << std::endl;
+  std::cout << "non-linear: " << nonlinear_path << std::endl;
   //  read_tsv(segment_path);
   //  read_vcf(nonlinear_path);
-  test();
+  sv2nl::test();
   return 0;
 }

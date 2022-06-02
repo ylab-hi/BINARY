@@ -1,38 +1,29 @@
 #ifndef SV2NL_SRC_VCF_READER_H_
 #define SV2NL_SRC_VCF_READER_H_
 
+#include <memory>
 #include <string>
 #include <utility>
 
 namespace sv2nl {
 
   class [[maybe_unused]] VcfReader {
+  private:
+    struct impl;
+    std::unique_ptr<impl> pimpl;
+
   public:
-    [[maybe_unused]] explicit VcfReader(std::string const& file_path) : file_path_{file_path} {
-      init();
-    }
+    explicit VcfReader(std::string file_path);
 
     VcfReader(VcfReader const&) = delete;
     VcfReader& operator=(VcfReader const&) = delete;
     VcfReader(VcfReader&&) = default;
     VcfReader& operator=(VcfReader&&) = default;
 
-    ~VcfReader() {
-      bcf_destroy(line);
-      if (fp) {
-        close();
-      }
-    }
+    ~VcfReader();
 
     [[maybe_unused]] void open(std::string file_path);
     void close();
-
-  private:
-    void init();
-    std::string file_path_{};
-    htsFile* fp{nullptr};
-    bcf_hdr_t* hdr{nullptr};
-    bcf1_t* line{nullptr};
   };
 
 }  // namespace sv2nl
