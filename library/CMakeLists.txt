@@ -20,8 +20,11 @@ message(STATUS "Started CMake for  ${PROJECT_NAME} v${PROJECT_VERSION}...")
 message(STATUS "Compiler name: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Cmake Binary path: ${CMAKE_BINARY_DIR}")
 
-include(../cmake/CPM.cmake)
-include(../cmake/htslib.cmake)
+list(APPEND CMAKE_MODULE_PATH "../cmake")
+message(STATUS "CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
+message(STATUS "CMake current list dir: ${CMAKE_CURRENT_LIST_DIR}")
+include(CPM)
+include(htslib)
 find_package(Threads REQUIRED)
 
 

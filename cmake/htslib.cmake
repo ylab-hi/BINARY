@@ -30,7 +30,6 @@ endif ()
 
 # config cmake files path
 # deflate
-list(APPEND CMAKE_MODULE_PATH ../cmake)
 find_package(Deflate)
 message(STATUS "Deflate FOUND: ${Deflate_FOUND}")
 if(Deflate_FOUND)
