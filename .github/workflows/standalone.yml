@@ -14,6 +14,10 @@ env:
   CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
   CMAKE_VERSION: 3.14.0
 
+defaults:
+  run:
+    shell: bash -ex {0}
+
 jobs:
   build:
     name: ${{matrix.name}}
@@ -32,11 +36,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/cache@v2
-        with:
-          path: "**/cpm_modules"
-          key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
-
       - name: Configure APT
         continue-on-error: true
         run: bash ./.github/workflows/scripts/configure_apt.sh
@@ -44,12 +43,21 @@ jobs:
       - name: Install compiler ${{ matrix.cxx }}
         run: sudo apt-get install --yes ${{ matrix.cxx }}
 
+      - uses: actions/cache@v2
+        with:
+          path: "**/cpm_modules"
+          key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
+
+
       - name: Tool versions
         run: |
           env cmake --version
           env ${{ matrix.cxx }} --version
 
       - name: configure
+        env:
+          CXX: ${{ matrix.cxx }}
+          CC: ${{ matrix.cc }}
         run: cmake -Sstandalone -Bbuild -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
 
       - name: build
