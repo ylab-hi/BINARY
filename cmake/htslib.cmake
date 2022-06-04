@@ -12,6 +12,21 @@ endif()
 find_package(HTSlib)
 message(STATUS "HTSlib_FOUND: ${HTSlib_FOUND}")
 
+# lzma
+find_package(LibLZMA)
+if(LIBLZMA_FOUND)
+  include_directories(SYSTEM ${LIBLZMA_INCLUDE_DIRS})
+  list(APPEND deps_LIB ${LIBLZMA_LIBRARIES})
+endif()
+
+# config cmake files path deflate
+find_package(Deflate)
+message(STATUS "Deflate FOUND: ${Deflate_FOUND}")
+if(Deflate_FOUND)
+  include_directories(SYSTEM ${Deflate_INCLUDE_DIRS})
+  list(APPEND deps_LIB ${Deflate_LIBRARIES})
+endif()
+
 message(STATUS "Building htslib ${MAKE_COMMAND}")
 set(flags "-O2 -g -fPIC")
 set(disable_flags --disable-bz2 --disable-lzma --disable-gcs --disable-s3 --disable-plugins
@@ -36,21 +51,6 @@ if(ZLIB_FOUND)
 else()
   include(../cmake/zlib.cmake)
   add_dependencies(htslib zlib)
-endif()
-
-# lzma
-find_package(LibLZMA)
-if(LIBLZMA_FOUND)
-  include_directories(SYSTEM ${LIBLZMA_INCLUDE_DIRS})
-  list(APPEND deps_LIB ${LIBLZMA_LIBRARIES})
-endif()
-
-# config cmake files path deflate
-find_package(Deflate)
-message(STATUS "Deflate FOUND: ${Deflate_FOUND}")
-if(Deflate_FOUND)
-  include_directories(SYSTEM ${Deflate_INCLUDE_DIRS})
-  list(APPEND deps_LIB ${Deflate_LIBRARIES})
 endif()
 
 include_directories(${htslib_INSTALL}/include/htslib)
