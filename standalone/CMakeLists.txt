@@ -25,7 +25,8 @@ FIND_PACKAGE(spdlog REQUIRED)
 # ---- Create standalone executable ----
 
 add_executable(${PROJECT_NAME} source/main.cpp)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20 OUTPUT_NAME "sv2nl")
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "sv2nl")
 target_link_libraries(${PROJECT_NAME} PRIVATE Sv2nl::Sv2nl spdlog::spdlog)
 
 target_link_libraries_system(${PROJECT_NAME} PRIVATE argparse) # suppress unused parameters warning
