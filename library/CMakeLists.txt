@@ -21,9 +21,6 @@ message(STATUS "Compiler name: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VER
 message(STATUS "Cmake Binary path: ${CMAKE_BINARY_DIR}")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
-message(STATUS "CMAKE SOURCE DIR is: ${CMAKE_CURRENT_SOURCE_DIR}")
-message(STATUS "CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
-message(STATUS "CMake current list dir: ${CMAKE_CURRENT_LIST_DIR}")
 include(CPM)
 include(htslib)
 find_package(Threads REQUIRED)
