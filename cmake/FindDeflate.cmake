@@ -1,5 +1,5 @@
  # file Copyright.txt or https://cmake.org/licensing for details.
-
+# source: https://github.com/OSGeo/gdal/blob/master/cmake/modules/packages/FindDeflate.cmake
  #[=======================================================================[.rst:
  FindDeflate
  --------
