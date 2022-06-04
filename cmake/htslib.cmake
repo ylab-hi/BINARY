@@ -21,7 +21,7 @@ ExternalProject_Add(htslib
         INSTALL_COMMAND ${MAKE_COMMAND} install prefix=${htslib_INSTALL}
         )
 
-include(zlib)
+include(../cmake/zlib.cmake)
 add_dependencies(htslib zlib)
 include_directories(${htslib_INSTALL}/include/htslib)
 set(htslib_LIB ${htslib_INSTALL}/lib/libhts.a
