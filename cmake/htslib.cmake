@@ -10,18 +10,6 @@ else()
     find_program(MAKE_COMMAND NAMES make gmake)
 endif()
 
-message(STATUS "Building htslib ${MAKE_COMMAND}")
-set(flags "-O2 -g -fPIC")
-ExternalProject_Add(htslib
-        PREFIX ${htslib_PREFIX}
-        URL https://github.com/samtools/htslib/releases/download/1.15.1/htslib-1.15.1.tar.bz2
-        BUILD_IN_SOURCE 1
-        UPDATE_COMMAND ""
-        CONFIGURE_COMMAND autoreconf -i && ./configure --prefix=${htslib_PREFIX}  --disable-bz2 --disable-lzma --disable-gcs --disable-s3 --disable-plugins --disable-libcurl
-        BUILD_COMMAND ${MAKE_COMMAND} CFLAGS=${flags} lib-static
-        INSTALL_COMMAND ${MAKE_COMMAND} install prefix=${htslib_INSTALL}
-        )
-
 # zlib
 find_package(ZLIB)
 MESSAGE(STATUS "ZLIB FOUNDED: ${ZLIB_FOUND}")
@@ -49,6 +37,19 @@ if(Deflate_FOUND)
     include_directories(SYSTEM ${Deflate_INCLUDE_DIRS})
     list(APPEND deps_LIB ${Deflate_LIBRARIES})
 endif()
+
+message(STATUS "Building htslib ${MAKE_COMMAND}")
+set(flags "-O2 -g -fPIC")
+set(disable_flags "--disable-bz2 --disable-lzma --disable-gcs --disable-s3 --disable-plugins --disable-libcurl")
+ExternalProject_Add(htslib
+        PREFIX ${htslib_PREFIX}
+        URL https://github.com/samtools/htslib/releases/download/1.15.1/htslib-1.15.1.tar.bz2
+        BUILD_IN_SOURCE 1
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND autoreconf -i && ./configure --prefix=${htslib_PREFIX} ${disable_flags}
+        BUILD_COMMAND ${MAKE_COMMAND} CFLAGS=${flags} lib-static
+        INSTALL_COMMAND ${MAKE_COMMAND} install prefix=${htslib_INSTALL}
+        )
 
 include_directories(${htslib_INSTALL}/include/htslib)
 set(htslib_LIB ${htslib_INSTALL}/lib/libhts.a
