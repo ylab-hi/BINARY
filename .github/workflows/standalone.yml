@@ -44,7 +44,7 @@ jobs:
         run: bash ./.github/workflows/scripts/install_cmake.sh
 
       - name: Install compiler ${{ matrix.cxx }}
-        run: sudo apt-get install --yes ${{ matrix.cxx }}
+        run: sudo apt-get install --yes ${{ matrix.cxx }} autoconf
 
       - uses: actions/cache@v2
         with:
