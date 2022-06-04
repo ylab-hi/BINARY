@@ -39,7 +39,7 @@ jobs:
 
       - name: Configure APT
         continue-on-error: true
-        run: bash ./sv2nl/.github/workflows/scripts/configure_apt.sh
+        run: bash ./.github/workflows/scripts/configure_apt.sh
 
       - name: Install compiler ${{ matrix.cxx }}
         run: sudo apt-get install --yes ${{ matrix.cxx }}
