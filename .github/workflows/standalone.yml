@@ -12,10 +12,22 @@ on:
 
 env:
   CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
+  CMAKE_VERSION: 3.14.0
 
 jobs:
   build:
+    name: ${{matrix.name}}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: "standalone gcc12"
+            os: ubuntu-latest
+            cxx: "g++-12"
+            cc: "gcc-12"
+            build: standalone
+            build_type: Debug
+
 
     steps:
       - uses: actions/checkout@v2
@@ -25,8 +37,20 @@ jobs:
           path: "**/cpm_modules"
           key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
 
+      - name: Configure APT
+        continue-on-error: true
+        run: bash ./sv2nl/.github/workflows/scripts/configure_apt.sh
+
+      - name: Install compiler ${{ matrix.cxx }}
+        run: sudo apt-get install --yes ${{ matrix.cxx }}
+
+      - name: Tool versions
+        run: |
+          env cmake --version
+          env ${{ matrix.cxx }} --version
+
       - name: configure
-        run: cmake -Sstandalone -Bbuild -DCMAKE_BUILD_TYPE=Debug -DCMAKE_BUILD_TYPE=Debug
+        run: cmake -Sstandalone -Bbuild -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
 
       - name: build
         run: cmake --build build -j4
