@@ -40,7 +40,7 @@ endif()
 
 message(STATUS "Building htslib ${MAKE_COMMAND}")
 set(flags "-O2 -g -fPIC")
-set(disable_flags "--disable-bz2 --disable-lzma --disable-gcs --disable-s3 --disable-plugins --disable-libcurl")
+set(disable_flags --disable-bz2 --disable-lzma --disable-gcs --disable-s3 --disable-plugins --disable-libcurl)
 ExternalProject_Add(htslib
         PREFIX ${htslib_PREFIX}
         URL https://github.com/samtools/htslib/releases/download/1.15.1/htslib-1.15.1.tar.bz2
