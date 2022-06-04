@@ -11,7 +11,7 @@ on:
       - main
 
 env:
-  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
+#  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
   CMAKE_VERSION: 3.14.0
 
 defaults:
