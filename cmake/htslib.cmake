@@ -15,8 +15,8 @@ ExternalProject_Add(htslib
         PREFIX ${htslib_PREFIX}
         URL https://github.com/samtools/htslib/releases/download/1.15.1/htslib-1.15.1.tar.bz2
         BUILD_IN_SOURCE 1
-        UPDATE_COMMAND autoreconf -i
-        CONFIGURE_COMMAND ./configure --prefix=${htslib_PREFIX}  --disable-bz2 --disable-lzma --disable-gcs --disable-s3 --disable-plugins --disable-libcurl
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND autoheader && autoconf && ./configure --prefix=${htslib_PREFIX}  --disable-bz2 --disable-lzma --disable-gcs --disable-s3 --disable-plugins --disable-libcurl
         BUILD_COMMAND ${MAKE_COMMAND} lib-static
         INSTALL_COMMAND ${MAKE_COMMAND} install prefix=${htslib_INSTALL}
         )
