@@ -11,7 +11,7 @@ on:
       - main
 
 env:
-#  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
   CMAKE_VERSION: 3.14.0
 
 defaults:
@@ -26,7 +26,6 @@ jobs:
       matrix:
         include:
           - name: "standalone gcc12"
-            os: ubuntu-latest
             cxx: "g++-12"
             cc: "gcc-12"
             build: standalone
@@ -39,6 +38,9 @@ jobs:
       - name: Configure APT
         continue-on-error: true
         run: bash ./.github/workflows/scripts/configure_apt.sh
+
+      - name: Install CMake
+        run: bash ./.github/workflows/scripts/install_cmake.sh
 
       - name: Install compiler ${{ matrix.cxx }}
         run: sudo apt-get install --yes ${{ matrix.cxx }}
