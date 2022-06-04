@@ -5,7 +5,7 @@ project(
     VERSION 1.0
     LANGUAGES CXX
 )
-
+#SET(CMAKE_CXX_STANDARD 20)
 MESSAGE(STATUS "Building Sv2nlStandalone")
 
 # --- Import tools ----
