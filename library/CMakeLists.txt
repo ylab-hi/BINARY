@@ -21,6 +21,7 @@ message(STATUS "Cmake Binary path: ${CMAKE_BINARY_DIR}")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 include(CPM)
+set(HTSlib_USE_STATIC_LIBS OFF)
 include(htslib)
 find_package(Threads REQUIRED)
 
@@ -49,12 +50,17 @@ add_library(
   source/test.cpp
 )
 
-add_dependencies(${PROJECT_NAME} htslib)
+if(NOT HTSlib_FOUND)
+  add_dependencies(${PROJECT_NAME} htslib)
+endif()
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 # being a cross-platform target, we enforce standards conformance on MSVC
 # target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wnon-virtual-dtor -pedantic)
-target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog ${htslib_LIB} Threads::Threads)
+target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog ${HTSlib_LIBRARIES} Threads::Threads)
+target_include_directories(
+  ${PROJECT_NAME} PRIVATE ${HTSlib_INCLUDE_DIRS} ${HTSlib_INCLUDE_DIRS}/htslib
+)
 
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

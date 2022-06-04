@@ -18,4 +18,4 @@ ExternalProject_Add(
 )
 
 include_directories(${zlib_INSTALL}/include)
-set(zlib_LIB ${zlib_INSTALL}/lib/libz.a)
+set(zlib_LIBRARIES ${zlib_INSTALL}/lib/libz.a)
