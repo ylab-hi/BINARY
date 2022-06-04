@@ -59,10 +59,7 @@ jobs:
           env ${{ matrix.cc }} --version
 
       - name: configure
-        env:
-          CXX: ${{ matrix.cxx }}
-          CC: ${{ matrix.cc }}
-        run: cmake -Sstandalone -Bbuild -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+        run: cmake -Sstandalone -Bbuild -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=${{matrix.cc}} -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
 
       - name: build
         run: cmake --build build -j4
