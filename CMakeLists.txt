@@ -15,14 +15,7 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
     )
 endif()
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug")
 
-    if(UNIX)
-        add_compile_options("$<$<CONFIG:DEBUG>:-D_DEBUG>")    #this will allow to use same _DEBUG macro available in both Linux as well as Windows - MSCV environment. Easy to put Debug specific code.
-    endif(UNIX)
-
-endif()
 message(STATUS "Started CMake for  ${PROJECT_NAME} v${PROJECT_VERSION}...")
 message(STATUS "Compiler name: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Cmake Binary path: ${CMAKE_BINARY_DIR}")
@@ -92,5 +85,5 @@ packageProject(
     INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
     VERSION_HEADER "${VERSION_HEADER_LOCATION}"
     COMPATIBILITY SameMajorVersion
-    DEPENDENCIES "spdlog 1.10.0;htslib 1.15.1"
+    DEPENDENCIES "spdlog 1.10.0;htslib 1.10.0"
 )

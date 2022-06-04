@@ -68,7 +68,6 @@ namespace sv2nl {
     bcf1_t* line{nullptr};
   };
 
-  VcfReader::VcfReader() = default;
   VcfReader::VcfReader(std::string file_path)
       : pimpl{std::make_unique<impl>(std::move(file_path))} {
     pimpl->init();
@@ -76,8 +75,6 @@ namespace sv2nl {
 
   VcfReader& VcfReader::operator=(VcfReader&&) noexcept = default;
   VcfReader::VcfReader(VcfReader&&) noexcept = default;
-  VcfReader::VcfReader(const VcfReader&) = delete;
-  VcfReader& VcfReader::operator=(const VcfReader&) = delete;
   VcfReader::~VcfReader() = default;
 
   void VcfReader::open(std::string file_path) { pimpl->open(std::move(file_path)); }
