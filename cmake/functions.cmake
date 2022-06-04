@@ -1,4 +1,3 @@
-
 function(target_link_libraries_system target)
   set(options PRIVATE PUBLIC INTERFACE)
   cmake_parse_arguments(TLLS "${options}" "" "" ${ARGN})
@@ -18,7 +17,9 @@ function(target_link_libraries_system target)
         target_include_directories(${target} SYSTEM PRIVATE ${lib_include_dirs})
       endif()
     else()
-      message("Warning: ${lib} doesn't set INTERFACE_INCLUDE_DIRECTORIES. No include_directories set.")
+      message(
+        "Warning: ${lib} doesn't set INTERFACE_INCLUDE_DIRECTORIES. No include_directories set."
+      )
     endif()
     if(scope)
       target_link_libraries(${target} ${scope} ${lib})

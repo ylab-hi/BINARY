@@ -16,34 +16,9 @@ env:
   CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
   CMAKE_VERSION: 3.14.0
 
-defaults:
-  run:
-    shell: bash -ex {0}
-
 jobs:
   build:
-    name: ${{matrix.name}}
     runs-on: macos-latest
-    timeout-minutes: 120
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - name: "Unit gcc11"
-            cxx: "g++-11"
-            cc: "gcc-11"
-            build: test
-            build_type: Release
-          - name: "Unit gcc11"
-            cxx: "g++-11"
-            cc: "gcc-11"
-            build: test
-            build_type: Debug
-          - name: "Unit gcc10"
-            cxx: "g++-10"
-            cc: "gcc-10"
-            build: test
-            build_type: Release
 
     steps:
       - uses: actions/checkout@v2
@@ -56,29 +31,15 @@ jobs:
       - name: Configure Homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
-
       - name: Install CMake
         run: bash ./.github/workflows/scripts/install_cmake.sh
 
       - name: Install autoconf tools
-        run: bash ./.github/workflows/scripts/install_via_brew.sh autoconf automake libtool
-
-      - name: Install compiler ${{ matrix.cxx }}
-        env:
-          CC: ${{ matrix.cc }}
-        run: bash ./.github/workflows/scripts/install_via_brew.sh $(echo ${CC/clang/llvm} | awk -F '-' '{print $1, $2}')
-
-
-      - name: Tool versions
-        run: |
-          env cmake --version
-          env ${{ matrix.cxx }} --version
+        run: brew install autoconf automake libtool
 
       - name: configure
         env:
-          CXX: ${{ matrix.cxx }}
-          CC: ${{ matrix.cc }}
-        run: cmake -Stest -Bbuild -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=${{matrix.cc}} -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
+        run: cmake -Stest -Bbuild -DCMAKE_BUILD_TYPE=Release
 
       - name: build
         run: cmake --build build -j4

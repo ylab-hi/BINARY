@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14...3.22)
 
 project(Sv2nlTests LANGUAGES CXX)
 
-MESSAGE(STATUS "Building Sv2nlTests")
+message(STATUS "Building Sv2nlTests")
 # ---- Options ----
 
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)

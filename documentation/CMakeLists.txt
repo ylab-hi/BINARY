@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 project(Sv2nlDocs)
 
-MESSAGE(STATUS "Building Sv2nlDocs")
+message(STATUS "Building Sv2nlDocs")
 
 # ---- Dependencies ----
 
@@ -24,9 +24,9 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/Doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Do
 configure_file(${CMAKE_CURRENT_LIST_DIR}/conf.py ${CMAKE_CURRENT_BINARY_DIR}/conf.py)
 
 add_custom_target(
-    Sv2nlDocs
-    ${CMAKE_COMMAND} -E make_directory "${DOXYGEN_OUTPUT_DIRECTORY}"
-    COMMAND "${m.css_SOURCE_DIR}/documentation/doxygen.py" "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
-    COMMAND echo "Docs written to: ${DOXYGEN_OUTPUT_DIRECTORY}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  Sv2nlDocs
+  ${CMAKE_COMMAND} -E make_directory "${DOXYGEN_OUTPUT_DIRECTORY}"
+  COMMAND "${m.css_SOURCE_DIR}/documentation/doxygen.py" "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
+  COMMAND echo "Docs written to: ${DOXYGEN_OUTPUT_DIRECTORY}"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
