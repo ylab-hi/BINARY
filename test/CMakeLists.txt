@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.14...3.22)
 
 project(Sv2nlTests LANGUAGES CXX)
 
+MESSAGE(STATUS "Building Sv2nlTests")
 # ---- Options ----
 
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
-option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
+option(TEST_INSTALLED_VERSION "Test the version found by find_package" ON)
 
 # --- Import tools ----
 
@@ -21,7 +22,7 @@ CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
 if(TEST_INSTALLED_VERSION)
   find_package(Sv2nl REQUIRED)
 else()
-  CPMAddPackage(NAME Sv2nl SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+  CPMAddPackage(NAME Sv2nl SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
 endif()
 
 # ---- Create binary ----

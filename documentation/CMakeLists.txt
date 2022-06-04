@@ -2,12 +2,14 @@ cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 project(Sv2nlDocs)
 
+MESSAGE(STATUS "Building Sv2nlDocs")
+
 # ---- Dependencies ----
 
 include(../cmake/CPM.cmake)
 
 CPMAddPackage("gh:mosra/m.css#42d4a9a48f31f5df6e246c948403b54b50574a2a")
-CPMAddPackage(NAME Sv2nl SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+CPMAddPackage(NAME Sv2nl SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
 
 # ---- Doxygen variables ----
 

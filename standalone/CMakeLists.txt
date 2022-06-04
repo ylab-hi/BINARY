@@ -6,6 +6,8 @@ project(
     LANGUAGES CXX
 )
 
+MESSAGE(STATUS "Building Sv2nlStandalone")
+
 # --- Import tools ----
 
 include(../cmake/tools.cmake)
@@ -17,7 +19,7 @@ include(../cmake/tools.cmake)
 include(../cmake/CPM.cmake)
 include(../cmake/functions.cmake)
 CPMAddPackage("gh:p-ranav/argparse@2.4")
-CPMAddPackage(NAME Sv2nl SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
+CPMAddPackage(NAME Sv2nl SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
 FIND_PACKAGE(spdlog REQUIRED)
 
 # ---- Create standalone executable ----

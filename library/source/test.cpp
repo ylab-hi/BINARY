@@ -1,10 +1,10 @@
 //
 // Created by li002252 on 5/31/22.
 //
-#include <sv2nl/csv.h>
-#include <sv2nl/test.h>
+#include "sv2nl/test.h"
 
 #include "spdlog/spdlog.h"
+#include "sv2nl/csv.h"
 #include "vcf.h"
 
 namespace sv2nl {
