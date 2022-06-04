@@ -25,24 +25,21 @@ namespace sv2nl {
     void init() {
       fp = hts_open(file_path_.c_str(), "r");
       if (!fp) {
-        spdlog::error("Failed to open {}", file_path_);
-        std::exit(1);
+        throw std::runtime_error("Failed to open file " + file_path_);
       }
       hdr = bcf_hdr_read(fp);
       if (!hdr) {
-        spdlog::error("Failed to init bcf_hdr_read");
-        std::exit(1);
+        throw std::runtime_error("Failed to init bcf_hdr_read");
       }
       line = bcf_init();
       if (!line) {
-        spdlog::error("Failed to init bcf_init");
-        std::exit(1);
+        throw std::runtime_error("Failed to init bcf_init");
       }
     }
 
     void open(std::string file_path) {
       if (fp) {
-        spdlog::warn("VcfReader cannot open {} before {} closed", file_path, file_path_);
+        throw std::runtime_error("File is already opened " + file_path_);
       }
       file_path_ = std::move(file_path);
       init();
@@ -50,7 +47,7 @@ namespace sv2nl {
 
     void close() {
       if (fp == nullptr) {
-        spdlog::warn("VcfReader already closed");
+        throw std::runtime_error("File is already closed");
       }
 
       bcf_hdr_destroy(hdr);
@@ -58,7 +55,7 @@ namespace sv2nl {
       int ret = hts_close(fp);
       fp = nullptr;
       if (ret < 0) {
-        spdlog::error("hts_close() failed");
+        throw std::runtime_error("Failed to close file");
       }
       bcf_destroy(line);
       line = nullptr;
@@ -79,6 +76,8 @@ namespace sv2nl {
 
   VcfReader& VcfReader::operator=(VcfReader&&) noexcept = default;
   VcfReader::VcfReader(VcfReader&&) noexcept = default;
+  VcfReader::VcfReader(const VcfReader&) = delete;
+  VcfReader& VcfReader::operator=(const VcfReader&) = delete;
   VcfReader::~VcfReader() = default;
 
   void VcfReader::open(std::string file_path) { pimpl->open(std::move(file_path)); }
