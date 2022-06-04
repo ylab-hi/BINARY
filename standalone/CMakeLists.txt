@@ -22,7 +22,7 @@ FIND_PACKAGE(spdlog REQUIRED)
 
 # ---- Create standalone executable ----
 
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/source/main.cpp)
+add_executable(${PROJECT_NAME} source/main.cpp)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20 OUTPUT_NAME "sv2nl")
 target_link_libraries(${PROJECT_NAME} PRIVATE Sv2nl::Sv2nl spdlog::spdlog)
 
