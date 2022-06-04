@@ -1,5 +1,6 @@
 include(ExternalProject)
 
+
 set(htslib_PREFIX ${CMAKE_BINARY_DIR}/cmake-ext/htslib-prefix)
 set(htslib_INSTALL ${CMAKE_BINARY_DIR}/cmake-ext/htslib-install)
 
