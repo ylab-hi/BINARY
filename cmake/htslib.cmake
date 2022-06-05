@@ -17,7 +17,8 @@ else()
   endif()
 
   message(STATUS "Building static htslib ${MAKE_COMMAND}")
-  set(flags "-O2 -g -fPIC")
+  # Set CMAKE_CX_FLAGS or CMAKE_CXX_FLAGS if you use conda environment!
+  set(flags "-O2 -g -fPIC ${CMAKE_C_FLAGS}")
   set(disable_flags --disable-gcs --disable-s3 --disable-plugins)
 
   # find lzma
@@ -38,9 +39,9 @@ else()
   endif()
 
   find_package(BZip2)
-  if(BZip2_FOUND)
-    include_directories(SYSTEM ${BZip2_INCLUDE_DIRS})
-    list(APPEND deps_LIB ${BZip2_LIBRARIES})
+  if(BZIP2_FOUND)
+    include_directories(SYSTEM ${BZIP2_INCLUDE_DIRS})
+    list(APPEND deps_LIB ${BZIP2_LIBRARIES})
   else()
     list(APPEND disable_flags --disable-bz2)
   endif()
