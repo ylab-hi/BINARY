@@ -65,12 +65,24 @@ else()
     INSTALL_COMMAND ${MAKE_COMMAND} install prefix=${htslib_INSTALL}
   )
 
-  # build zlib from source
-  if(NOT ZLIB_FOUND)
+  message(STATUS "ZLIB_BUILD: ${ZLIB_BUILD}")
+  if(ZLIB_BUILD)
     include(../cmake/zlib.cmake)
     add_dependencies(htslib zlib)
+  else()
+    find_package(ZLIB)
+    if(ZLIB_FOUND)
+      include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
+      list(APPEND deps_LIB ${ZLIB_LIBRARIES})
+    else()
+      # build zlib from source
+      message(STATUS "Building zlib from source")
+      include(../cmake/zlib.cmake)
+      add_dependencies(htslib zlib)
+      list(APPEND deps_LIB ${zlib_LIBRARIES})
+      endif()
   endif()
-  list(APPEND deps_LIB z)
+  list(APPEND deps_LIB ${zlib_LIBRARIES})
 
   set(HTSlib_INCLUDE_DIRS ${htslib_INSTALL}/include)
   set(HTSlib_LIBRARIES ${htslib_INSTALL}/lib/libhts.a ${deps_LIB})
