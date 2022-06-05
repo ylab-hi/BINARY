@@ -142,4 +142,4 @@ libfind_process(HTSlib)
 
 message(STATUS "   HTSlib include dirs: ${HTSlib_INCLUDE_DIRS}")
 message(STATUS "   HTSlib libraries: ${HTSlib_LIBRARIES}")
-message(STATUS " HTSLIB FOUNE: ${HTSlib_FOUND} | ${htslib_FOUND}")
+message(STATUS " HTSLIB FOUND: ${HTSlib_FOUND} ")

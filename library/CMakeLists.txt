@@ -22,7 +22,7 @@ message(STATUS "Cmake Binary path: ${CMAKE_BINARY_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 include(CPM)
 
-# set(HTSlib_USE_STATIC_LIBS OFF)
+# set(HTSlib_USE_STATIC_LIBS ON)
 
 include(htslib)
 find_package(Threads REQUIRED)
