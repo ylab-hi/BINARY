@@ -81,7 +81,7 @@ else()
       include(../cmake/zlib.cmake)
       add_dependencies(htslib zlib)
       list(APPEND deps_LIB ${zlib_LIBRARIES})
-      endif()
+    endif()
   endif()
   list(APPEND deps_LIB ${zlib_LIBRARIES})
 
