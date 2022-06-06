@@ -8,7 +8,6 @@
 #include "vcf.h"
 
 namespace sv2nl {
-  [[maybe_unused]] void test() { spdlog::info("This is a test"); }
 
   [[maybe_unused]] void read_tsv(std::string_view file_path) {
     io::CSVReader<3, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in(

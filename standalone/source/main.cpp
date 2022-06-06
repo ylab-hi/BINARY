@@ -33,8 +33,7 @@ int main(int argc, char* argv[]) {
   std::cout << "segment: " << segment_path << std::endl;
   std::cout << "adjacent: " << adjacent_path << std::endl;
   std::cout << "non-linear: " << nonlinear_path << std::endl;
-  //  read_tsv(segment_path);
-  //  read_vcf(nonlinear_path);
-  sv2nl::test();
+  sv2nl::read_tsv(segment_path);
+  sv2nl::read_vcf(nonlinear_path);
   return 0;
 }

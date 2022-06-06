@@ -90,24 +90,6 @@ std::ostream &operator<<(std::ostream &os, const std::pair<T, U> &pr) {
   return os;
 }
 
-// template<typename T, typename Cont>
-// auto output_element(std::ostream& os, const T& element,
-//                     const Cont&, const std::true_type)
-//-> decltype(std::declval<typename Cont::key_type>(), os)
-//{
-//     os << element.first << " => " << element.second;
-//     return os;
-// }
-//
-// template <typename T, typename Cont>
-// auto output_element(std::ostream& os, const T& element,
-//                     const Cont&, ...)
-//-> decltype(os)
-//{
-//     os << element;
-//     return os;
-// }
-
 // 针对没有输出函数的容器处理
 template <typename T, typename = std::enable_if_t<!has_output_function_v<T>>>
 auto operator<<(std::ostream &os, const T &container)

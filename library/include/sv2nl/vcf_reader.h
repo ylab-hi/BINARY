@@ -14,15 +14,13 @@ namespace sv2nl {
     std::experimental::propagate_const<std::unique_ptr<impl>> pimpl;
 
   public:
-    explicit VcfReader(std::string file_path);
+    explicit VcfReader(std::string const& file_path);
 
     VcfReader(VcfReader&&) noexcept;
     VcfReader& operator=(VcfReader&&) noexcept;
 
-    ~VcfReader();
-
-    [[maybe_unused]] void open(std::string file_path);
-    void close();
+    [[maybe_unused]] void open(const std::string& file_path) const;
+    void close() const;
     [[nodiscard]] const std::string& get_file_path() const;
 
     [[nodiscard]] bool is_open() const;
