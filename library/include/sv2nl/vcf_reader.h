@@ -4,7 +4,6 @@
 #include <experimental/propagate_const>
 #include <memory>
 #include <string>
-#include <utility>
 
 namespace sv2nl {
 
