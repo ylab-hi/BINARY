@@ -9,7 +9,7 @@ namespace sv2nl {
 
   class [[maybe_unused]] VcfReader {
   private:
-    class impl;
+    struct impl;
     std::experimental::propagate_const<std::unique_ptr<impl>> pimpl;
 
   public:

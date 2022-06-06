@@ -2,14 +2,13 @@
 // Created by li002252 on 5/19/22.
 //
 
-#include "sv2nl/vcf_reader.h"
+#include <spdlog/spdlog.h>
+#include <sv2nl/vcf_reader.h>
 
-#include "spdlog/spdlog.h"
 #include "vcf.h"
 
 namespace sv2nl {
-  class VcfReader::impl {
-  public:
+  struct VcfReader::impl {
     explicit impl(std::string const& file_path) : file_path_{file_path} { init(); }
 
     ~impl() {
