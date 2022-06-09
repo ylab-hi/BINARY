@@ -347,7 +347,6 @@ dmypy.json
 cython_debug/
 
 # data
-test/data/
 cmake-build-debug-docker/
 cmake-build-release-docker/
 .idea/
