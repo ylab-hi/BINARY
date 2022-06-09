@@ -16,9 +16,9 @@ else()
     find_program(MAKE_COMMAND NAMES make gmake)
   endif()
 
-  message(STATUS "Building static htslib ${MAKE_COMMAND}")
-  # Set CMAKE_CX_FLAGS or CMAKE_CXX_FLAGS if you use conda environment!
-  set(flags "-O2 -g -fPIC ${CMAKE_C_FLAGS}")
+  message(STATUS "Building static htslib from source")
+  message(NOTICE "Set ENV CFLAGS and CXXFLAGS if you use conda environment!")
+
   set(disable_flags --disable-gcs --disable-s3 --disable-plugins)
 
   # find lzma
@@ -62,7 +62,7 @@ else()
     BUILD_IN_SOURCE 1
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND autoreconf -i && ./configure --prefix=${htslib_PREFIX} ${disable_flags}
-    BUILD_COMMAND ${MAKE_COMMAND} CFLAGS=${flags} lib-static
+    BUILD_COMMAND ${MAKE_COMMAND} lib-static
     INSTALL_COMMAND ${MAKE_COMMAND} install prefix=${htslib_INSTALL}
   )
 

@@ -36,6 +36,7 @@ namespace sv2nl {
       spdlog::error("Failed to init bcf_init");
       std::exit(1);
     }
+
     char const* sr = nullptr;
     int32_t count = 0;
     while (bcf_read(fp, hdr, line) >= 0) {

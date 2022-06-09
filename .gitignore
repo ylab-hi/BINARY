@@ -205,7 +205,6 @@ Temporary Items
 .apdisk
 
 #data
-data/
 build/
 ### Python template
 # Byte-compiled / optimized / DLL files
@@ -348,7 +347,7 @@ dmypy.json
 cython_debug/
 
 # data
-data/
+test/data/
 cmake-build-debug-docker/
 cmake-build-release-docker/
 .idea/

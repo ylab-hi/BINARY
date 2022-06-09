@@ -45,7 +45,6 @@ add_library(
   include/sv2nl/csv.h
   include/sv2nl/output_container.h
   include/sv2nl/test.h
-  include/sv2nl/utils.h
   include/sv2nl/vcf_reader.h
   # source
   source/vcf_reader.cpp
