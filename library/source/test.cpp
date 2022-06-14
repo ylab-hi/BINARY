@@ -4,7 +4,11 @@
 #include <spdlog/spdlog.h>
 #include <sv2nl/csv.h>
 #include <sv2nl/test.h>
+#include <sv2nl/vcf_reader.h>
 
+#include <iostream>
+
+#include "tbx.h"
 #include "vcf.h"
 
 namespace sv2nl {
@@ -20,35 +24,23 @@ namespace sv2nl {
       spdlog::info("chr {} start {} ", chr, start);
     }
   }
-  [[maybe_unused]] void read_vcf(const std::string& file_path) {
-    htsFile* fp = hts_open(file_path.c_str(), "r");
-    if (!fp) {
-      spdlog::error("Failed to open {}", file_path);
-      std::exit(1);
-    }
-    bcf_hdr_t* hdr = bcf_hdr_read(fp);
-    if (!hdr) {
-      spdlog::error("Failed to init bcf_hdr_read");
-      std::exit(1);
-    }
-    bcf1_t* line = bcf_init();
-    if (!line) {
-      spdlog::error("Failed to init bcf_init");
-      std::exit(1);
-    }
 
-    char const* sr = nullptr;
-    int32_t count = 0;
-    while (bcf_read(fp, hdr, line) >= 0) {
-      int ret = bcf_get_info_string(hdr, line, "SVTYPE", &sr, &count);
-      spdlog::info("result code: {} count: {}", ret, count);
-      if (ret >= 0) {
-        spdlog::info("SVTYPE: {}", sr);
-      }
-    }
+  void read_vcf(std::string const& file_path) {
+    VcfReader reader{file_path};
+    assert(reader.is_open());
+    assert(!reader.is_closed());
+    std::cout << "file_path: " << reader.get_file_path() << '\n';
 
-    bcf_hdr_destroy(hdr);
-    hts_close(fp);
-    bcf_destroy(line);
+    while (reader.next_record() >= 0) {
+      spdlog::info("Chrom: {} Pos: {} SVTYPE: {} SVEND: {}", reader.get_chrom(), reader.get_pos(),
+                   reader.get_info_int("SVEND"), reader.get_info_string("SVTYPE"));
+    }
   }
+
+  void test_vcf(const std::string& file_path) {
+    auto vcf_reader = VcfReader{file_path};
+    assert(vcf_reader.is_open());
+    vcf_reader.query("chr17", 7707250, 7798250);
+  }
+
 }  // namespace sv2nl
