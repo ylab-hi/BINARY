@@ -1,8 +1,8 @@
-[![Actions Status](https://github.com/TheLartians/ModernCppStarter/workflows/MacOS/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
-[![Actions Status](https://github.com/TheLartians/ModernCppStarter/workflows/Windows/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
-[![Actions Status](https://github.com/TheLartians/ModernCppStarter/workflows/Ubuntu/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
-[![Actions Status](https://github.com/TheLartians/ModernCppStarter/workflows/Style/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
-[![Actions Status](https://github.com/TheLartians/ModernCppStarter/workflows/Install/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
+[![Actions Status](https://github.com/ylab-hi/sv2nl/workflows/MacOS/badge.svg)](https://github.com/ylab-hi/sv2nl/ModernCppStarter/actions)
+[![Actions Status](https://github.com/ylab-hi/sv2nl/workflows/Windows/badge.svg)](https://github.com/ylab-hi/sv2nl/ModernCppStarter/actions)
+[![Actions Status](https://github.com/ylab-hi/sv2nl/workflows/Ubuntu/badge.svg)](https://github.com/ylab-hi/sv2nl/ModernCppStarter/actions)
+[![Actions Status](https://github.com/ylab-hi/sv2nl/workflows/Style/badge.svg)](https://github.com/ylab-hi/sv2nl/ModernCppStarter/actions)
+[![Actions Status](https://github.com/ylab-hi/sv2nl/workflows/Install/badge.svg)](https://github.com/TheLartians/ModernCppStarter/actions)
 [![codecov](https://codecov.io/gh/TheLartians/ModernCppStarter/branch/master/graph/badge.svg)](https://codecov.io/gh/TheLartians/ModernCppStarter)
 
 # <center> sv2nl
@@ -31,7 +31,7 @@ cmake --build build/test
 CTEST_OUTPUT_ON_FAILURE=1 cmake --build build/test --target test
 
 # or simply call the executable:
-./build/test/GreeterTests
+./build/test/Sv2nlTests
 ```
 
 To collect code coverage information, run CMake with the `-DENABLE_TEST_COVERAGE=1` option.
@@ -55,12 +55,12 @@ See [Format.cmake](https://github.com/TheLartians/Format.cmake) for details.
 
 ### Build the documentation
 
-The documentation is automatically built and [published](https://thelartians.github.io/ModernCppStarter) whenever a [GitHub Release](https://help.github.com/en/github/administering-a-repository/managing-releases-in-a-repository) is created.
+The documentation is automatically built and [published](https://github.com/ylab-hi/sv2nl) whenever a [GitHub Release](https://help.github.com/en/github/administering-a-repository/managing-releases-in-a-repository) is created.
 To manually build documentation, call the following command.
 
 ```bash
 cmake -S documentation -B build/doc
-cmake --build build/doc --target GenerateDocs
+cmake --build build/doc --target Sv2nlDocs
 # view the docs
 open build/doc/doxygen/html/index.html
 ```
@@ -73,17 +73,17 @@ The project also includes an `all` directory that allows building all targets at
 This is useful during development, as it exposes all subprojects to your IDE and avoids redundant builds of the library.
 
 ```bash
-cmake -S all -B build
+cmake -S . -B build
 cmake --build build
 
 # run tests
-./build/test/GreeterTests
+./build/test/Sv2nlTests
 # format code
 cmake --build build --target fix-format
 # run standalone
 ./build/standalone/Greeter --help
 # build docs
-cmake --build build --target GenerateDocs
+cmake --build build --target Sv2nlDocs
 ```
 
 ### Additional tools
@@ -105,4 +105,8 @@ Additional arguments can be passed to the analyzers by setting the `CLANG_TIDY_A
 
 Ccache can be enabled by configuring with `-DUSE_CCACHE=<ON | OFF>`.
 
-## FAQ
+## Acknowledgements
+
+- https://github.com/TheLartians/ModernCppStarter
+- https://github.com/samtools/htslib/blob/develop/htslib
+-

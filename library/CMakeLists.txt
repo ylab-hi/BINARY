@@ -19,9 +19,15 @@ message(STATUS "Started CMake for  ${PROJECT_NAME} v${PROJECT_VERSION}...")
 message(STATUS "Compiler name: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Cmake Binary path: ${CMAKE_BINARY_DIR}")
 
+# ---- Set up Options ----
+option(HTSlib_USE_STATIC_LIBS "Use static libs for htslib" OFF)
+
+# ---- Set up dependency----
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 include(CPM)
-set(HTSlib_USE_STATIC_LIBS OFF)
+
+# set(HTSlib_USE_STATIC_LIBS ON)
+
 include(htslib)
 find_package(Threads REQUIRED)
 
@@ -40,14 +46,9 @@ CPMAddPackage(
 add_library(
   ${PROJECT_NAME}
   # headers
-  include/sv2nl/csv.h
-  include/sv2nl/output_container.h
-  include/sv2nl/test.h
-  include/sv2nl/utils.h
-  include/sv2nl/vcf_reader.h
+  include/sv2nl/csv.h include/sv2nl/test.h include/sv2nl/vcf_reader.h include/sv2nl/exception.h
   # source
-  source/vcf_reader.cpp
-  source/test.cpp
+  source/vcf_reader.cpp source/test.cpp
 )
 
 if(NOT HTSlib_FOUND)
@@ -55,9 +56,13 @@ if(NOT HTSlib_FOUND)
 endif()
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 # being a cross-platform target, we enforce standards conformance on MSVC
-# target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
+target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wnon-virtual-dtor -pedantic)
-target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog ${HTSlib_LIBRARIES} Threads::Threads)
+target_link_libraries(
+  ${PROJECT_NAME}
+  PRIVATE ${HTSlib_LIBRARIES} Threads::Threads
+  PUBLIC spdlog::spdlog
+)
 target_include_directories(
   ${PROJECT_NAME} PRIVATE ${HTSlib_INCLUDE_DIRS} ${HTSlib_INCLUDE_DIRS}/htslib
 )

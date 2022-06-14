@@ -16,8 +16,9 @@ else()
     find_program(MAKE_COMMAND NAMES make gmake)
   endif()
 
-  message(STATUS "Building static htslib ${MAKE_COMMAND}")
-  set(flags "-O2 -g -fPIC")
+  message(STATUS "Building static htslib from source")
+  message(NOTICE "Set ENV CFLAGS and CXXFLAGS if you use conda environment!")
+
   set(disable_flags --disable-gcs --disable-s3 --disable-plugins)
 
   # find lzma
@@ -38,9 +39,9 @@ else()
   endif()
 
   find_package(BZip2)
-  if(BZip2_FOUND)
-    include_directories(SYSTEM ${BZip2_INCLUDE_DIRS})
-    list(APPEND deps_LIB ${BZip2_LIBRARIES})
+  if(BZIP2_FOUND)
+    include_directories(SYSTEM ${BZIP2_INCLUDE_DIRS})
+    list(APPEND deps_LIB ${BZIP2_LIBRARIES})
   else()
     list(APPEND disable_flags --disable-bz2)
   endif()
@@ -61,16 +62,28 @@ else()
     BUILD_IN_SOURCE 1
     UPDATE_COMMAND ""
     CONFIGURE_COMMAND autoreconf -i && ./configure --prefix=${htslib_PREFIX} ${disable_flags}
-    BUILD_COMMAND ${MAKE_COMMAND} CFLAGS=${flags} lib-static
+    BUILD_COMMAND ${MAKE_COMMAND} lib-static
     INSTALL_COMMAND ${MAKE_COMMAND} install prefix=${htslib_INSTALL}
   )
 
-  # build zlib from source
-  if(NOT ZLIB_FOUND)
+  message(STATUS "ZLIB_BUILD: ${ZLIB_BUILD}")
+  if(ZLIB_BUILD)
     include(../cmake/zlib.cmake)
     add_dependencies(htslib zlib)
+  else()
+    find_package(ZLIB)
+    if(ZLIB_FOUND)
+      include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
+      list(APPEND deps_LIB ${ZLIB_LIBRARIES})
+    else()
+      # build zlib from source
+      message(STATUS "Building zlib from source")
+      include(../cmake/zlib.cmake)
+      add_dependencies(htslib zlib)
+      list(APPEND deps_LIB ${zlib_LIBRARIES})
+    endif()
   endif()
-  list(APPEND deps_LIB z)
+  list(APPEND deps_LIB ${zlib_LIBRARIES})
 
   set(HTSlib_INCLUDE_DIRS ${htslib_INSTALL}/include)
   set(HTSlib_LIBRARIES ${htslib_INSTALL}/lib/libhts.a ${deps_LIB})
