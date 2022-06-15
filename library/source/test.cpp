@@ -8,7 +8,6 @@
 
 #include <iostream>
 
-#include "tbx.h"
 #include "vcf.h"
 
 namespace sv2nl {

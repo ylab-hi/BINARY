@@ -42,10 +42,6 @@ namespace sv2nl {
     }
 
     void destroy() noexcept {
-      if (fp == nullptr) {
-        spdlog::error("File is already closed");
-      }
-
       if (int ret = hts_close(fp); ret < 0) {
         spdlog::error("Failed to destroy file");
       }
