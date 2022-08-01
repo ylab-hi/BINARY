@@ -37,5 +37,6 @@ int main(int argc, char* argv[]) {
   spdlog::info("spdlog::info test: segment: {}", segment_path);
   sv2nl::read_tsv(segment_path);
   sv2nl::test_vcf(nonlinear_path);
+  sv2nl::read_vcf(nonlinear_path);
   return 0;
 }
