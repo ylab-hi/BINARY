@@ -4,8 +4,6 @@
 #include <doctest/doctest.h>
 #include <sv2nl/vcf_reader.h>
 
-#include <iostream>
-
 TEST_CASE("testing vcf reader") {
   using namespace sv2nl;
 
@@ -30,6 +28,7 @@ TEST_CASE("testing vcf reader") {
     // 0-based
     CHECK_EQ(reader.get_info_int("SVEND"), 7705262);
     CHECK_EQ(reader.get_info_string("SVTYPE"), "TRA");
+    CHECK_EQ(get_info_field<int32_t>("SVEND", reader), 7705262);
   }
 
   SUBCASE("testing read all record") {

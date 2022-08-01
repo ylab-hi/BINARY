@@ -8,8 +8,6 @@
 
 #include <iostream>
 
-#include "vcf.h"
-
 namespace sv2nl {
 
   [[maybe_unused]] void read_tsv(std::string_view file_path) {
@@ -31,6 +29,8 @@ namespace sv2nl {
     std::cout << "file_path: " << reader.get_file_path() << '\n';
 
     while (reader.next_record() >= 0) {
+      spdlog::info("Test for INT:: {}", get_info_field<int32_t>("SVEND", reader));
+      spdlog::info("Test for STR:: {}", get_info_field<char>("SVTYPE", reader));
       spdlog::info("Chrom: {} Pos: {} SVTYPE: {} SVEND: {}", reader.get_chrom(), reader.get_pos(),
                    reader.get_info_int("SVEND"), reader.get_info_string("SVTYPE"));
     }
