@@ -37,11 +37,10 @@ namespace sv2nl {
     auto operator=(VcfReader&&) noexcept -> VcfReader&;
 
     [[nodiscard]] auto get_file_path() const -> const std::string&;
-
     [[nodiscard]] auto is_open() const -> bool;
     [[nodiscard]] auto is_closed() const -> bool;
     [[nodiscard]] auto has_index() const -> bool;
-    void check_record() const;
+    void tell();
 
     auto begin() -> VcfRecord&;
     [[nodiscard]] auto begin() const -> VcfRecord const&;
@@ -88,7 +87,6 @@ namespace sv2nl {
 
     // overload operators
     friend auto operator==(VcfRecord const& lhs, VcfRecord const& rhs) -> bool;
-
     auto operator++() -> VcfRecord&;
     auto operator++(int) -> VcfRecord;
     auto operator*() const -> value_type;

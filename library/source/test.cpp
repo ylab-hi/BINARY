@@ -34,6 +34,15 @@ namespace sv2nl {
       spdlog::info("Test for STR:: {}", get_info_field_string("SVTYPE", i));
       spdlog::info("Chrom: {} Pos: {}", chrom, pos);
     }
+    reader.tell();
+    assert(reader.is_open());
+
+    for (auto i = reader.begin(); i != reader.end(); ++i) {
+      auto [chrom, pos] = *i;
+      spdlog::info("Test for INT2:: {}", get_info_field_int32("SVEND", i));
+      spdlog::info("Test for STR2:: {}", get_info_field_string("SVTYPE", i));
+      spdlog::info("Chrom: {} Pos2: {}", chrom, pos);
+    }
   }
 
   void test_vcf(std::string const& file_path) {
