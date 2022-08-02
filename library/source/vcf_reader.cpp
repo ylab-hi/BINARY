@@ -15,10 +15,22 @@ namespace sv2nl {
     if (hts_file) hts_close(hts_file);
   }
 
+  void bcf_tbx_deleter(tbx_t* tbx) noexcept {
+    if (tbx) tbx_destroy(tbx);
+  }
+
+  void bcf_itr_deleter(hts_itr_t* itr) noexcept {
+    if (itr) hts_itr_destroy(itr);
+  }
+
+  void bcf_kstring_deleter(kstring_t* ks) noexcept {
+    if (ks) free(ks->s);
+  }
+
   struct VcfReader::impl {
     std::string file_path_{};
     std::shared_ptr<htsFile> fp{nullptr, bcf_hts_file_deleter};
-    VcfRecord record{};
+    mutable VcfRecord record{};
 
     // late load
     tbx_t* idx{nullptr};
@@ -96,7 +108,23 @@ namespace sv2nl {
       return value;
     }
 
-    [[maybe_unused]] void print_record() const { std::cout << record << '\n'; }
+    [[maybe_unused]] void print_record() const { std::cout << record << "query\n"; }
+
+    auto begin() -> VcfRecord& {
+      record.clear_record();  // foward one position from begin
+      return ++record;
+    }
+
+    //    auto begin() const -> VcfRecord const& {
+    //      record.clear_record();
+    //      return ++record;
+    //    }
+
+    auto end() const -> VcfRecord {
+      VcfRecord temp{record};
+      temp.record_ = nullptr;
+      return temp;
+    }
 
     [[nodiscard]] auto next_record() const -> int {
       // 0 on success; -1 on end of file; < -1 on critical error
@@ -150,6 +178,7 @@ namespace sv2nl {
   // getters
   auto VcfReader::get_chrom() const -> std::string { return pimpl->get_chrom(); }
   auto VcfReader::get_pos() const -> int64_t { return pimpl->get_pos(); }
+
   auto VcfReader::get_info_string(std::string const& key) const -> std::string {
     return pimpl->get_info_string(key);
   }
@@ -170,6 +199,10 @@ namespace sv2nl {
   auto VcfReader::get_header() const -> bcf_hdr_t* { return pimpl->record.get_header(); }
   auto VcfReader::get_record() const -> bcf1_t* { return pimpl->record.get_record(); }
 
+  auto VcfReader::begin() -> VcfRecord& { return pimpl->begin(); }
+  auto VcfReader::begin() const -> VcfRecord const& { return pimpl->begin(); }
+  auto VcfReader::end() const -> VcfRecord { return pimpl->end(); }
+
   // VcfRecord
   auto VcfRecord::get_record() const -> bcf1_t* { return record_.get(); }
   auto VcfRecord::get_header() const -> bcf_hdr_t* { return header_.get(); }
@@ -186,7 +219,40 @@ namespace sv2nl {
   auto VcfRecord::is_valid() const -> bool { return record_ != nullptr && header_ != nullptr; }
 
   auto operator<<(std::ostream& os, const VcfRecord& record) -> std::ostream& {
-    os << "Chrom: " << record.get_chrom() << " Pos: " << record.get_pos();
+    os << "Chrom: " << record.get_chrom() << " Pos: " << record.get_pos()
+       << " SVTYPE:" << get_info_field<char>("SVTYPE", record);
     return os;
   }
+
+  auto VcfRecord::operator++() -> VcfRecord& {
+    int ret = bcf_read(file_.get(), header_.get(), record_.get());
+
+    if (ret < -1) {
+      throw VcfReaderError("Failed to read line in vcf ");
+    } else if (ret == -1) {
+      record_ = nullptr;  // mean end of file
+    }
+
+    return *this;
+  }
+
+  auto VcfRecord::operator++(int) -> VcfRecord {
+    VcfRecord old = *this;
+    ++*this;
+    return old;
+  }
+
+  auto VcfRecord::operator*() const -> VcfRecord::value_type {
+    return std::make_tuple(get_chrom(), get_pos());
+  }
+
+  auto operator==(const VcfRecord& lhs, const VcfRecord& rhs) -> bool {
+    if (lhs.file_ != rhs.file_ && lhs.header_ != rhs.header_)
+      throw VcfReaderError("VcfRecord from differ files cannot be compared");
+    return lhs.record_ == rhs.record_;
+  }
+
+  // TODO: need to change
+  void VcfRecord::clear_record() { record_.reset(bcf_init(), bcf_record_deleter); }
+
 }  // namespace sv2nl

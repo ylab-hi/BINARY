@@ -23,16 +23,28 @@ namespace sv2nl {
   }
 
   void read_vcf(std::string const& file_path) {
-    VcfReader reader{file_path};
+    VcfReader reader{file_path};  // non-const
     assert(reader.is_open());
     assert(!reader.is_closed());
     std::cout << "file_path: " << reader.get_file_path() << '\n';
 
-    while (reader.next_record() >= 0) {
-      spdlog::info("Test for INT:: {}", get_info_field<int32_t>("SVEND", reader));
-      spdlog::info("Test for STR:: {}", get_info_field<char>("SVTYPE", reader));
-      spdlog::info("Chrom: {} Pos: {} SVTYPE: {} SVEND: {}", reader.get_chrom(), reader.get_pos(),
-                   reader.get_info_int("SVEND"), reader.get_info_string("SVTYPE"));
+    for (auto i = reader.begin(); i != reader.end(); ++i) {
+      auto [chrom, pos] = *i;
+      spdlog::info("Test for INT:: {}", get_info_field<int32_t>("SVEND", i));
+      spdlog::info("Test for STR:: {}", get_info_field<char>("SVTYPE", i));
+      spdlog::info("Chrom: {} Pos: {}", chrom, pos);
+    }
+
+    auto a = reader.begin();
+    if (a == reader.end()) {
+      spdlog::info("End of file");
+    }
+
+    for (auto i = reader.begin(); i != reader.end(); ++i) {
+      auto [chrom, pos] = *i;
+      spdlog::info("Test for INT2:: {}", get_info_field<int32_t>("SVEND", i));
+      spdlog::info("Test for STR2:: {}", get_info_field<char>("SVTYPE", i));
+      spdlog::info("Chrom: {} Pos2: {}", chrom, pos);
     }
   }
 
