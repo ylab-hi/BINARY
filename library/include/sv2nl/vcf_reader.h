@@ -9,8 +9,8 @@
 #include <string>
 #include <utility>
 
-#include "tbx.h"
-#include "vcf.h"
+#include "htslib/tbx.h"
+#include "htslib/vcf.h"
 
 namespace sv2nl {
 
