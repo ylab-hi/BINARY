@@ -16,6 +16,7 @@
 namespace sv2nl {
   void bcf_record_deleter(bcf1_t* record) noexcept;
   void bcf_hdr_deleter(bcf_hdr_t* hdr) noexcept;
+  void bcf_hts_file_deleter(htsFile* hts_file) noexcept;
 
   class VcfReader {
   private:
@@ -63,11 +64,12 @@ namespace sv2nl {
     friend auto operator<<(std::ostream& os, VcfRecord const& record) -> std::ostream&;
 
     VcfRecord() = default;
-    explicit VcfRecord(bcf_hdr_t* hdr) : header_{hdr, bcf_hdr_deleter} {}
-    VcfRecord(bcf_hdr_t* hdr, bcf1_t* record)
-        : header_{hdr, bcf_hdr_deleter}, record_{record, bcf_record_deleter} {}
-    VcfRecord(std::shared_ptr<bcf_hdr_t> header, std::shared_ptr<bcf1_t> record)
-        : header_(std::move(header)), record_(std::move(record)) {}
+    explicit VcfRecord(std::shared_ptr<htsFile> file)
+        : file_{std::move(file)}, header_{bcf_hdr_read(file_.get()), bcf_hdr_deleter} {}
+
+    VcfRecord(std::shared_ptr<htsFile> file, std::shared_ptr<bcf_hdr_t> header,
+              std::shared_ptr<bcf1_t> record)
+        : file_{std::move(file)}, header_(std::move(header)), record_(std::move(record)) {}
 
     VcfRecord(VcfRecord const& other) = default;
     auto operator=(VcfRecord const&) -> VcfRecord& = default;
@@ -84,6 +86,7 @@ namespace sv2nl {
     [[nodiscard]] auto is_valid() const -> bool;
 
   private:
+    std::shared_ptr<htsFile> file_{nullptr, bcf_hts_file_deleter};
     std::shared_ptr<bcf_hdr_t> header_{nullptr, bcf_hdr_deleter};
     std::shared_ptr<bcf1_t> record_{bcf_init(), bcf_record_deleter};
   };

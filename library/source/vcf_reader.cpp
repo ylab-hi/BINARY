@@ -11,10 +11,13 @@ namespace sv2nl {
   void bcf_hdr_deleter(bcf_hdr_t* hdr) noexcept {
     if (hdr) bcf_hdr_destroy(hdr);
   };
+  void bcf_hts_file_deleter(htsFile* hts_file) noexcept {
+    if (hts_file) hts_close(hts_file);
+  }
 
   struct VcfReader::impl {
     std::string file_path_{};
-    htsFile* fp{nullptr};
+    std::shared_ptr<htsFile> fp{nullptr, bcf_hts_file_deleter};
     VcfRecord record{};
 
     // late load
@@ -24,14 +27,10 @@ namespace sv2nl {
 
     explicit impl(std::string file_path)
         : file_path_{std::move(file_path)},
-          fp{hts_open(file_path_.c_str(), "r")},
-          record{bcf_hdr_read(fp)} {}
+          fp{hts_open(file_path_.c_str(), "r"), bcf_hts_file_deleter},
+          record{fp} {}
 
-    ~impl() {
-      if (fp) {
-        destroy();
-      }
-    }
+    ~impl() { destroy(); }
 
     impl(impl const&) = delete;
     auto operator=(impl const&) -> impl& = delete;
@@ -39,10 +38,6 @@ namespace sv2nl {
     auto operator=(impl&&) -> impl& = default;
 
     void destroy() noexcept {
-      if (int ret = hts_close(fp); ret < 0) {
-        spdlog::error("Failed to destroy file");
-      }
-
       if (idx) {
         tbx_destroy(idx);
       }
@@ -106,7 +101,7 @@ namespace sv2nl {
     [[nodiscard]] auto next_record() const -> int {
       // 0 on success; -1 on end of file; < -1 on critical error
 
-      int ret = bcf_read(fp, record.get_header(), record.get_record());
+      int ret = bcf_read(fp.get(), record.get_header(), record.get_record());
       if (ret < -1) {
         throw VcfReaderError("Failed to read line in vcf " + file_path_);
       }
@@ -132,7 +127,7 @@ namespace sv2nl {
     void query(std::string const& chrom, int64_t start, int64_t end) {
       auto tid = check_query(chrom);  // may throw error
       itr = tbx_itr_queryi(idx, tid, start, end);
-      while (tbx_itr_next(fp, idx, itr, &kstr) >= 0) {
+      while (tbx_itr_next(fp.get(), idx, itr, &kstr) >= 0) {
         vcf_parse1(&kstr, record.get_header(), record.get_record());
         print_record();
       }
@@ -188,7 +183,7 @@ namespace sv2nl {
   void VcfRecord::check_header() const {
     if (!header_) throw VcfReaderError("Header is not set");
   }
-  auto VcfRecord::is_valid() const -> bool { return record_ != nullptr; }
+  auto VcfRecord::is_valid() const -> bool { return record_ != nullptr && header_ != nullptr; }
 
   auto operator<<(std::ostream& os, const VcfRecord& record) -> std::ostream& {
     os << "Chrom: " << record.get_chrom() << " Pos: " << record.get_pos();
