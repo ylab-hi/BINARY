@@ -20,9 +20,6 @@ namespace sv2nl {
   void bcf_record_deleter(bcf1_t* record) noexcept;
   void bcf_hdr_deleter(bcf_hdr_t* hdr) noexcept;
   void bcf_hts_file_deleter(htsFile* hts_file) noexcept;
-  void bcf_tbx_deleter(tbx_t* tbx) noexcept;
-  void bcf_itr_deleter(hts_itr_t* itr) noexcept;
-  void bcf_kstring_deleter(kstring_t* ks) noexcept;
 
   class VcfRecord;
 
@@ -45,10 +42,6 @@ namespace sv2nl {
     [[nodiscard]] auto is_closed() const -> bool;
     [[nodiscard]] auto has_index() const -> bool;
     void check_record() const;
-
-    [[nodiscard]] auto get_chrom() const -> std::string;
-    [[nodiscard]] auto get_pos() const -> int64_t;
-    [[nodiscard]] auto get_rlen() const -> int64_t;
 
     auto begin() -> VcfRecord&;
     [[nodiscard]] auto begin() const -> VcfRecord const&;
@@ -100,7 +93,7 @@ namespace sv2nl {
     auto operator++(int) -> VcfRecord;
     auto operator*() const -> value_type;
 
-  protected:
+  private:
     std::weak_ptr<htsFile> file_{};  // may become weak pointer
     std::shared_ptr<bcf_hdr_t> header_{nullptr, bcf_hdr_deleter};
     std::shared_ptr<bcf1_t> record_{bcf_init(), bcf_record_deleter};

@@ -14,18 +14,29 @@ namespace sv2nl {
   void bcf_hts_file_deleter(htsFile* hts_file) noexcept {
     if (hts_file) hts_close(hts_file);
   }
-
-  void bcf_tbx_deleter(tbx_t* tbx) noexcept {
+  //
+  //  void bcf_tbx_deleter(tbx_t* tbx) noexcept {
+  //    if (tbx) tbx_destroy(tbx);
+  //  }
+  auto bcf_tbx_deleter = [](tbx_t* tbx) noexcept {
     if (tbx) tbx_destroy(tbx);
-  }
+  };
 
-  void bcf_itr_deleter(hts_itr_t* itr) noexcept {
+  auto bcf_itr_deleter = [](hts_itr_t* itr) noexcept {
     if (itr) hts_itr_destroy(itr);
-  }
+  };
+  //
+  //  void bcf_itr_deleter(hts_itr_t* itr) noexcept {
+  //    if (itr) hts_itr_destroy(itr);
+  //  }
 
-  void bcf_kstring_deleter(kstring_t* ks) noexcept {
+  [[maybe_unused]] auto bcf_kstring_deleter = [](kstring_t* ks) noexcept {
     if (ks) free(ks->s);
-  }
+  };
+  //
+  //  void bcf_kstring_deleter(kstring_t* ks) noexcept {
+  //    if (ks) free(ks->s);
+  //  }
 
   struct VcfReader::impl {
     std::string file_path_{};
@@ -34,9 +45,9 @@ namespace sv2nl {
     VcfRecord end_record{};
 
     // late load
-    tbx_t* idx{nullptr};
-    kstring_t kstr{};
-    hts_itr_t* itr{nullptr};
+    std::unique_ptr<tbx_t, decltype(bcf_tbx_deleter)> idx{nullptr, bcf_tbx_deleter};
+    std::unique_ptr<hts_itr_t, decltype(bcf_itr_deleter)> itr_ptr{nullptr, bcf_itr_deleter};
+    kstring_t ks{};
 
     explicit impl(std::string file_path)
         : file_path_{std::move(file_path)},
@@ -46,26 +57,12 @@ namespace sv2nl {
       end_record.set_end_of_file();
     }
 
-    ~impl() { destroy(); }
-
     impl(impl const&) = delete;
     auto operator=(impl const&) -> impl& = delete;
     impl(impl&&) = default;
     auto operator=(impl&&) -> impl& = default;
 
-    void destroy() noexcept {
-      if (idx) {
-        tbx_destroy(idx);
-      }
-      if (itr) {
-        hts_itr_destroy(itr);
-      }
-      free(kstr.s);
-
-      fp = nullptr;
-      idx = nullptr;
-      itr = nullptr;
-    }
+    ~impl() { free(ks.s); }
 
     [[nodiscard]] auto get_file_path() const -> const std::string& { return file_path_; }
 
@@ -75,18 +72,12 @@ namespace sv2nl {
       }
     }
 
-    // TODO: Need to change
-    [[nodiscard]] auto get_chrom() const -> std::string { return record.get_chrom(); }
-    [[nodiscard]] auto get_pos() const -> int64_t { return record.get_pos(); }
-    [[nodiscard]] auto get_rlen() const -> int64_t { return record.get_rlen(); }
-
-    [[maybe_unused]] void print_record() const { std::cout << record << "query\n"; }
-
     auto begin() -> VcfRecord& { return ++record; }
     auto end() const -> VcfRecord { return end_record; }
 
     auto check_query(std::string const& chrom) -> int {
-      idx = tbx_index_load(file_path_.c_str());
+      idx = {tbx_index_load(file_path_.c_str()), bcf_tbx_deleter};
+
       if (!idx) {
         throw VcfReaderError("Query-> Failed to load index for vcf " + file_path_);
       }
@@ -94,7 +85,7 @@ namespace sv2nl {
       if (bcf_hdr_name2id(record.get_header(), chrom.c_str()) < 0) {
         throw VcfReaderError(chrom + "  is not in file " + file_path_);
       }
-      auto tid = tbx_name2id(idx, chrom.c_str());
+      auto tid = tbx_name2id(idx.get(), chrom.c_str());
       if (tid <= 0) {
         throw VcfReaderError(chrom + "  is not in file " + file_path_);
       }
@@ -102,21 +93,21 @@ namespace sv2nl {
     }
 
     auto iter_query_record() -> VcfRecord const& {
-      int ret = tbx_itr_next(fp.get(), idx, itr, &kstr);
+      int ret = tbx_itr_next(fp.get(), idx.get(), itr_ptr.get(), &ks);
       if (ret < -1) {
         throw VcfReaderError("Query-> Failed to query ");
       } else if (ret == -1) {
         return end_record;
       }
       // no problem
-      vcf_parse1(&kstr, record.get_header(), record.get_record());
+      vcf_parse1(&ks, record.get_header(), record.get_record());
       return record;
     }
 
     auto query(std::string const& chrom_, int64_t start_, int64_t end_) -> VcfRecord const& {
       auto tid = check_query(chrom_);  // may throw error
-      itr = tbx_itr_queryi(idx, tid, start_, end_);
-      if (!itr) {
+      itr_ptr = {tbx_itr_queryi(idx.get(), tid, start_, end_), bcf_itr_deleter};
+      if (!itr_ptr) {
         throw VcfReaderError("Query-> Failed to query " + chrom_ + ":" + std::to_string(start_)
                              + "-" + std::to_string(end_));
       }
@@ -137,10 +128,6 @@ namespace sv2nl {
   auto VcfReader::is_closed() const -> bool { return pimpl->fp == nullptr; }
   auto VcfReader::has_index() const -> bool { return pimpl->idx != nullptr; }
 
-  // getters
-  auto VcfReader::get_chrom() const -> std::string { return pimpl->get_chrom(); }
-  auto VcfReader::get_pos() const -> int64_t { return pimpl->get_pos(); }
-  auto VcfReader::get_rlen() const -> int64_t { return pimpl->get_rlen(); }
   void VcfReader::check_record() const { pimpl->check_record(); }
 
   auto VcfReader::iter_query_record() -> VcfRecord const& { return pimpl->iter_query_record(); }
