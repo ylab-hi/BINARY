@@ -42,12 +42,24 @@ CPMAddPackage(
 )
 
 # ---- Add source files ----
-file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
-file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
-add_library(${PROJECT_NAME} ${headers} ${sources})
-# add_library( ${PROJECT_NAME} # headers include/sv2nl/csv.hpp include/sv2nl/test.hpp
-# include/sv2nl/vcf_reader.hpp include/sv2nl/exception.hpp include/sv2nl/info_field.hpp
-# source/vcf_reader.cpp source/test.cpp )
+# file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+# file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
+# add_library(${PROJECT_NAME} ${headers} ${sources})
+
+add_library(
+  ${PROJECT_NAME}
+  # headers
+  include/sv2nl/csv.hpp
+  include/sv2nl/test.hpp
+  include/sv2nl/vcf_reader.hpp
+  include/sv2nl/exception.hpp
+  include/sv2nl/info_field.hpp
+  include/sv2nl/utils.hpp
+  # sources
+  source/vcf_reader.cpp
+  source/test.cpp
+  source/utils.cpp
+)
 
 if(NOT HTSlib_FOUND)
   add_dependencies(${PROJECT_NAME} htslib)
