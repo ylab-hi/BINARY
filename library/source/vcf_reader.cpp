@@ -128,8 +128,6 @@ namespace sv2nl {
   auto VcfReader::is_closed() const -> bool { return pimpl->fp == nullptr; }
   auto VcfReader::has_index() const -> bool { return pimpl->idx != nullptr; }
 
-  void VcfReader::check_record() const { pimpl->check_record(); }
-
   auto VcfReader::iter_query_record() -> VcfRecord const& { return pimpl->iter_query_record(); }
   auto VcfReader::query(const std::string& chrom, int64_t start, int64_t end) -> VcfRecord const& {
     return pimpl->query(chrom, start, end);
@@ -138,6 +136,7 @@ namespace sv2nl {
   auto VcfReader::begin() -> VcfRecord& { return pimpl->begin(); }
   auto VcfReader::begin() const -> VcfRecord const& { return pimpl->begin(); }
   auto VcfReader::end() const -> VcfRecord { return pimpl->end(); }
+  void VcfReader::tell() { *this = VcfReader{get_file_path()}; }
 
   // VcfRecord
   auto VcfRecord::get_record() const -> bcf1_t* { return record_.get(); }
