@@ -20,6 +20,7 @@ namespace sv2nl {
     std::unique_ptr<impl> pimpl;
 
     [[maybe_unused]] void open(const std::string& file_path);
+
     template <typename DataType>
     friend auto get_info_field(const std::string& key, VcfReader const& vcf_reader) ->
         typename InfoField<DataType>::result_type;
