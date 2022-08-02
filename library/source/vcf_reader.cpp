@@ -13,7 +13,7 @@ namespace sv2nl {
     bcf1_t* record{nullptr};
     // late load
     tbx_t* idx{nullptr};
-    kstring_t str{};
+    kstring_t kstr{};
     hts_itr_t* itr{nullptr};
 
     explicit impl(std::string file_path) : file_path_{std::move(file_path)} { init(); }
@@ -51,7 +51,7 @@ namespace sv2nl {
       if (itr) {
         hts_itr_destroy(itr);
       }
-      free(str.s);
+      free(kstr.s);
 
       hdr = nullptr;
       fp = nullptr;
@@ -93,6 +93,7 @@ namespace sv2nl {
       }
       return value;
     }
+
     [[nodiscard]] auto get_info_int(std::string const& key) const -> int32_t {
       int32_t value{-1};
       int32_t* data{nullptr};
@@ -121,25 +122,28 @@ namespace sv2nl {
       return ret;
     }
 
-    void query(std::string const& chrom, int64_t start, int64_t end) {
+    auto check_query(std::string const& chrom) -> int {
       idx = tbx_index_load(file_path_.c_str());
       if (!idx) {
         throw VcfReaderError("Query-> Failed to load index for vcf " + file_path_);
       }
 
       if (bcf_hdr_name2id(hdr, chrom.c_str()) < 0) {
-        spdlog::error("{} not found in header", chrom);
-        return;
+        throw VcfReaderError(chrom + "  is not in file " + file_path_);
       }
-
       auto tid = tbx_name2id(idx, chrom.c_str());
+      if (tid <= 0) {
+        throw VcfReaderError(chrom + "  is not in file " + file_path_);
+      }
+      return tid;
+    }
 
-      if (tid > 0) {
-        itr = tbx_itr_queryi(idx, tid, start, end);
-        while (tbx_itr_next(fp, idx, itr, &str) >= 0) {
-          vcf_parse1(&str, hdr, record);
-          print_record();
-        }
+    void query(std::string const& chrom, int64_t start, int64_t end) {
+      auto tid = check_query(chrom);  // may throw error
+      itr = tbx_itr_queryi(idx, tid, start, end);
+      while (tbx_itr_next(fp, idx, itr, &kstr) >= 0) {
+        vcf_parse1(&kstr, hdr, record);
+        print_record();
       }
     }
   };
