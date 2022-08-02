@@ -2,11 +2,11 @@
 // Created by li002252 on 5/31/22.
 //
 #include <spdlog/spdlog.h>
-#include <sv2nl/csv.h>
-#include <sv2nl/test.h>
-#include <sv2nl/vcf_reader.h>
 
 #include <iostream>
+#include <sv2nl/csv.hpp>
+#include <sv2nl/test.hpp>
+#include <sv2nl/vcf_reader.hpp>
 
 namespace sv2nl {
 

@@ -46,11 +46,11 @@ CPMAddPackage(
 add_library(
   ${PROJECT_NAME}
   # headers
-  include/sv2nl/csv.h
-  include/sv2nl/test.h
-  include/sv2nl/vcf_reader.h
-  include/sv2nl/exception.h
-  include/sv2nl/info_field.h
+  include/sv2nl/csv.hpp
+  include/sv2nl/test.hpp
+  include/sv2nl/vcf_reader.hpp
+  include/sv2nl/exception.hpp
+  include/sv2nl/info_field.hpp
   # source
   source/vcf_reader.cpp
   source/test.cpp
