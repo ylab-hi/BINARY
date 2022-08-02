@@ -5,6 +5,8 @@
 #include <sv2nl/vcf_reader.hpp>
 
 namespace sv2nl {
+  void bcf_record_deleter(bcf1_t* record) noexcept { bcf_destroy(record); };
+  void bcf_hdr_deleter(bcf_hdr_t* hdr) noexcept { bcf_hdr_destroy(hdr); };
 
   struct VcfReader::impl {
     std::string file_path_{};
@@ -148,6 +150,7 @@ namespace sv2nl {
     }
   };
 
+  // VcfReader
   VcfReader::VcfReader(std::string const& file_path) : pimpl{std::make_unique<impl>(file_path)} {}
 
   auto VcfReader::operator=(VcfReader&&) noexcept -> VcfReader& = default;
@@ -184,4 +187,27 @@ namespace sv2nl {
   auto VcfReader::get_header() const -> bcf_hdr_t* { return pimpl->hdr; }
   auto VcfReader::get_record() const -> bcf1_t* { return pimpl->record; }
 
+  // VcfRecord
+  VcfRecord::VcfRecord() = default;
+  VcfRecord::VcfRecord(VcfRecord&&) noexcept = default;
+  auto VcfRecord::operator=(VcfRecord&&) noexcept -> VcfRecord& = default;
+  auto VcfRecord::operator=(const VcfRecord&) -> VcfRecord& = default;
+  VcfRecord::VcfRecord(const VcfRecord& other) = default;
+
+  auto VcfRecord::get_record() const -> bcf1_t* { return record_.get(); }
+
+  auto VcfRecord::get_chrom() const -> std::string {
+    return bcf_seqname_safe(header_.get(), record_.get());
+  }
+
+  void VcfRecord::check_header() const {
+    if (!header_) throw VcfReaderError("Header is not set");
+  }
+  auto VcfRecord::is_valid() const -> bool { return record_ != nullptr; }
+  auto VcfRecord::get_pos() const -> int64_t { return record_->pos; }
+
+  auto operator<<(std::ostream& os, const VcfRecord& record) -> std::ostream& {
+    os << "Chrom: " << record.get_chrom() << " Pos: " << record.get_pos() << '\n';
+    return os;
+  }
 }  // namespace sv2nl
