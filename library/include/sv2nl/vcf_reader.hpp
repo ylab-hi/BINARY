@@ -3,8 +3,10 @@
 #include <spdlog/fmt/bundled/core.h>
 #include <spdlog/spdlog.h>
 
+#include <functional>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <sv2nl/exception.hpp>
 #include <sv2nl/info_field.hpp>
@@ -29,16 +31,9 @@ namespace sv2nl {
     struct impl;
     std::unique_ptr<impl> pimpl;
 
-    template <typename DataType>
-    friend auto get_info_field(const std::string& key, VcfReader const& vcf_reader) ->
-        typename InfoField<DataType>::result_type;
-
-    [[nodiscard]] auto get_header() const -> bcf_hdr_t*;
-    [[nodiscard]] auto get_record() const -> bcf1_t*;
-
   public:
     VcfReader() = delete;
-    explicit VcfReader(std::string const& file_path);
+    explicit VcfReader(const std::string& file_path);
     ~VcfReader() noexcept;
 
     VcfReader(VcfReader&&) noexcept;
@@ -54,17 +49,12 @@ namespace sv2nl {
     [[nodiscard]] auto get_chrom() const -> std::string;
     [[nodiscard]] auto get_pos() const -> int64_t;
     [[nodiscard]] auto get_rlen() const -> int64_t;
-    [[nodiscard]] auto get_info_int(const std::string& key) const -> int32_t;
-    [[nodiscard]] auto get_info_string(const std::string& key) const -> std::string;
 
     auto begin() -> VcfRecord&;
-    auto begin() const -> VcfRecord const&;
-    auto end() const -> VcfRecord;
-
-    auto next_record() -> int;
-    void print_record() const;
-
-    void query(const std::string& chrom, int64_t start, int64_t end);
+    [[nodiscard]] auto begin() const -> VcfRecord const&;
+    [[nodiscard]] auto end() const -> VcfRecord;
+    auto query(const std::string& chrom, int64_t start, int64_t end) -> VcfRecord const&;
+    auto iter_query_record() -> VcfRecord const&;
   };
 
   // VCfRecord
@@ -82,11 +72,11 @@ namespace sv2nl {
 
     VcfRecord() = default;
     explicit VcfRecord(std::shared_ptr<htsFile> file)
-        : file_{std::move(file)}, header_{bcf_hdr_read(file_.get()), bcf_hdr_deleter} {}
+        : file_{file}, header_{bcf_hdr_read(file_.lock().get()), bcf_hdr_deleter} {}
 
     VcfRecord(std::shared_ptr<htsFile> file, std::shared_ptr<bcf_hdr_t> header,
               std::shared_ptr<bcf1_t> record)
-        : file_{std::move(file)}, header_(std::move(header)), record_(std::move(record)) {}
+        : file_{file}, header_(std::move(header)), record_(std::move(record)) {}
 
     VcfRecord(VcfRecord const& other) = default;
     auto operator=(VcfRecord const&) -> VcfRecord& = default;
@@ -101,7 +91,7 @@ namespace sv2nl {
     [[nodiscard]] auto get_pos() const -> int64_t;
     [[nodiscard]] auto get_rlen() const -> int64_t;
     [[nodiscard]] auto is_valid() const -> bool;
-    void clear_record();
+    void set_end_of_file();
 
     // overload operators
     friend auto operator==(VcfRecord const& lhs, VcfRecord const& rhs) -> bool;
@@ -111,52 +101,10 @@ namespace sv2nl {
     auto operator*() const -> value_type;
 
   protected:
-    std::shared_ptr<htsFile> file_{nullptr, bcf_hts_file_deleter};
+    std::weak_ptr<htsFile> file_{};  // may become weak pointer
     std::shared_ptr<bcf_hdr_t> header_{nullptr, bcf_hdr_deleter};
     std::shared_ptr<bcf1_t> record_{bcf_init(), bcf_record_deleter};
   };
-
-  class VcfQueryRecord : public VcfRecord {
-  public:
-    using VcfRecord::VcfRecord;
-    VcfQueryRecord() = default;
-
-    auto operator++() -> VcfQueryRecord&;
-    auto operator++(int) -> VcfQueryRecord;
-
-  private:
-    std::shared_ptr<hts_itr_t> itr_{nullptr, bcf_itr_deleter};
-    std::shared_ptr<tbx_t> tbx_{nullptr, bcf_tbx_deleter};
-    std::shared_ptr<kstring_t> ks_{nullptr, bcf_kstring_deleter};
-  };
-
-  template <typename DataType>
-  auto get_info_field(const std::string& key, VcfReader const& vcf_reader) ->
-      typename InfoField<DataType>::result_type {
-    /**
- #define BCF_HT_FLAG 0  header type
- #define BCF_HT_INT  1
- #define BCF_HT_REAL 2
- #define BCF_HT_STR  3
- #define BCF_HT_LONG (BCF_HT_INT | 0x100)  BCF_HT_INT, but for int64_t values; VCF only!
- **/
-
-    auto info_field = InfoField<DataType>{};
-    auto data_id = info_field.data_id;
-
-    DataType* data{nullptr};
-    int32_t count{};
-
-    if (int ret = bcf_get_info_values(vcf_reader.get_header(), vcf_reader.get_record(), key.c_str(),
-                                      (void**)(&data), &count, data_id);
-        ret < 0) {
-      throw VcfReaderError("Failed to get info " + key);
-    }
-
-    typename InfoField<DataType>::result_type result = info_field.get_result(data, count);
-    free(data);
-    return result;
-  }
 
   template <typename DataType>
   auto get_info_field(const std::string& key, VcfRecord const& vcf_record) ->
@@ -185,6 +133,9 @@ namespace sv2nl {
     free(data);
     return result;
   }
+
+  auto get_info_field_int32(const std::string& key, VcfRecord const& vcf_record) -> int32_t;
+  auto get_info_field_string(const std::string& key, VcfRecord const& vcf_record) -> std::string;
 
 }  // namespace sv2nl
 
