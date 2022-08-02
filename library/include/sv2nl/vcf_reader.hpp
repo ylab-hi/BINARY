@@ -3,6 +3,7 @@
 #include <spdlog/fmt/bundled/core.h>
 #include <spdlog/spdlog.h>
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <sv2nl/exception.hpp>
@@ -20,8 +21,6 @@ namespace sv2nl {
   private:
     struct impl;
     std::unique_ptr<impl> pimpl;
-
-    [[maybe_unused]] void open(const std::string& file_path);
 
     template <typename DataType>
     friend auto get_info_field(const std::string& key, VcfReader const& vcf_reader) ->
@@ -57,25 +56,31 @@ namespace sv2nl {
     void query(const std::string& chrom, int64_t start, int64_t end);
   };
 
+  // VCfRecord
   class VcfRecord {
   public:
     friend class VcfReader;
     friend auto operator<<(std::ostream& os, VcfRecord const& record) -> std::ostream&;
 
-    VcfRecord();
+    VcfRecord() = default;
+    explicit VcfRecord(bcf_hdr_t* hdr) : header_{hdr, bcf_hdr_deleter} {}
+    VcfRecord(bcf_hdr_t* hdr, bcf1_t* record)
+        : header_{hdr, bcf_hdr_deleter}, record_{record, bcf_record_deleter} {}
     VcfRecord(std::shared_ptr<bcf_hdr_t> header, std::shared_ptr<bcf1_t> record)
         : header_(std::move(header)), record_(std::move(record)) {}
 
-    VcfRecord(VcfRecord const& other);
-    auto operator=(VcfRecord const&) -> VcfRecord&;
-    VcfRecord(VcfRecord&&) noexcept;
-    auto operator=(VcfRecord&&) noexcept -> VcfRecord&;
+    VcfRecord(VcfRecord const& other) = default;
+    auto operator=(VcfRecord const&) -> VcfRecord& = default;
+    VcfRecord(VcfRecord&&) noexcept = default;
+    auto operator=(VcfRecord&&) noexcept -> VcfRecord& = default;
 
     void check_header() const;  // will throw if header is not set
     // all functions is unchecked for header pay attentions
     [[nodiscard]] auto get_record() const -> bcf1_t*;
+    [[nodiscard]] auto get_header() const -> bcf_hdr_t*;
     [[nodiscard]] auto get_chrom() const -> std::string;
     [[nodiscard]] auto get_pos() const -> int64_t;
+    [[nodiscard]] auto get_rlen() const -> int64_t;
     [[nodiscard]] auto is_valid() const -> bool;
 
   private:
