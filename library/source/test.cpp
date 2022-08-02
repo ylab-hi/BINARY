@@ -30,28 +30,21 @@ namespace sv2nl {
 
     for (auto i = reader.begin(); i != reader.end(); ++i) {
       auto [chrom, pos] = *i;
-      spdlog::info("Test for INT:: {}", get_info_field<int32_t>("SVEND", i));
-      spdlog::info("Test for STR:: {}", get_info_field<char>("SVTYPE", i));
+      spdlog::info("Test for INT:: {}", get_info_field_int32("SVEND", i));
+      spdlog::info("Test for STR:: {}", get_info_field_string("SVTYPE", i));
       spdlog::info("Chrom: {} Pos: {}", chrom, pos);
-    }
-
-    auto a = reader.begin();
-    if (a == reader.end()) {
-      spdlog::info("End of file");
-    }
-
-    for (auto i = reader.begin(); i != reader.end(); ++i) {
-      auto [chrom, pos] = *i;
-      spdlog::info("Test for INT2:: {}", get_info_field<int32_t>("SVEND", i));
-      spdlog::info("Test for STR2:: {}", get_info_field<char>("SVTYPE", i));
-      spdlog::info("Chrom: {} Pos2: {}", chrom, pos);
     }
   }
 
-  void test_vcf(const std::string& file_path) {
+  void test_vcf(std::string const& file_path) {
     auto vcf_reader = VcfReader{file_path};
     assert(vcf_reader.is_open());
-    vcf_reader.query("chr17", 7707250, 7798250);
+    for (auto i = vcf_reader.query("chr17", 7707250, 7798250); i != vcf_reader.end();
+         i = vcf_reader.iter_query_record()) {
+      auto [chrom, pos] = *i;
+      spdlog::info("Chrom: {} Pos: {} SVTYPE: {} SVEND: {}", chrom, pos,
+                   get_info_field_string("SVTYPE", i), get_info_field_int32("SVEND", i));
+    }
   }
 
 }  // namespace sv2nl

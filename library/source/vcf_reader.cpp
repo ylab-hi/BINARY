@@ -31,6 +31,7 @@ namespace sv2nl {
     std::string file_path_{};
     std::shared_ptr<htsFile> fp{nullptr, bcf_hts_file_deleter};
     mutable VcfRecord record{};
+    VcfRecord end_record{};
 
     // late load
     tbx_t* idx{nullptr};
@@ -40,7 +41,10 @@ namespace sv2nl {
     explicit impl(std::string file_path)
         : file_path_{std::move(file_path)},
           fp{hts_open(file_path_.c_str(), "r"), bcf_hts_file_deleter},
-          record{fp} {}
+          record{fp},
+          end_record(record) {
+      end_record.set_end_of_file();
+    }
 
     ~impl() { destroy(); }
 
@@ -76,65 +80,10 @@ namespace sv2nl {
     [[nodiscard]] auto get_pos() const -> int64_t { return record.get_pos(); }
     [[nodiscard]] auto get_rlen() const -> int64_t { return record.get_rlen(); }
 
-    [[nodiscard]] auto get_info_string(std::string const& key) const -> std::string {
-      std::string value;
-      char* data = nullptr;
-      int32_t count = 0;
-
-      if (int ret = bcf_get_info_string(record.get_header(), record.get_record(), key.c_str(),
-                                        &data, &count);
-          ret < 0) {
-        spdlog::error("Failed to get info string {}", key);
-      } else {
-        value = data;
-        free(data);
-      }
-      return value;
-    }
-
-    [[nodiscard]] auto get_info_int(std::string const& key) const -> int32_t {
-      int32_t value{-1};
-      int32_t* data{nullptr};
-      int32_t count{};
-
-      if (int ret = bcf_get_info_int32(record.get_header(), record.get_record(), key.c_str(), &data,
-                                       &count);
-          ret < 0) {
-        spdlog::error("Failed to get info int {}", key);
-      } else {
-        value = *data;
-        free(data);
-      }
-      return value;
-    }
-
     [[maybe_unused]] void print_record() const { std::cout << record << "query\n"; }
 
-    auto begin() -> VcfRecord& {
-      record.clear_record();  // foward one position from begin
-      return ++record;
-    }
-
-    //    auto begin() const -> VcfRecord const& {
-    //      record.clear_record();
-    //      return ++record;
-    //    }
-
-    auto end() const -> VcfRecord {
-      VcfRecord temp{record};
-      temp.record_ = nullptr;
-      return temp;
-    }
-
-    [[nodiscard]] auto next_record() const -> int {
-      // 0 on success; -1 on end of file; < -1 on critical error
-
-      int ret = bcf_read(fp.get(), record.get_header(), record.get_record());
-      if (ret < -1) {
-        throw VcfReaderError("Failed to read line in vcf " + file_path_);
-      }
-      return ret;
-    }
+    auto begin() -> VcfRecord& { return ++record; }
+    auto end() const -> VcfRecord { return end_record; }
 
     auto check_query(std::string const& chrom) -> int {
       idx = tbx_index_load(file_path_.c_str());
@@ -152,18 +101,31 @@ namespace sv2nl {
       return tid;
     }
 
-    void query(std::string const& chrom, int64_t start, int64_t end) {
-      auto tid = check_query(chrom);  // may throw error
-      itr = tbx_itr_queryi(idx, tid, start, end);
-      while (tbx_itr_next(fp.get(), idx, itr, &kstr) >= 0) {
-        vcf_parse1(&kstr, record.get_header(), record.get_record());
-        print_record();
+    auto iter_query_record() -> VcfRecord const& {
+      int ret = tbx_itr_next(fp.get(), idx, itr, &kstr);
+      if (ret < -1) {
+        throw VcfReaderError("Query-> Failed to query ");
+      } else if (ret == -1) {
+        return end_record;
       }
+      // no problem
+      vcf_parse1(&kstr, record.get_header(), record.get_record());
+      return record;
+    }
+
+    auto query(std::string const& chrom_, int64_t start_, int64_t end_) -> VcfRecord const& {
+      auto tid = check_query(chrom_);  // may throw error
+      itr = tbx_itr_queryi(idx, tid, start_, end_);
+      if (!itr) {
+        throw VcfReaderError("Query-> Failed to query " + chrom_ + ":" + std::to_string(start_)
+                             + "-" + std::to_string(end_));
+      }
+      return iter_query_record();
     }
   };
 
   // VcfReader
-  VcfReader::VcfReader(std::string const& file_path) : pimpl{std::make_unique<impl>(file_path)} {}
+  VcfReader::VcfReader(const std::string& file_path) : pimpl{std::make_unique<impl>(file_path)} {}
 
   auto VcfReader::operator=(VcfReader&&) noexcept -> VcfReader& = default;
   VcfReader::VcfReader(VcfReader&&) noexcept = default;
@@ -178,26 +140,13 @@ namespace sv2nl {
   // getters
   auto VcfReader::get_chrom() const -> std::string { return pimpl->get_chrom(); }
   auto VcfReader::get_pos() const -> int64_t { return pimpl->get_pos(); }
-
-  auto VcfReader::get_info_string(std::string const& key) const -> std::string {
-    return pimpl->get_info_string(key);
-  }
-
-  auto VcfReader::get_info_int(std::string const& key) const -> int32_t {
-    return pimpl->get_info_int(key);
-  }
-
-  // iterator
-  auto VcfReader::next_record() -> int { return pimpl->next_record(); }
   auto VcfReader::get_rlen() const -> int64_t { return pimpl->get_rlen(); }
   void VcfReader::check_record() const { pimpl->check_record(); }
-  void VcfReader::print_record() const { pimpl->print_record(); }
 
-  void VcfReader::query(const std::string& chrom, int64_t start, int64_t end) {
+  auto VcfReader::iter_query_record() -> VcfRecord const& { return pimpl->iter_query_record(); }
+  auto VcfReader::query(const std::string& chrom, int64_t start, int64_t end) -> VcfRecord const& {
     return pimpl->query(chrom, start, end);
   }
-  auto VcfReader::get_header() const -> bcf_hdr_t* { return pimpl->record.get_header(); }
-  auto VcfReader::get_record() const -> bcf1_t* { return pimpl->record.get_record(); }
 
   auto VcfReader::begin() -> VcfRecord& { return pimpl->begin(); }
   auto VcfReader::begin() const -> VcfRecord const& { return pimpl->begin(); }
@@ -225,12 +174,12 @@ namespace sv2nl {
   }
 
   auto VcfRecord::operator++() -> VcfRecord& {
-    int ret = bcf_read(file_.get(), header_.get(), record_.get());
+    int ret = bcf_read(file_.lock().get(), header_.get(), record_.get());
 
     if (ret < -1) {
       throw VcfReaderError("Failed to read line in vcf ");
     } else if (ret == -1) {
-      record_ = nullptr;  // mean end of file
+      set_end_of_file();  // record_ = nullptr;  mean end of file
     }
 
     return *this;
@@ -247,12 +196,20 @@ namespace sv2nl {
   }
 
   auto operator==(const VcfRecord& lhs, const VcfRecord& rhs) -> bool {
-    if (lhs.file_ != rhs.file_ && lhs.header_ != rhs.header_)
+    if (lhs.header_ != rhs.header_)
       throw VcfReaderError("VcfRecord from differ files cannot be compared");
     return lhs.record_ == rhs.record_;
   }
 
-  // TODO: need to change
-  void VcfRecord::clear_record() { record_.reset(bcf_init(), bcf_record_deleter); }
+  void VcfRecord::set_end_of_file() { record_ = nullptr; }
 
+  auto get_info_field_int32(const std::string& key, VcfRecord const& vcf_record) -> int32_t {
+    auto data = get_info_field<int32_t>(key, vcf_record);
+    return data;
+  }
+
+  auto get_info_field_string(const std::string& key, VcfRecord const& vcf_record) -> std::string {
+    auto data = get_info_field<char>(key, vcf_record);
+    return data;
+  }
 }  // namespace sv2nl
