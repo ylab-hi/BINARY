@@ -13,6 +13,8 @@
 #include "htslib/vcf.h"
 
 namespace sv2nl {
+  void bcf_record_deleter(bcf1_t* record) noexcept;
+  void bcf_hdr_deleter(bcf_hdr_t* hdr) noexcept;
 
   class VcfReader {
   private:
@@ -53,6 +55,32 @@ namespace sv2nl {
     void print_record() const;
 
     void query(const std::string& chrom, int64_t start, int64_t end);
+  };
+
+  class VcfRecord {
+  public:
+    friend class VcfReader;
+    friend auto operator<<(std::ostream& os, VcfRecord const& record) -> std::ostream&;
+
+    VcfRecord();
+    VcfRecord(std::shared_ptr<bcf_hdr_t> header, std::shared_ptr<bcf1_t> record)
+        : header_(std::move(header)), record_(std::move(record)) {}
+
+    VcfRecord(VcfRecord const& other);
+    auto operator=(VcfRecord const&) -> VcfRecord&;
+    VcfRecord(VcfRecord&&) noexcept;
+    auto operator=(VcfRecord&&) noexcept -> VcfRecord&;
+
+    void check_header() const;  // will throw if header is not set
+    // all functions is unchecked for header pay attentions
+    [[nodiscard]] auto get_record() const -> bcf1_t*;
+    [[nodiscard]] auto get_chrom() const -> std::string;
+    [[nodiscard]] auto get_pos() const -> int64_t;
+    [[nodiscard]] auto is_valid() const -> bool;
+
+  private:
+    std::shared_ptr<bcf_hdr_t> header_{nullptr, bcf_hdr_deleter};
+    std::shared_ptr<bcf1_t> record_{bcf_init(), bcf_record_deleter};
   };
 
   template <typename DataType>
