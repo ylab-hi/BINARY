@@ -5,20 +5,27 @@
 #include <sv2nl/vcf_reader.hpp>
 
 namespace sv2nl {
-  void bcf_record_deleter(bcf1_t* record) noexcept { bcf_destroy(record); };
-  void bcf_hdr_deleter(bcf_hdr_t* hdr) noexcept { bcf_hdr_destroy(hdr); };
+  void bcf_record_deleter(bcf1_t* record) noexcept {
+    if (record) bcf_destroy(record);
+  };
+  void bcf_hdr_deleter(bcf_hdr_t* hdr) noexcept {
+    if (hdr) bcf_hdr_destroy(hdr);
+  };
 
   struct VcfReader::impl {
     std::string file_path_{};
     htsFile* fp{nullptr};
-    bcf_hdr_t* hdr{nullptr};
-    bcf1_t* record{nullptr};
+    VcfRecord record{};
+
     // late load
     tbx_t* idx{nullptr};
     kstring_t kstr{};
     hts_itr_t* itr{nullptr};
 
-    explicit impl(std::string file_path) : file_path_{std::move(file_path)} { init(); }
+    explicit impl(std::string file_path)
+        : file_path_{std::move(file_path)},
+          fp{hts_open(file_path_.c_str(), "r")},
+          record{bcf_hdr_read(fp)} {}
 
     ~impl() {
       if (fp) {
@@ -31,22 +38,11 @@ namespace sv2nl {
     impl(impl&&) = default;
     auto operator=(impl&&) -> impl& = default;
 
-    void init() {
-      fp = hts_open(file_path_.c_str(), "r");
-      hdr = bcf_hdr_read(fp);
-      record = bcf_init();
-    }
-
     void destroy() noexcept {
       if (int ret = hts_close(fp); ret < 0) {
         spdlog::error("Failed to destroy file");
       }
 
-      bcf_hdr_destroy(hdr);
-
-      if (record) {
-        bcf_destroy(record);
-      }
       if (idx) {
         tbx_destroy(idx);
       }
@@ -55,39 +51,32 @@ namespace sv2nl {
       }
       free(kstr.s);
 
-      hdr = nullptr;
       fp = nullptr;
-      record = nullptr;
       idx = nullptr;
       itr = nullptr;
-    }
-
-    void open(std::string const& file_path) {
-      if (fp) {
-        throw std::invalid_argument("File is already opened " + file_path_);
-      }
-      file_path_ = file_path;
-      init();
     }
 
     [[nodiscard]] auto get_file_path() const -> const std::string& { return file_path_; }
 
     void check_record() const {
-      if (!record) {
+      if (!record.is_valid()) {
         throw VcfReaderError("Record is null");
       }
     }
 
-    [[nodiscard]] auto get_chrom() const -> std::string { return bcf_seqname_safe(hdr, record); }
-    [[nodiscard]] auto get_pos() const -> int64_t { return record->pos; }
-    [[nodiscard]] auto get_rlen() const -> int64_t { return record->rlen; }
+    // TODO: Need to change
+    [[nodiscard]] auto get_chrom() const -> std::string { return record.get_chrom(); }
+    [[nodiscard]] auto get_pos() const -> int64_t { return record.get_pos(); }
+    [[nodiscard]] auto get_rlen() const -> int64_t { return record.get_rlen(); }
 
     [[nodiscard]] auto get_info_string(std::string const& key) const -> std::string {
       std::string value;
       char* data = nullptr;
       int32_t count = 0;
 
-      if (int ret = bcf_get_info_string(hdr, record, key.c_str(), &data, &count); ret < 0) {
+      if (int ret = bcf_get_info_string(record.get_header(), record.get_record(), key.c_str(),
+                                        &data, &count);
+          ret < 0) {
         spdlog::error("Failed to get info string {}", key);
       } else {
         value = data;
@@ -101,7 +90,9 @@ namespace sv2nl {
       int32_t* data{nullptr};
       int32_t count{};
 
-      if (int ret = bcf_get_info_int32(hdr, record, key.c_str(), &data, &count); ret < 0) {
+      if (int ret = bcf_get_info_int32(record.get_header(), record.get_record(), key.c_str(), &data,
+                                       &count);
+          ret < 0) {
         spdlog::error("Failed to get info int {}", key);
       } else {
         value = *data;
@@ -110,14 +101,12 @@ namespace sv2nl {
       return value;
     }
 
-    [[maybe_unused]] void print_record() const {
-      fmt::print("Chrom: {} Pos: {}\n", get_chrom(), get_pos());
-    }
+    [[maybe_unused]] void print_record() const { std::cout << record << '\n'; }
 
     [[nodiscard]] auto next_record() const -> int {
       // 0 on success; -1 on end of file; < -1 on critical error
 
-      int ret = bcf_read(fp, hdr, record);
+      int ret = bcf_read(fp, record.get_header(), record.get_record());
       if (ret < -1) {
         throw VcfReaderError("Failed to read line in vcf " + file_path_);
       }
@@ -130,7 +119,7 @@ namespace sv2nl {
         throw VcfReaderError("Query-> Failed to load index for vcf " + file_path_);
       }
 
-      if (bcf_hdr_name2id(hdr, chrom.c_str()) < 0) {
+      if (bcf_hdr_name2id(record.get_header(), chrom.c_str()) < 0) {
         throw VcfReaderError(chrom + "  is not in file " + file_path_);
       }
       auto tid = tbx_name2id(idx, chrom.c_str());
@@ -144,7 +133,7 @@ namespace sv2nl {
       auto tid = check_query(chrom);  // may throw error
       itr = tbx_itr_queryi(idx, tid, start, end);
       while (tbx_itr_next(fp, idx, itr, &kstr) >= 0) {
-        vcf_parse1(&kstr, hdr, record);
+        vcf_parse1(&kstr, record.get_header(), record.get_record());
         print_record();
       }
     }
@@ -158,7 +147,6 @@ namespace sv2nl {
   VcfReader::~VcfReader() noexcept = default;
 
   // status
-  void VcfReader::open(const std::string& file_path) { pimpl->open(file_path); }
   auto VcfReader::get_file_path() const -> const std::string& { return pimpl->get_file_path(); }
   auto VcfReader::is_open() const -> bool { return pimpl->fp != nullptr; }
   auto VcfReader::is_closed() const -> bool { return pimpl->fp == nullptr; }
@@ -184,30 +172,26 @@ namespace sv2nl {
   void VcfReader::query(const std::string& chrom, int64_t start, int64_t end) {
     return pimpl->query(chrom, start, end);
   }
-  auto VcfReader::get_header() const -> bcf_hdr_t* { return pimpl->hdr; }
-  auto VcfReader::get_record() const -> bcf1_t* { return pimpl->record; }
+  auto VcfReader::get_header() const -> bcf_hdr_t* { return pimpl->record.get_header(); }
+  auto VcfReader::get_record() const -> bcf1_t* { return pimpl->record.get_record(); }
 
   // VcfRecord
-  VcfRecord::VcfRecord() = default;
-  VcfRecord::VcfRecord(VcfRecord&&) noexcept = default;
-  auto VcfRecord::operator=(VcfRecord&&) noexcept -> VcfRecord& = default;
-  auto VcfRecord::operator=(const VcfRecord&) -> VcfRecord& = default;
-  VcfRecord::VcfRecord(const VcfRecord& other) = default;
-
   auto VcfRecord::get_record() const -> bcf1_t* { return record_.get(); }
+  auto VcfRecord::get_header() const -> bcf_hdr_t* { return header_.get(); }
 
   auto VcfRecord::get_chrom() const -> std::string {
     return bcf_seqname_safe(header_.get(), record_.get());
   }
+  auto VcfRecord::get_rlen() const -> int64_t { return record_->rlen; }
+  auto VcfRecord::get_pos() const -> int64_t { return record_->pos; }
 
   void VcfRecord::check_header() const {
     if (!header_) throw VcfReaderError("Header is not set");
   }
   auto VcfRecord::is_valid() const -> bool { return record_ != nullptr; }
-  auto VcfRecord::get_pos() const -> int64_t { return record_->pos; }
 
   auto operator<<(std::ostream& os, const VcfRecord& record) -> std::ostream& {
-    os << "Chrom: " << record.get_chrom() << " Pos: " << record.get_pos() << '\n';
+    os << "Chrom: " << record.get_chrom() << " Pos: " << record.get_pos();
     return os;
   }
 }  // namespace sv2nl
