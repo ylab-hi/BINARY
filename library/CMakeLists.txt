@@ -68,9 +68,7 @@ target_link_libraries(
   PRIVATE Threads::Threads ${HTSlib_LIBRARIES}
   PUBLIC spdlog::spdlog
 )
-target_include_directories(
-  ${PROJECT_NAME} PUBLIC ${HTSlib_INCLUDE_DIRS} ${HTSlib_INCLUDE_DIRS}/htslib
-)
+target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${HTSlib_INCLUDE_DIRS}>)
 
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

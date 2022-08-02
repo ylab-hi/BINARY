@@ -6,7 +6,7 @@
 #define SV2NL_INCLUDE_SV2NL_TEST_H_
 #include <string>
 
-#include "vcf.h"
+#include "htslib/vcf.h"
 
 namespace sv2nl {
 
