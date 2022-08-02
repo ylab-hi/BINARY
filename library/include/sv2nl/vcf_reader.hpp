@@ -2,11 +2,11 @@
 #define SV2NL_SRC_VCF_READER_H_
 #include <spdlog/fmt/bundled/core.h>
 #include <spdlog/spdlog.h>
-#include <sv2nl/exception.h>
-#include <sv2nl/info_field.h>
 
 #include <memory>
 #include <string>
+#include <sv2nl/exception.hpp>
+#include <sv2nl/info_field.hpp>
 #include <utility>
 
 #include "htslib/tbx.h"

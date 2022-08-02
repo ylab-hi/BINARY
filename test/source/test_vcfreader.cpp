@@ -2,7 +2,8 @@
 // Created by li002252 on 6/13/22.
 //
 #include <doctest/doctest.h>
-#include <sv2nl/vcf_reader.h>
+
+#include <sv2nl/vcf_reader.hpp>
 
 TEST_CASE("testing vcf reader") {
   using namespace sv2nl;

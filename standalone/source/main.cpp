@@ -1,5 +1,6 @@
 #include <spdlog/spdlog.h>
-#include <sv2nl/test.h>
+
+#include <sv2nl/test.hpp>
 
 // #include <argparse/argparse.hpp>
 #include <cxxopts.hpp>
@@ -36,6 +37,7 @@ auto main(int argc, char* argv[]) -> int {
     auto segment_path = result["segment"].as<std::string>();
     auto adjacent_path = result["adjacent"].as<std::string>();
     auto nonlinear_path = result["non-linear"].as<std::string>();
+
     spdlog::debug("segment file path: {}", segment_path);
     spdlog::debug("adjacent file path: {}", adjacent_path);
     spdlog::debug("non-linear file path: {}", nonlinear_path);
@@ -45,7 +47,7 @@ auto main(int argc, char* argv[]) -> int {
   } catch (const cxxopts::option_has_no_value_exception& err) {
     spdlog::error("error parsing options: {} ", err.what());
     std::cout << options.help() << "\n";
-    return 1;
+    std::exit(1);
   }
 
   return 0;
