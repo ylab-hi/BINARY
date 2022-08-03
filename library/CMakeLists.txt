@@ -61,6 +61,7 @@ add_library(
   source/test.cpp
   source/utils.cpp
   source/vcf_record.cpp
+  include/sv2nl/types.hpp
 )
 
 if(NOT HTSlib_FOUND)

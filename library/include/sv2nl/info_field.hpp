@@ -6,8 +6,12 @@
 #define SV2NL_LIBRARY_INCLUDE_SV2NL_INFO_FIELD_H_
 #include <map>
 #include <string>
+#include <sv2nl/types.hpp>
+
+// TODO: Overload get_info_field to support many types
 
 namespace sv2nl {
+  using namespace types;
 
   /**
 #define BCF_HT_FLAG 0  header type
@@ -32,12 +36,10 @@ namespace sv2nl {
     }
   };
 
-  template <> struct InfoField<int32_t> {
-    using result_type = int32_t;
+  template <> struct InfoField<pos_t> {
+    using result_type = pos_t;
     const int data_id = SV2NL_BCF_HT_INT;
-    auto get_result(int32_t const* data, int32_t /**unused**/) const -> result_type {
-      return *data;
-    }
+    auto get_result(pos_t const* data, int32_t /**unused**/) const -> result_type { return *data; }
   };
 
   template <> struct InfoField<int64_t> {

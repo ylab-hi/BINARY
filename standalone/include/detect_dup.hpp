@@ -7,10 +7,11 @@
 
 #include <concepts>
 #include <sv2nl/csv.hpp>
+#include <sv2nl/types.hpp>
 #include <sv2nl/vcf_reader.hpp>
 #include <tuple>
 
-using pos_t = int32_t;
+using sv2nl::types::pos_t;
 
 auto read_csv(std::string_view file_path) -> std::vector<std::tuple<std::string, pos_t, pos_t>>;
 
