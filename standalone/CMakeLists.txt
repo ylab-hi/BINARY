@@ -24,17 +24,19 @@ CPMAddPackage(
   OPTIONS "CXXOPTS_BUILD_EXAMPLES NO" "CXXOPTS_BUILD_TESTS NO" "CXXOPTS_ENABLE_INSTALL YES"
 )
 
-file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
-
 CPMAddPackage(NAME Sv2nl SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
 find_package(spdlog REQUIRED)
 
 # ---- Create standalone executable ----
 
-add_executable(${PROJECT_NAME} ${sources})
+add_executable(
+  ${PROJECT_NAME} source/main.cpp source/detect_dup.cpp include/detect_dup.hpp utils.cpp
+                  include/utils.hpp
+)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "sv2nl")
 target_link_libraries(${PROJECT_NAME} PRIVATE Sv2nl::Sv2nl cxxopts stdc++fs)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 # target_link_libraries_system(${PROJECT_NAME} PRIVATE argparse) # suppress unused parameters
 # warning
