@@ -35,12 +35,15 @@ void detect_dup(std::string const& vcf_path, std::string const& csv_path) {
     auto vcf_type = sv2nl::get_info_field_string("SVTYPE", i);  // use enum class
 
     // TODO: Reconsidering copy operations of VcfReader
+    // TODO: Using enum class for SVTYPE
+    // TODO: USing enum class for CHROM
 
-    if (vcf_start == 29927247) {
+    if (vcf_type == "TDUP") {
       spdlog::info("chrom: {} start: {}  end: {}  type: {}", vcf_chrom, vcf_start, vcf_end,
                    vcf_type);
       for (auto [csv_chrom, csv_start, csv_end] : csv_result) {
-        if (enclose<pos_t>(csv_start, csv_end, vcf_start, vcf_end)) {
+        if (add_chr(csv_chrom) == vcf_chrom
+            && enclose<pos_t>(csv_start, csv_end, vcf_start, vcf_end)) {
           spdlog::info("csv_chrom: {} csv_start: {} csv_end: {}", csv_chrom, csv_start, csv_end);
         }
       }
