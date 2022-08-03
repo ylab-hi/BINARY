@@ -58,7 +58,7 @@ namespace sv2nl {
     using result_type = std::string;
     const int data_id = SV2NL_BCF_HT_STR;
     auto get_result(char const* data, int32_t count) const -> result_type {
-      return {data, data + count};
+      return {data, data + count - 1};  // -1 to exclude the null terminator
     }
   };
 
