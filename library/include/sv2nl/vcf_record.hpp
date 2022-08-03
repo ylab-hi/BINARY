@@ -7,14 +7,16 @@
 
 #include <sv2nl/exception.hpp>
 #include <sv2nl/info_field.hpp>
+#include <sv2nl/types.hpp>
 #include <sv2nl/utils.hpp>
 
 namespace sv2nl {
+  using namespace types;
 
   class VcfRecord {
   public:
     using iterator_category = std::forward_iterator_tag;
-    using value_type = std::tuple<std::string, int64_t>;
+    using value_type = std::tuple<std::string, pos_t>;
 
     friend auto operator<<(std::ostream& os, VcfRecord const& record) -> std::ostream&;
 
@@ -40,8 +42,8 @@ namespace sv2nl {
     [[nodiscard]] auto get_record() const -> bcf1_t*;
     [[nodiscard]] auto get_header() const -> bcf_hdr_t*;
     [[nodiscard]] auto get_chrom() const -> std::string;
-    [[nodiscard]] auto get_pos() const -> int64_t;
-    [[nodiscard]] auto get_rlen() const -> int64_t;
+    [[nodiscard]] auto get_pos() const -> pos_t;
+    [[nodiscard]] auto get_rlen() const -> pos_t;
     [[nodiscard]] auto is_valid() const -> bool;
     void set_end_of_file();
 
@@ -85,8 +87,12 @@ namespace sv2nl {
     return result;
   }
 
-  auto get_info_field_int32(const std::string& key, VcfRecord const& vcf_record) -> int32_t;
+  auto get_info_field_int32(const std::string& key, VcfRecord const& vcf_record) -> pos_t;
+  auto get_info_field_int32(std::initializer_list<std::string> keys, VcfRecord const& vcf_record)
+      -> std::vector<pos_t>;
   auto get_info_field_string(const std::string& key, VcfRecord const& vcf_record) -> std::string;
+  auto get_info_field_string(std::initializer_list<std::string> keys, VcfRecord const& vcf_record)
+      -> std::vector<std::string>;
 
 }  // namespace sv2nl
 #endif  // SV2NL_LIBRARY_INCLUDE_SV2NL_VCF_RECORD_HPP_

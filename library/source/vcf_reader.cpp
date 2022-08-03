@@ -6,10 +6,6 @@
 
 namespace sv2nl {
 
-  [[maybe_unused]] auto bcf_kstring_deleter = [](kstring_t* ks) noexcept {
-    if (ks) free(ks->s);
-  };
-
   struct VcfReader::impl {
     std::string file_path_{};
     std::shared_ptr<htsFile> fp{nullptr, utils::bcf_hts_file_deleter};

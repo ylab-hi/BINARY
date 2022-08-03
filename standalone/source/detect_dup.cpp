@@ -32,7 +32,9 @@ void detect_dup(std::string const& vcf_path, std::string const& csv_path) {
   for (auto i = vcf_reader.begin(); i != vcf_reader.end(); ++i) {
     auto [vcf_chrom, vcf_start] = *i;
     auto vcf_end = sv2nl::get_info_field_int32("SVEND", i);
-    auto vcf_type = sv2nl::get_info_field_string("SVTYPE", i);
+    auto vcf_type = sv2nl::get_info_field_string("SVTYPE", i);  // use enum class
+
+    // TODO: Reconsidering copy operations of VcfReader
 
     if (vcf_start == 29927247) {
       spdlog::info("chrom: {} start: {}  end: {}  type: {}", vcf_chrom, vcf_start, vcf_end,
