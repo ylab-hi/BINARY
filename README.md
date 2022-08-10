@@ -5,7 +5,7 @@
 [![Actions Status](https://github.com/ylab-hi/BINARY/workflows/Install/badge.svg)](https://github.com/ylab-hi/BINARY/actions)
 [![codecov](https://codecov.io/gh/TheLartians/ModernCppStarter/branch/master/graph/badge.svg)](https://codecov.io/gh/ylab-hi/BINARY)
 
-# <center> **BI**oi**N**formatics **A**lgorithms lib**R**ar**Y**
+# <center> **BI**oi**N**formatics **A**lgorithms lib**R**ar**Y** aka **BINARY**
 
 ## :star: Features
 
