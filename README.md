@@ -21,8 +21,6 @@ The library is a collection of algorithms and data structures that are designed 
 bioinformatics application. You can use the library in your own projects or as a part of a larger project.
 The current project is developing and evolving, and changes will be made to the library as time goes on.
 
-Mapping Structural Variants to Non-Linear Transcripts Variants
-
 ### Algorithms
 
 The library contains algorithms for:
