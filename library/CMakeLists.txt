@@ -56,12 +56,14 @@ add_library(
   include/sv2nl/info_field.hpp
   include/sv2nl/utils.hpp
   include/sv2nl/vcf_record.hpp
+  include/sv2nl/types.hpp
+  include/sv2nl/algorithm/interval_tree.hpp
+  include/sv2nl/algorithm.hpp
   # sources
   source/vcf_reader.cpp
   source/test.cpp
   source/utils.cpp
   source/vcf_record.cpp
-  include/sv2nl/types.hpp
 )
 
 if(NOT HTSlib_FOUND)
