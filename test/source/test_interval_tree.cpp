@@ -6,35 +6,53 @@
 #include <sv2nl/algorithm.hpp>
 
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
-#include <vector>
+#include <array>
+#include <random>
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
+
+int black_height(auto const& root, auto const& nil) {
+  if (root == nil) {
+    return 0;
+  }
+
+  int temp = black_height(root->left(), nil);
+  if (temp != black_height(root->right(), nil)) {
+    throw std::invalid_argument("black height mismatch");
+  }
+
+  return static_cast<int>(root->is_black()) + temp;
+}
 
 TEST_CASE("test for red black tree") {
   using namespace sv2nl::algorithm::tree;
   RbTree<IntNode> rb_tree{};
-  std::vector<int> keys{3,  7,  10, 12, 14, 15, 16, 17, 19, 20, 29,
-                        21, 23, 26, 28, 30, 35, 38, 39, 41, 47};
+  std::array keys{3, 7, 10, 12, 14, 15, 16, 17, 19, 20, 29, 21, 23, 26, 28, 30, 35, 38, 39, 41, 47};
+
+  // TODO: test for left rotate and right rotate
+  // TODO: test for black height
 
   SUBCASE("test for inserting shareptr node") {
-    rb_tree.insert_node(std::make_shared<IntNode>(1));
-    rb_tree.insert_node(std::make_shared<IntNode>(2));
-    rb_tree.insert_node(std::make_shared<IntNode>(4));
+    for (auto k : {1, 2, 4}) {
+      rb_tree.insert_node(std::make_shared<IntNode>(k));
+    }
     CHECK_EQ(rb_tree.size(), 3);
     CHECK_EQ(rb_tree.root()->key(), 2);
+    CHECK_EQ(black_height(rb_tree.root(), rb_tree.nil()), 1);
   }
 
   SUBCASE("test for inserting arg node") {
-    rb_tree.insert_node(1);
-    rb_tree.insert_node(2);
-    rb_tree.insert_node(4);
-    CHECK_EQ(rb_tree.size(), 3);
+    for (auto k : {1, 2, 7, 4, 10}) {
+      rb_tree.insert_node(k);
+    }
+    CHECK_EQ(rb_tree.size(), 5);
     CHECK_EQ(rb_tree.root()->key(), 2);
+    CHECK_EQ(black_height(rb_tree.root(), rb_tree.nil()), 2);
   }
 
   SUBCASE("test for successor and predecessor") {
-    rb_tree.insert_node(1);
-    rb_tree.insert_node(2);
-    rb_tree.insert_node(4);
+    for (auto k : {1, 2, 4}) {
+      rb_tree.insert_node(k);
+    }
     auto root = rb_tree.root();
     auto left = root->left();
     auto right = root->right();
@@ -43,8 +61,6 @@ TEST_CASE("test for red black tree") {
     CHECK_EQ(left->parent(), root);
     CHECK_EQ(right->parent(), root);
   }
-
-  // TODO: test for left rotate and right rotate
 
   SUBCASE("test for inserting multiple nodes") {
     for (auto key : keys) {
@@ -55,14 +71,33 @@ TEST_CASE("test for red black tree") {
   }
 
   SUBCASE("test for inserting multiple nodes fuzzy case") {
-    int counter = 0;
+    int counter = 42;
     do {
       RbTree<IntNode> tree{};
       for (auto key : keys) {
         tree.insert_node(key);
       }
-      ++counter;
+      --counter;
       CHECK_EQ(tree.size(), keys.size());
-    } while (std::next_permutation(keys.begin(), keys.end()) && counter < 66);
+    } while (std::next_permutation(keys.begin(), keys.end()) && counter > 0);
+  }
+
+  SUBCASE("test for inserting random key fuzzy case") {
+    constexpr int kNum = 100;
+    int counter = 10;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(1, 1000);
+    std::array<int, kNum> random_keys{};
+
+    do {
+      std::generate(random_keys.begin(), random_keys.end(), [&]() { return dis(gen); });
+      RbTree<IntNode> tree{};
+      for (auto key : random_keys) {
+        tree.insert_node(key);
+      }
+      --counter;
+      CHECK_EQ(tree.size(), random_keys.size());
+    } while (counter > 0);
   }
 }

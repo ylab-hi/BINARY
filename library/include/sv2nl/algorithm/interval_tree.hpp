@@ -23,10 +23,11 @@ namespace sv2nl::algorithm::tree {
 
   **/
 
-  // TODO: Add Deletion  and Test
+  // TODO: Add Deletion and Test
   // TODO: Implement Interval Tree with information including chrom, pos, svtype.
   // TODO: Implement Interval Tree Query with Concurrency
   // TODO: Use concepts
+  // TODO: Conciser to use  Move shared_ptr  and Ref shared_ptr
 
   // define key constraints
   template <typename T>
