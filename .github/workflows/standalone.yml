@@ -13,6 +13,8 @@ on:
 env:
   CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
   CMAKE_VERSION: 3.18.0
+  CTEST_OUTPUT_ON_FAILURE: 1
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
 defaults:
   run:
@@ -36,7 +38,16 @@ jobs:
             cc: "gcc-10"
             build: standalone
             build_type: Release
-
+          - name: "Unit Test gcc11"
+            cxx: "g++-11"
+            cc: "gcc-11"
+            build: test
+            build_type: Release
+          - name: "Unit Test gcc10"
+            cxx: "g++-10"
+            cc: "gcc-10"
+            build: test
+            build_type: Release
 
     steps:
       - uses: actions/checkout@v2
@@ -64,10 +75,21 @@ jobs:
           env ${{ matrix.cc }} --version
 
       - name: configure
-        run: cmake -Sstandalone -Bbuild -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=${{matrix.cc}} -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
+        run: cmake -S${{matrix.build}} -Bbuild/${{matrix.build}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=${{matrix.cc}} -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
 
       - name: build
         run: cmake --build build -j4
 
       - name: run sv2nl
-        run: ./build/sv2nl -h
+        if: matrix.build == 'standalone'
+        run: ./build/${{matrix.build}}/sv2nl -h
+
+      - name: test
+        if: matrix.build == 'test'
+        run: |
+          cd build/${{matrix.build}}
+          ctest --build-config Debug
+
+      - name: collect code coverage
+        if: matrix.build == 'test'
+        run: bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
