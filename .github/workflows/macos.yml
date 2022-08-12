@@ -3,15 +3,17 @@ name: MacOS
 on:
   push:
     branches:
+      - main
       - release*
   pull_request:
     branches:
+      - main
       - release*
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
-  CMAKE_VERSION: 3.14.0
+  CMAKE_VERSION: 3.18.0
 
 jobs:
   build:
