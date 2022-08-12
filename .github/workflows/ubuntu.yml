@@ -43,7 +43,7 @@ jobs:
         run: sudo apt-get install --yes ccache
 
       - name: Install compiler
-        run: sudo apt-get install --yes $GCC_VERSION
+        run: sudo apt-get install --yes ${{env.GCC_VERSION}}
 
 
       - name: configure

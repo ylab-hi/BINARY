@@ -1,19 +1,19 @@
 cmake_minimum_required(VERSION 3.18..3.22)
 
 project(
-    binary
-    VERSION 1.0
-    LANGUAGES CXX
+  binary
+  VERSION 1.0
+  LANGUAGES CXX
 )
 
 # ---- Include guards ----
 
-if (PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   message(
-      FATAL_ERROR
+    FATAL_ERROR
       "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
   )
-endif ()
+endif()
 
 message(STATUS "Started CMake for  ${PROJECT_NAME} v${PROJECT_VERSION}...")
 message(STATUS "Compiler name: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
@@ -35,10 +35,10 @@ find_package(Threads REQUIRED)
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
 
 CPMAddPackage(
-    NAME spdlog
-    GITHUB_REPOSITORY gabime/spdlog
-    VERSION 1.10.0
-    OPTIONS "SPDLOG_INSTALL YES"
+  NAME spdlog
+  GITHUB_REPOSITORY gabime/spdlog
+  VERSION 1.10.0
+  OPTIONS "SPDLOG_INSTALL YES"
 )
 
 # ---- Add source files ----
@@ -47,42 +47,42 @@ CPMAddPackage(
 # add_library(${PROJECT_NAME} ${headers} ${sources})
 
 add_library(
-    ${PROJECT_NAME}
-    # headers
-    include/binary/csv.hpp
-    include/binary/test.hpp
-    include/binary/vcf_reader.hpp
-    include/binary/exception.hpp
-    include/binary/info_field.hpp
-    include/binary/utils.hpp
-    include/binary/vcf_record.hpp
-    include/binary/types.hpp
-    include/binary/algorithm/interval_tree.hpp
-    include/binary/algorithm.hpp
-    # sources
-    source/vcf_reader.cpp
-    source/test.cpp
-    source/utils.cpp
-    source/vcf_record.cpp
+  ${PROJECT_NAME}
+  # headers
+  include/binary/csv.hpp
+  include/binary/test.hpp
+  include/binary/vcf_reader.hpp
+  include/binary/exception.hpp
+  include/binary/info_field.hpp
+  include/binary/utils.hpp
+  include/binary/vcf_record.hpp
+  include/binary/types.hpp
+  include/binary/algorithm/interval_tree.hpp
+  include/binary/algorithm.hpp
+  # sources
+  source/vcf_reader.cpp
+  source/test.cpp
+  source/utils.cpp
+  source/vcf_record.cpp
 )
 
-if (NOT HTSlib_FOUND)
+if(NOT HTSlib_FOUND)
   add_dependencies(${PROJECT_NAME} htslib)
-endif ()
+endif()
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 # being a cross-platform target, we enforce standards conformance on MSVC
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wextra -Wnon-virtual-dtor -pedantic)
 target_link_libraries(
-    ${PROJECT_NAME}
-    PRIVATE Threads::Threads ${HTSlib_LIBRARIES}
-    PUBLIC spdlog::spdlog
+  ${PROJECT_NAME}
+  PRIVATE Threads::Threads ${HTSlib_LIBRARIES}
+  PUBLIC spdlog::spdlog
 )
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${HTSlib_INCLUDE_DIRS}>)
 
 target_include_directories(
-    ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
+  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                         $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
@@ -95,13 +95,13 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
 string(TOLOWER ${PROJECT_NAME}/version.h VERSION_HEADER_LOCATION)
 
 packageProject(
-    NAME ${PROJECT_NAME}
-    VERSION ${PROJECT_VERSION}
-    NAMESPACE ${PROJECT_NAME}
-    BINARY_DIR ${PROJECT_BINARY_DIR}
-    INCLUDE_DIR include
-    INCLUDE_DESTINATION library/include/${PROJECT_NAME}-${PROJECT_VERSION}
-    VERSION_HEADER "${VERSION_HEADER_LOCATION}"
-    COMPATIBILITY SameMajorVersion
-    DEPENDENCIES "spdlog 1.10.0;htslib 1.10.0"
+  NAME ${PROJECT_NAME}
+  VERSION ${PROJECT_VERSION}
+  NAMESPACE ${PROJECT_NAME}
+  BINARY_DIR ${PROJECT_BINARY_DIR}
+  INCLUDE_DIR include
+  INCLUDE_DESTINATION library/include/${PROJECT_NAME}-${PROJECT_VERSION}
+  VERSION_HEADER "${VERSION_HEADER_LOCATION}"
+  COMPATIBILITY SameMajorVersion
+  DEPENDENCIES "spdlog 1.10.0;htslib 1.10.0"
 )
