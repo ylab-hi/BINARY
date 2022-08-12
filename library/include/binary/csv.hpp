@@ -32,6 +32,10 @@
 #ifndef CSV_H
 #define CSV_H
 
+#ifdef __GNUG__
+#  pragma GCC diagnostic warning "-Wstringop-truncation"
+#endif
+
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
