@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14...3.22)
+cmake_minimum_required(VERSION 3.18...3.22)
 
 project(BinaryTests LANGUAGES CXX)
 
@@ -19,11 +19,11 @@ include(../cmake/CPM.cmake)
 CPMAddPackage("gh:onqtam/doctest@2.4.8")
 CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
 
-if(TEST_INSTALLED_VERSION)
+if (TEST_INSTALLED_VERSION)
   find_package(binary REQUIRED)
-else()
+else ()
   CPMAddPackage(NAME binary SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
-endif()
+endif ()
 
 # ---- Create binary ----
 
@@ -33,14 +33,14 @@ target_link_libraries(${PROJECT_NAME} doctest::doctest binary::binary)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 
 # enable compiler warnings
-if(NOT TEST_INSTALLED_VERSION)
-  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+if (NOT TEST_INSTALLED_VERSION)
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     target_compile_options(binary PUBLIC -Wall -Wpedantic -Wextra -Werror)
-  elseif(MSVC)
+  elseif (MSVC)
     target_compile_options(binary PUBLIC /W4 /WX)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DOCTEST_CONFIG_USE_STD_HEADERS)
-  endif()
-endif()
+  endif ()
+endif ()
 
 # ---- Add BinaryTests ----
 
@@ -55,7 +55,7 @@ doctest_discover_tests(${PROJECT_NAME})
 
 # ---- code coverage ----
 
-if(ENABLE_TEST_COVERAGE)
+if (ENABLE_TEST_COVERAGE)
   target_compile_options(binary PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
   target_link_options(binary PUBLIC -fprofile-arcs -ftest-coverage)
-endif()
+endif ()
