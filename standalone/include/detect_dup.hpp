@@ -5,13 +5,13 @@
 #ifndef SV2NL_STANDALONE_INCLUDE_DETECT_DUP_HPP_
 #define SV2NL_STANDALONE_INCLUDE_DETECT_DUP_HPP_
 
+#include <binary/csv.hpp>
+#include <binary/types.hpp>
+#include <binary/vcf_reader.hpp>
 #include <concepts>
-#include <sv2nl/csv.hpp>
-#include <sv2nl/types.hpp>
-#include <sv2nl/vcf_reader.hpp>
 #include <tuple>
 
-using sv2nl::types::pos_t;
+using binary::types::pos_t;
 
 auto read_csv(std::string_view file_path) -> std::vector<std::tuple<std::string, pos_t, pos_t>>;
 

@@ -1,9 +1,7 @@
 #include <spdlog/spdlog.h>
 
-#include <sv2nl/test.hpp>
-#include <sv2nl/utils.hpp>
-
-// #include <argparse/argparse.hpp>
+#include <binary/test.hpp>
+#include <binary/utils.hpp>
 #include <cxxopts.hpp>
 #include <iostream>
 #include <string>
@@ -40,7 +38,7 @@ auto main(int argc, char* argv[]) -> int {
     auto segment_path = result["segment"].as<std::string>();
     auto adjacent_path = result["adjacent"].as<std::string>();
     auto nonlinear_path = result["non-linear"].as<std::string>();
-    if (!sv2nl::utils::check_file_path({segment_path, adjacent_path, nonlinear_path})) {
+    if (!binary::utils::check_file_path({segment_path, adjacent_path, nonlinear_path})) {
       std::exit(1);
     }
     spdlog::debug("segment file path: {}", segment_path);

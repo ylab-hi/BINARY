@@ -8,7 +8,7 @@
 #include <binary/vcf_reader.hpp>
 #include <iostream>
 
-namespace sv2nl {
+namespace binary {
 
   [[maybe_unused]] void read_tsv(std::string_view file_path) {
     io::CSVReader<3, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in(
@@ -56,4 +56,4 @@ namespace sv2nl {
     }
   }
 
-}  // namespace sv2nl
+}  // namespace binary

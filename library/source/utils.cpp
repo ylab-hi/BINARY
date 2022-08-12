@@ -4,7 +4,7 @@
 
 #include <binary/utils.hpp>
 
-namespace sv2nl::utils {
+namespace binary::utils {
 
   auto check_file_path(std::initializer_list<std::string> const& file_paths) -> bool {
     for (auto const& file_path : file_paths) {
@@ -31,4 +31,4 @@ namespace sv2nl::utils {
     if (hts_file) hts_close(hts_file);
   }
 
-}  // namespace sv2nl::utils
+}  // namespace binary::utils
