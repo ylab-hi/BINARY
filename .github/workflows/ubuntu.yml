@@ -3,9 +3,11 @@ name: Ubuntu
 on:
   push:
     branches:
+      - main
       - release*
   pull_request:
     branches:
+      - main
       - release*
 
 env:
@@ -13,6 +15,7 @@ env:
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
   GCC_VERSION: 11.2.0
+  CMAKE_VERSION: 3.18.0
 
 jobs:
   build:
