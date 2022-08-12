@@ -2,8 +2,8 @@
 // Created by li002252 on 8/3/22.
 //
 
-#ifndef SV2NL_STANDALONE_INCLUDE_DETECT_DUP_HPP_
-#define SV2NL_STANDALONE_INCLUDE_DETECT_DUP_HPP_
+#ifndef BINARY_STANDALONE_INCLUDE_DETECT_DUP_HPP_
+#define BINARY_STANDALONE_INCLUDE_DETECT_DUP_HPP_
 
 #include <binary/csv.hpp>
 #include <binary/types.hpp>
@@ -27,4 +27,4 @@ template <std::integral T> auto enclose(T p1, T p2, T p3, T p4) -> bool {
 
 void detect_dup(std::string const& vcf_path, std::string const& csv_path);
 
-#endif  // SV2NL_STANDALONE_INCLUDE_DETECT_DUP_HPP_
+#endif  // BINARY_STANDALONE_INCLUDE_DETECT_DUP_HPP_

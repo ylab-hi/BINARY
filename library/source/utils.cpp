@@ -20,15 +20,10 @@ namespace binary::utils {
     return std::filesystem::exists(file_path);
   }
 
-  void bcf_record_deleter(bcf1_t* record) noexcept {
-    if (record) bcf_destroy(record);
-  };
-  void bcf_hdr_deleter(bcf_hdr_t* hdr) noexcept {
-    if (hdr) bcf_hdr_destroy(hdr);
-  };
-
-  void bcf_hts_file_deleter(htsFile* hts_file) noexcept {
-    if (hts_file) hts_close(hts_file);
-  }
+  void bcf_record_deleter(bcf1_t* record) noexcept { bcf_destroy(record); };
+  void bcf_hdr_deleter(bcf_hdr_t* hdr) noexcept { bcf_hdr_destroy(hdr); };
+  void bcf_hts_file_deleter(htsFile* hts_file) noexcept { hts_close(hts_file); }
+  void bcf_tbx_deleter(tbx_t* tbx) noexcept { tbx_destroy(tbx); }
+  void bcf_itr_deleter(hts_itr_t* itr) noexcept { hts_itr_destroy(itr); }
 
 }  // namespace binary::utils

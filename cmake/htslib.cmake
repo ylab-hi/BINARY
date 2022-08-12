@@ -18,6 +18,9 @@ else()
 
   message(STATUS "Building static htslib from source")
   message(NOTICE "Set ENV CFLAGS and CXXFLAGS if you use conda environment!")
+  message(NOTICE
+          "Set -DCMAKE_PREFIX_PATH to Conda environment prefix if you use conda environment!"
+  )
 
   set(disable_flags --disable-gcs --disable-s3 --disable-plugins)
 

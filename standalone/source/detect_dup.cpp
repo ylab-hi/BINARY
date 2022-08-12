@@ -4,7 +4,7 @@
 
 #include "detect_dup.hpp"
 
-#include "utils.hpp"
+#include "util.hpp"
 
 auto read_csv(std::string_view file_path) -> std::vector<std::tuple<std::string, pos_t, pos_t>> {
   std::vector<std::tuple<std::string, pos_t, pos_t>> ret{};
@@ -31,7 +31,7 @@ void detect_dup(std::string const& vcf_path, std::string const& csv_path) {
 
   for (auto i = vcf_reader.begin(); i != vcf_reader.end(); ++i) {
     auto [vcf_chrom, vcf_start] = *i;
-    auto vcf_end = binary ::get_info_field_int32("SVEND", i);
+    auto vcf_end = binary::get_info_field_int32("SVEND", i);
     auto vcf_type = binary::get_info_field_string("SVTYPE", i);  // use enum class
 
     // TODO: Reconsidering copy operations of VcfReader

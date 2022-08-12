@@ -72,7 +72,7 @@ endif()
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 # being a cross-platform target, we enforce standards conformance on MSVC
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wnon-virtual-dtor -pedantic)
+target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wextra -Wnon-virtual-dtor -pedantic)
 target_link_libraries(
   ${PROJECT_NAME}
   PRIVATE Threads::Threads ${HTSlib_LIBRARIES}

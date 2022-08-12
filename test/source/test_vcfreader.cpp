@@ -8,7 +8,7 @@
 TEST_CASE("testing vcf reader") {
   using namespace binary;
 
-  auto constexpr file_path = "../../test/data/debug.vcf.gz";
+  auto file_path = "../../test/data/debug.vcf.gz";
   VcfReader reader(file_path);
   CHECK_EQ(reader.is_open(), true);
   CHECK_EQ(reader.get_file_path(), file_path);

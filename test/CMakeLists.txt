@@ -28,9 +28,7 @@ endif()
 # ---- Create binary ----
 
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/*.cpp)
-add_executable(
-  ${PROJECT_NAME} source/test_interval_tree.cpp source/main.cpp source/test_vcfreader.cpp
-)
+add_executable(${PROJECT_NAME} ${sources})
 target_link_libraries(${PROJECT_NAME} doctest::doctest binary::binary)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 
@@ -44,7 +42,7 @@ if(NOT TEST_INSTALLED_VERSION)
   endif()
 endif()
 
-# ---- Add GreeterTests ----
+# ---- Add BinaryTests ----
 
 enable_testing()
 
