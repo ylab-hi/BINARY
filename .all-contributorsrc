@@ -1,0 +1,24 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "cauliyang",
+      "name": "yangliz5",
+      "avatar_url": "https://avatars.githubusercontent.com/u/38903141?v=4",
+      "profile": "https://yangyangli.top",
+      "contributions": [
+        "infra"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "BINARY",
+  "projectOwner": "ylab-hi",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}
