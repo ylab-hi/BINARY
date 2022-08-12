@@ -2,9 +2,9 @@
 // Created by li002252 on 5/19/22.
 //
 
-#include <sv2nl/vcf_reader.hpp>
+#include <binary/vcf_reader.hpp>
 
-namespace sv2nl {
+namespace binary {
 
   struct VcfReader::impl {
     std::string file_path_{};
@@ -107,4 +107,4 @@ namespace sv2nl {
   auto VcfReader::end() const -> value_type { return pimpl->end(); }
   void VcfReader::tell() { *this = VcfReader{get_file_path()}; }
 
-}  // namespace sv2nl
+}  // namespace binary

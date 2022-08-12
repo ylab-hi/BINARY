@@ -2,9 +2,9 @@
 // Created by li002252 on 8/2/22.
 //
 
-#include "sv2nl/vcf_record.hpp"
+#include <binary/vcf_record.hpp>
 
-namespace sv2nl {
+namespace binary {
 
   auto VcfRecord::get_record() const -> bcf1_t* { return record_.get(); }
   auto VcfRecord::get_header() const -> bcf_hdr_t* { return header_.get(); }
@@ -76,4 +76,4 @@ namespace sv2nl {
     return values;
   }
 
-}  // namespace sv2nl
+}  // namespace binary

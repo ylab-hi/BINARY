@@ -2,13 +2,13 @@
 // Created by li002252 on 6/11/22.
 //
 
-#ifndef SV2NL_LIBRARY_INCLUDE_SV2NL_EXCEPTION_H_
-#define SV2NL_LIBRARY_INCLUDE_SV2NL_EXCEPTION_H_
+#ifndef BINARY_LIBRARY_INCLUDE_BINARY_EXCEPTION_H_
+#define BINARY_LIBRARY_INCLUDE_BINARY_EXCEPTION_H_
 #include <stdexcept>
 #include <string>
 #include <utility>
 
-namespace sv2nl {
+namespace binary {
 
   class VcfReaderError : public std::exception {
   private:
@@ -19,6 +19,6 @@ namespace sv2nl {
     [[nodiscard]] auto what() const noexcept -> const char* override { return msg.c_str(); }
   };
 
-}  // namespace sv2nl
+}  // namespace binary
 
-#endif  // SV2NL_LIBRARY_INCLUDE_SV2NL_EXCEPTION_H_
+#endif  // BINARY_LIBRARY_INCLUDE_BINARY_EXCEPTION_H_

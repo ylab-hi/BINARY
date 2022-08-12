@@ -1,24 +1,24 @@
-#ifndef SV2NL_SRC_VCF_READER_H_
-#define SV2NL_SRC_VCF_READER_H_
+#ifndef BINARY_LIBRARY_INCLUDE_BINARY_UTLS_HPP_VCF_READER_H_
+#define BINARY_LIBRARY_INCLUDE_BINARY_UTLS_HPP_VCF_READER_H_
 #include <spdlog/fmt/bundled/core.h>
 #include <spdlog/spdlog.h>
 
+#include <binary/exception.hpp>
+#include <binary/info_field.hpp>
+#include <binary/utils.hpp>
+#include <binary/vcf_record.hpp>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
 #include <string>
-#include <sv2nl/exception.hpp>
-#include <sv2nl/info_field.hpp>
-#include <sv2nl/utils.hpp>
-#include <sv2nl/vcf_record.hpp>
 #include <tuple>
 #include <utility>
 
 #include "htslib/tbx.h"
 #include "htslib/vcf.h"
 
-namespace sv2nl {
+namespace binary {
 
   class VcfReader {
   private:
@@ -50,6 +50,6 @@ namespace sv2nl {
     auto iter_query_record() -> const_iterator;
   };
 
-}  // namespace sv2nl
+}  // namespace binary
 
-#endif
+#endif  // BINARY_LIBRARY_INCLUDE_BINARY_UTLS_HPP_VCF_READER_H_

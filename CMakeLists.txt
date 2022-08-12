@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.14...3.22)
 
 project(BuildAll LANGUAGES CXX)
-message(STATUS "Building all subprojects")
+message(STATUS "Building all subprojects for BINARY")
 include(cmake/tools.cmake)
 
 # needed to generate test target

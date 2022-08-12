@@ -3,10 +3,10 @@
 //
 #include <spdlog/spdlog.h>
 
+#include <binary/csv.hpp>
+#include <binary/test.hpp>
+#include <binary/vcf_reader.hpp>
 #include <iostream>
-#include <sv2nl/csv.hpp>
-#include <sv2nl/test.hpp>
-#include <sv2nl/vcf_reader.hpp>
 
 namespace sv2nl {
 
