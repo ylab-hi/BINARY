@@ -28,6 +28,24 @@ jobs:
           path: "**/cpm_modules"
           key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
 
+      - name: Configure APT
+        continue-on-error: true
+        run: |
+          echo 'APT::Acquire::Retries "5";' | sudo tee -a /etc/apt/apt.conf.d/80-retries > /dev/null
+          sudo add-apt-repository --no-update --yes ppa:ubuntu-toolchain-r/ppa
+          sudo add-apt-repository --no-update --yes ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+
+      #      - name: Install CMake
+      #        run: sudo apt-get install --yes cmake
+
+      - name: Install ccache
+        run: sudo apt-get install --yes ccache
+
+      - name: Install compiler
+        run: sudo apt-get install --yes $GCC_VERSION
+
+
       - name: configure
         run: cmake -Stest -Bbuild -DENABLE_TEST_COVERAGE=1 -DCMAKE_BUILD_TYPE=Debug
 
