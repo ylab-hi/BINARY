@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.14...3.22)
 
-project(Sv2nlTests LANGUAGES CXX)
+project(BinaryTests LANGUAGES CXX)
 
-message(STATUS "Building Sv2nlTests")
+message(STATUS "Building BinaryTests")
 # ---- Options ----
 
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
@@ -19,28 +19,28 @@ include(../cmake/CPM.cmake)
 CPMAddPackage("gh:onqtam/doctest@2.4.8")
 CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
 
-if(TEST_INSTALLED_VERSION)
-  find_package(Sv2nl REQUIRED)
-else()
-  CPMAddPackage(NAME Sv2nl SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
-endif()
+if (TEST_INSTALLED_VERSION)
+  find_package(binary REQUIRED)
+else ()
+  CPMAddPackage(NAME binary SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
+endif ()
 
 # ---- Create binary ----
 
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/*.cpp)
 add_executable(${PROJECT_NAME} ${sources})
-target_link_libraries(${PROJECT_NAME} doctest::doctest Sv2nl::Sv2nl)
+target_link_libraries(${PROJECT_NAME} doctest::doctest binary::binary)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 
 # enable compiler warnings
-if(NOT TEST_INSTALLED_VERSION)
-  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    target_compile_options(Sv2nl PUBLIC -Wall -Wpedantic -Wextra -Werror)
-  elseif(MSVC)
-    target_compile_options(Sv2nl PUBLIC /W4 /WX)
+if (NOT TEST_INSTALLED_VERSION)
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wpedantic -Wextra -Werror)
+  elseif (MSVC)
+    target_compile_options(${PROJECT_NAME} PUBLIC /W4 /WX)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DOCTEST_CONFIG_USE_STD_HEADERS)
-  endif()
-endif()
+  endif ()
+endif ()
 
 # ---- Add GreeterTests ----
 
@@ -55,7 +55,7 @@ doctest_discover_tests(${PROJECT_NAME})
 
 # ---- code coverage ----
 
-if(ENABLE_TEST_COVERAGE)
-  target_compile_options(Sv2nl PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
-  target_link_options(Sv2nl PUBLIC -fprofile-arcs -ftest-coverage)
-endif()
+if (ENABLE_TEST_COVERAGE)
+  target_compile_options(${PROJECT_NAME} PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
+  target_link_options(${PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage)
+endif ()

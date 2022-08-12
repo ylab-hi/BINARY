@@ -2,15 +2,15 @@
 // Created by li002252 on 8/2/22.
 //
 
-#ifndef SV2NL_LIBRARY_INCLUDE_SV2NL_VCF_RECORD_HPP_
-#define SV2NL_LIBRARY_INCLUDE_SV2NL_VCF_RECORD_HPP_
+#ifndef BINARY_LIBRARY_INCLUDE_BINARY_VCF_RECORD_HPP_
+#define BINARY_LIBRARY_INCLUDE_BINARY_VCF_RECORD_HPP_
 
-#include <sv2nl/exception.hpp>
-#include <sv2nl/info_field.hpp>
-#include <sv2nl/types.hpp>
-#include <sv2nl/utils.hpp>
+#include <binary/exception.hpp>
+#include <binary/info_field.hpp>
+#include <binary/types.hpp>
+#include <binary/utils.hpp>
 
-namespace sv2nl {
+namespace binary {
   using namespace types;
 
   class VcfRecord {
@@ -22,7 +22,7 @@ namespace sv2nl {
 
     template <typename DataType>
     friend auto get_info_field(const std::string& key, VcfRecord const& vcf_record) ->
-        typename sv2nl::InfoField<DataType>::result_type;
+        typename binary::InfoField<DataType>::result_type;
 
     VcfRecord() = default;
     explicit VcfRecord(std::shared_ptr<htsFile> file)
@@ -94,5 +94,5 @@ namespace sv2nl {
   auto get_info_field_string(std::initializer_list<std::string> keys, VcfRecord const& vcf_record)
       -> std::vector<std::string>;
 
-}  // namespace sv2nl
-#endif  // SV2NL_LIBRARY_INCLUDE_SV2NL_VCF_RECORD_HPP_
+}  // namespace binary
+#endif  // BINARY_LIBRARY_INCLUDE_BINARY_VCF_RECORD_HPP_

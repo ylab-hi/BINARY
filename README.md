@@ -9,16 +9,18 @@
 
 ## :star: Features
 
-- Follows C++20 standard
+- Embrace C++20 standard
 - Supports modern C++ features
-- Support Concurrency
-- High performance
-- Safety and security
+- Support concurrency and thread safety
+- Safety, security and clean Over performance
+- Hard to use wrongly
+- Testing extensively
+- Python bindings
 
 ## Library Introduction
 
-The library is a collection of algorithms and data structures that are designed to be used in a modern C++
-bioinformatics application. You can use the library in your own projects or as a part of a larger project.
+The library is a collection of algorithms and data structures that are designed for modern C++
+bioinformatics applications. You can use the library in your own projects or as a part of a larger project.
 The current project is developing and evolving, and changes will be made to the library as time goes on.
 
 ### Algorithms
@@ -29,7 +31,7 @@ The library contains algorithms for:
 - VcfParser
 - More to come
 
-### Applications
+### Tools
 
 The library contains applications for:
 
@@ -136,5 +138,8 @@ Ccache can be enabled by configuring with `-DUSE_CCACHE=<ON | OFF>`.
 
 ## Acknowledgements
 
-- https://github.com/TheLartians/ModernCppStarter
 - https://github.com/samtools/htslib/blob/develop/htslib
+- https://github.com/doctest/doctest
+- https://github.com/jarro2783/cxxopts
+- https://github.com/gabime/spdlog
+- https://github.com/TheLartians/ModernCppStarter
