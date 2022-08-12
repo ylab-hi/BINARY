@@ -32,7 +32,7 @@ endif()
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/*.cpp)
 add_executable(${PROJECT_NAME} ${sources})
 target_link_libraries(${PROJECT_NAME} doctest::doctest binary::binary)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 # enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)
