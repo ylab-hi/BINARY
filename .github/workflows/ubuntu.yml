@@ -14,7 +14,6 @@ env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
-  GCC_VERSION: 11.2.0
   CMAKE_VERSION: 3.18.0
 
 jobs:
@@ -36,14 +35,12 @@ jobs:
           sudo add-apt-repository --no-update --yes ppa:ubuntu-toolchain-r/test
           sudo apt-get update
 
-      #      - name: Install CMake
-      #        run: sudo apt-get install --yes cmake
 
       - name: Install ccache
         run: sudo apt-get install --yes ccache
 
       - name: Install compiler
-        run: sudo apt-get install --yes ${{env.GCC_VERSION}}
+        run: sudo apt-get install --yes g++-10
 
 
       - name: configure
