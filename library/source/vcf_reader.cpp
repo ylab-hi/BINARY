@@ -13,9 +13,9 @@ namespace binary {
     VcfRecord end_record{};
 
     // late load
-    std::unique_ptr<tbx_t, decltype(utils::bcf_tbx_deleter)> idx{nullptr, utils::bcf_tbx_deleter};
-    std::unique_ptr<hts_itr_t, decltype(utils::bcf_itr_deleter)> itr_ptr{nullptr,
-                                                                         utils::bcf_itr_deleter};
+    std::unique_ptr<tbx_t, decltype(&utils::bcf_tbx_deleter)> idx{nullptr, &utils::bcf_tbx_deleter};
+    std::unique_ptr<hts_itr_t, decltype(&utils::bcf_itr_deleter)> itr_ptr{nullptr,
+                                                                          &utils::bcf_itr_deleter};
     kstring_t ks{};
 
     explicit impl(std::string file_path)

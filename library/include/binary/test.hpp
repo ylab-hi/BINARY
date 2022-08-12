@@ -4,9 +4,9 @@
 
 #ifndef BINARY_INCLUDE_BINARY_TEST_H_
 #define BINARY_INCLUDE_BINARY_TEST_H_
-#include <string>
+#include <htslib/vcf.h>
 
-#include "htslib/vcf.h"
+#include <string>
 
 namespace binary {
 

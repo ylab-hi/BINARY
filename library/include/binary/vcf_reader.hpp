@@ -1,11 +1,12 @@
-#ifndef BINARY_LIBRARY_INCLUDE_BINARY_UTLS_HPP_VCF_READER_H_
-#define BINARY_LIBRARY_INCLUDE_BINARY_UTLS_HPP_VCF_READER_H_
+#ifndef BINARY_LIBRARY_INCLUDE_BINARY_VCF_READER_H_
+#define BINARY_LIBRARY_INCLUDE_BINARY_VCF_READER_H_
+#include <htslib/tbx.h>
+#include <htslib/vcf.h>
 #include <spdlog/fmt/bundled/core.h>
 #include <spdlog/spdlog.h>
 
 #include <binary/exception.hpp>
 #include <binary/info_field.hpp>
-#include <binary/utils.hpp>
 #include <binary/vcf_record.hpp>
 #include <functional>
 #include <iostream>
@@ -14,9 +15,6 @@
 #include <string>
 #include <tuple>
 #include <utility>
-
-#include "htslib/tbx.h"
-#include "htslib/vcf.h"
 
 namespace binary {
 
@@ -52,4 +50,4 @@ namespace binary {
 
 }  // namespace binary
 
-#endif  // BINARY_LIBRARY_INCLUDE_BINARY_UTLS_HPP_VCF_READER_H_
+#endif  // BINARY_LIBRARY_INCLUDE_BINARY_VCF_READER_H_

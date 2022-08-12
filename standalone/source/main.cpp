@@ -1,6 +1,5 @@
 #include <spdlog/spdlog.h>
 
-#include <binary/test.hpp>
 #include <binary/utils.hpp>
 #include <cxxopts.hpp>
 #include <iostream>
