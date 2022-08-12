@@ -46,6 +46,7 @@ namespace binary {
       throw VcfReaderError("VcfRecord from differ files cannot be compared");
     return lhs.record_ == rhs.record_;
   }
+
   void VcfRecord::set_end_of_file() { record_ = nullptr; }
 
   auto get_info_field_int32(const std::string& key, VcfRecord const& vcf_record) -> pos_t {
