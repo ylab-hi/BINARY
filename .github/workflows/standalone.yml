@@ -78,7 +78,7 @@ jobs:
         run: cmake -S${{matrix.build}} -Bbuild/${{matrix.build}} -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=${{matrix.cc}} -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
 
       - name: build
-        run: cmake --build build -j4
+        run: cmake --build build/${{matrix.build}} -j4
 
       - name: run sv2nl
         if: matrix.build == 'standalone'
