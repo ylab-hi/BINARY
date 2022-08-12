@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.14..3.22)
 
 project(
-    BinaryStandalone
-    VERSION 1.0
-    LANGUAGES CXX
+  BinaryStandalone
+  VERSION 1.0
+  LANGUAGES CXX
 )
 # SET(CMAKE_CXX_STANDARD 20)
 message(STATUS "Building BinaryStandalone")
@@ -19,9 +19,9 @@ include(../cmake/functions.cmake)
 # CPMAddPackage("gh:p-ranav/argparse@2.4") the install option has to be explicitly set to allow
 # installation
 CPMAddPackage(
-    GITHUB_REPOSITORY jarro2783/cxxopts
-    VERSION 3.0.0
-    OPTIONS "CXXOPTS_BUILD_EXAMPLES NO" "CXXOPTS_BUILD_TESTS NO" "CXXOPTS_ENABLE_INSTALL YES"
+  GITHUB_REPOSITORY jarro2783/cxxopts
+  VERSION 3.0.0
+  OPTIONS "CXXOPTS_BUILD_EXAMPLES NO" "CXXOPTS_BUILD_TESTS NO" "CXXOPTS_ENABLE_INSTALL YES"
 )
 
 CPMAddPackage(NAME binary SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
@@ -30,8 +30,8 @@ find_package(spdlog REQUIRED)
 # ---- Create standalone executable ----
 
 add_executable(
-    ${PROJECT_NAME} source/main.cpp source/detect_dup.cpp include/detect_dup.hpp source/utils.cpp
-    include/utils.hpp
+  ${PROJECT_NAME} source/main.cpp source/detect_dup.cpp include/detect_dup.hpp source/utils.cpp
+                  include/utils.hpp
 )
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "sv2nl")

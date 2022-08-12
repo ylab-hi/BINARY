@@ -3,10 +3,10 @@
 //
 #include <doctest/doctest.h>
 
-#include <sv2nl/vcf_reader.hpp>
+#include <binary/vcf_reader.hpp>
 
 TEST_CASE("testing vcf reader") {
-  using namespace sv2nl;
+  using namespace binary;
 
   auto constexpr file_path = "../../test/data/debug.vcf.gz";
   VcfReader reader(file_path);

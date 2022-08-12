@@ -19,28 +19,30 @@ include(../cmake/CPM.cmake)
 CPMAddPackage("gh:onqtam/doctest@2.4.8")
 CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
 
-if (TEST_INSTALLED_VERSION)
+if(TEST_INSTALLED_VERSION)
   find_package(binary REQUIRED)
-else ()
+else()
   CPMAddPackage(NAME binary SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
-endif ()
+endif()
 
 # ---- Create binary ----
 
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/*.cpp)
-add_executable(${PROJECT_NAME} ${sources})
+add_executable(
+  ${PROJECT_NAME} source/test_interval_tree.cpp source/main.cpp source/test_vcfreader.cpp
+)
 target_link_libraries(${PROJECT_NAME} doctest::doctest binary::binary)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 
 # enable compiler warnings
-if (NOT TEST_INSTALLED_VERSION)
-  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wpedantic -Wextra -Werror)
-  elseif (MSVC)
-    target_compile_options(${PROJECT_NAME} PUBLIC /W4 /WX)
+if(NOT TEST_INSTALLED_VERSION)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    target_compile_options(binary PUBLIC -Wall -Wpedantic -Wextra -Werror)
+  elseif(MSVC)
+    target_compile_options(binary PUBLIC /W4 /WX)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DOCTEST_CONFIG_USE_STD_HEADERS)
-  endif ()
-endif ()
+  endif()
+endif()
 
 # ---- Add GreeterTests ----
 
@@ -55,7 +57,7 @@ doctest_discover_tests(${PROJECT_NAME})
 
 # ---- code coverage ----
 
-if (ENABLE_TEST_COVERAGE)
-  target_compile_options(${PROJECT_NAME} PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
-  target_link_options(${PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage)
-endif ()
+if(ENABLE_TEST_COVERAGE)
+  target_compile_options(binary PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
+  target_link_options(binary PUBLIC -fprofile-arcs -ftest-coverage)
+endif()
