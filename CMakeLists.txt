@@ -12,4 +12,4 @@ enable_testing()
 
 add_subdirectory(standalone ${CMAKE_BINARY_DIR}/standalone)
 add_subdirectory(test ${CMAKE_BINARY_DIR}/test)
-add_subdirectory(documentation ${CMAKE_BINARY_DIR}/documentation)
+#add_subdirectory(documentation ${CMAKE_BINARY_DIR}/documentation)
