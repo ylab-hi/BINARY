@@ -28,7 +28,7 @@ jobs:
       - name: Build
         run: |
           cmake -Sdocumentation -Bbuild
-          cmake --build build --target GenerateDocs
+          cmake --build build --target BinaryDocs
 
       - name: Publish
         uses: peaceiris/actions-gh-pages@v3

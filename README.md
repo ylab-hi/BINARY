@@ -54,7 +54,7 @@ cmake --build build/test
 CTEST_OUTPUT_ON_FAILURE=1 cmake --build build/test --target test
 
 # or simply call the executable:
-./build/test/Sv2nlTests
+./build/test/BinaryTests
 ```
 
 To collect code coverage information, run CMake with the `-DENABLE_TEST_COVERAGE=1` option.
@@ -85,7 +85,7 @@ To manually build documentation, call the following command.
 
 ```bash
 cmake -S documentation -B build/doc
-cmake --build build/doc --target Sv2nlDocs
+cmake --build build/doc --target BinaryDocs
 # view the docs
 open build/doc/doxygen/html/index.html
 ```
@@ -102,13 +102,13 @@ cmake -S . -B build
 cmake --build build
 
 # run tests
-./build/test/Sv2nlTests
+./build/test/BinaryTests
 # format code
 cmake --build build --target fix-format
 # run standalone
-./build/standalone/Greeter --help
+./build/standalone/sv2nl --help
 # build docs
-cmake --build build --target Sv2nlDocs
+cmake --build build --target BinaryDocs
 ```
 
 ### Additional tools

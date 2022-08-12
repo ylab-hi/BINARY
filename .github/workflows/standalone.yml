@@ -3,12 +3,10 @@ name: Standalone
 on:
   push:
     branches:
-      - master
       - main
       - release*
   pull_request:
     branches:
-      - master
       - main
 
 env:
@@ -32,11 +30,11 @@ jobs:
             cc: "gcc-11"
             build: standalone
             build_type: Release
-          - name: "standalone gcc10"
-            cxx: "g++-10"
-            cc: "gcc-10"
-            build: standalone
-            build_type: Release
+    #          - name: "standalone gcc10"
+    #            cxx: "g++-10"
+    #            cc: "gcc-10"
+    #            build: standalone
+    #            build_type: Release
 
 
     steps:
