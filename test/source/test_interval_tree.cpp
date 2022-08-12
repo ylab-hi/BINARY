@@ -3,7 +3,7 @@
 //
 #include <doctest/doctest.h>
 
-#include <sv2nl/algorithm.hpp>
+#include <binary/algorithm.hpp>
 
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <random>
@@ -24,7 +24,7 @@ int black_height(auto const& root, auto const& nil) {
 
 TEST_SUITE("algorithm") {
   TEST_CASE("test for red black tree") {
-    using namespace sv2nl::algorithm::tree;
+    using namespace binary::algorithm::tree;
     RbTree<IntNode> rb_tree{};
     std::array keys{3,  7,  10, 12, 14, 15, 16, 17, 19, 20, 29,
                     21, 23, 26, 28, 30, 35, 38, 39, 41, 47};
