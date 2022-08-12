@@ -93,7 +93,7 @@ jobs:
         if: matrix.build == 'test'
         run: |
           cd build/${{matrix.build}}
-          ctest --build-config Debug
+          ctest --build-config ${{matrix.build_type}}
 
       - name: collect code coverage
         if: matrix.build == 'test'
