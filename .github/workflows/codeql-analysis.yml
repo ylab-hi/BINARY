@@ -33,8 +33,7 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'cpp' ]
-        cxx: 'g++-10'
-        cc: 'gcc-10'
+
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
@@ -51,8 +50,9 @@ jobs:
           sudo apt-get update
 
 
-      - name: Install compiler ${{ matrix.cxx }}
-        run: sudo apt-get install --yes ${{ matrix.cxx }}
+
+      - name: Install compiler
+        run: sudo apt-get install --yes g++-10
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
@@ -71,8 +71,8 @@ jobs:
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
         env:
-          CXX: ${{ matrix.cxx }}
-          CC: ${{ matrix.cc }}
+          CXX: g++-10
+          CC: gcc-10
         uses: github/codeql-action/autobuild@v2
 
       # ℹ️ Command-line programs to run using the OS shell.
