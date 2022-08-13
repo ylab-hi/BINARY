@@ -48,6 +48,16 @@ jobs:
             cc: "gcc-10"
             build: test
             build_type: Release
+          - name: "Unit Test clang13"
+            cxx: "clang++-13"
+            cc: "clang-13"
+            build: test
+            build_type: Release
+          - name: "standalone clang13"
+            cxx: "clang++-13"
+            cc: "clang-13"
+            build: standalone
+            build_type: Release
 
     steps:
       - uses: actions/checkout@v2
@@ -96,5 +106,5 @@ jobs:
           ctest --build-config ${{matrix.build_type}}
 
       - name: collect code coverage
-        if: matrix.build == 'test'
+        if: matrix.build == 'test' && matrix.build_type == 'Debug'
         run: bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"

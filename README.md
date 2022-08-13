@@ -3,6 +3,7 @@
 [![Ubuntu](https://github.com/ylab-hi/BINARY/actions/workflows/linux.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/linux.yml)
 [![Style](https://github.com/ylab-hi/BINARY/actions/workflows/style.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/style.yml)
 [![codecov](https://codecov.io/gh/ylab-hi/BINARY/branch/main/graph/badge.svg?token=RWC5iqNPVi)](https://codecov.io/gh/ylab-hi/BINARY)
+[![CodeQL](https://github.com/ylab-hi/BINARY/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/codeql-analysis.yml)
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat?logoWidth=80)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
