@@ -39,8 +39,7 @@ if(NOT TEST_INSTALLED_VERSION)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     target_compile_options(
       binary PUBLIC -Wall -Wpedantic -Wextra # -Werror
-      # $<$<CXX_COMPILER_ID:Clang>:>
-      # $<$<CXX_COMPILER_ID:GNU>:>
+                    $<$<CXX_COMPILER_ID:Clang>:-std=libc++> # $<$<CXX_COMPILER_ID:GNU>:>
     )
   elseif(MSVC)
     target_compile_options(binary PUBLIC /W4 /WX)
