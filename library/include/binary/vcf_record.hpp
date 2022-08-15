@@ -11,6 +11,7 @@
 #include <binary/utils.hpp>
 
 namespace binary {
+
   using namespace types;
 
   class VcfRecord {

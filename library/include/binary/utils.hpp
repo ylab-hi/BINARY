@@ -20,13 +20,7 @@ namespace binary::utils {
   void bcf_hts_file_deleter(htsFile* hts_file) noexcept;
   void bcf_tbx_deleter(tbx_t* tbx) noexcept;
   void bcf_itr_deleter(hts_itr_t* itr) noexcept;
-
-  //  const auto bcf_tbx_deleter = [](tbx_t* tbx) noexcept {
-  //    if (tbx) tbx_destroy(tbx);
-  //  };
-  //  const auto bcf_itr_deleter = [](hts_itr_t* itr) noexcept {
-  //    if (itr) hts_itr_destroy(itr);
-  //  };
+  void bcf_kstring_deleter(kstring_t* kstring) noexcept;
 
 }  // namespace binary::utils
 
