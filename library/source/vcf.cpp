@@ -37,6 +37,7 @@ namespace binary::parser {
 
   void VcfRecord::set_eof() { record_.reset(); }
   auto VcfRecord::fp() const -> htsFile* { return fp_.lock().get(); }
+  auto VcfRecord::operator*() const -> std::tuple<std::string, pos_t> { return {chrom(), pos()}; }
 
   /**
    * @brief VcfReader constructor
@@ -110,7 +111,10 @@ namespace binary::parser {
     return iter_query_record();
   }
 
-  void VcfReader::seek() const { current_ = iterator{fp}; }
+  void VcfReader::seek() const {
+    fp.reset(hts_open(file_path_.c_str(), "r"), utils::bcf_hts_file_deleter);
+    current_ = iterator{fp};
+  }
 
   auto operator==(const VcfReader& lhs, const VcfReader& rhs) -> bool {
     if (lhs.file_path_ != rhs.file_path_) return false;

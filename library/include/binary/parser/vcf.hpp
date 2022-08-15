@@ -11,7 +11,7 @@
 
 #include <binary/exception.hpp>
 #include <binary/info_field.hpp>
-#include <binary/vcf_record.hpp>
+#include <binary/utils.hpp>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -47,6 +47,8 @@ namespace binary::parser {
     void set_eof();
 
     // overload operators
+    auto operator*() const -> std::tuple<std::string, pos_t>;
+
     friend auto operator==(VcfRecord const& lhs, VcfRecord const& rhs) -> bool;
     friend auto operator<<(std::ostream& os, VcfRecord const& record) -> std::ostream&;
 
@@ -115,7 +117,7 @@ namespace binary::parser {
     auto check_query(const std::string& chrom) -> int;
 
     std::string file_path_{};
-    std::shared_ptr<htsFile> fp{nullptr, utils::bcf_hts_file_deleter};
+    mutable std::shared_ptr<htsFile> fp{nullptr, utils::bcf_hts_file_deleter};
 
     mutable iterator current_{};
     iterator sentinel_{};

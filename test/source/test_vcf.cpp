@@ -60,5 +60,9 @@ TEST_CASE("testing vcf.hpp") {
   SUBCASE("test std algorithm usage") {
     std::for_each(reader.begin(), reader.end(),
                   [](auto& record) { spdlog::info("chrom: {}", record.chrom()); });
+
+    spdlog::info("number of chr10 {}",
+                 std::count_if(reader.begin(), reader.end(),
+                               [](auto& record) { return record.chrom() == "chr10"; }));
   }
 }

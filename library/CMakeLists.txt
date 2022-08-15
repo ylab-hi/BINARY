@@ -51,11 +51,9 @@ add_library(
   # headers
   include/binary/csv.hpp
   include/binary/test.hpp
-  include/binary/vcf_reader.hpp
   include/binary/exception.hpp
   include/binary/info_field.hpp
   include/binary/utils.hpp
-  include/binary/vcf_record.hpp
   include/binary/types.hpp
   include/binary/algorithm/interval_tree.hpp
   include/binary/algorithm.hpp
