@@ -80,8 +80,7 @@ namespace binary::parser {
   }
 
   auto VcfReader::iter_query_record() -> VcfReader::iterator& {
-    int ret = tbx_itr_next(fp.get(), idx.get(), itr_ptr.get(), ks_ptr.get());
-    if (ret < -1) {
+    if (int ret = tbx_itr_next(fp.get(), idx.get(), itr_ptr.get(), ks_ptr.get()); ret < -1) {
       throw VcfReaderError("Query-> Failed to query ");
     } else if (ret == -1) {
       return sentinel_;
@@ -143,8 +142,7 @@ namespace binary::parser {
 
   auto VcfReader::iterator::operator*() -> VcfReader::iterator::value_type& { return value_; }
   auto VcfReader::iterator::operator++() -> VcfReader::iterator& {
-    int ret = bcf_read(value_.fp(), value_.header(), value_.record());
-    if (ret < -1) {
+    if (int ret = bcf_read(value_.fp(), value_.header(), value_.record()); ret < -1) {
       throw VcfReaderError("Failed to read line in vcf ");
     } else if (ret == -1) {
       value_.set_eof();
@@ -179,4 +177,6 @@ namespace binary::parser {
 
     return values;
   }
+
+  namespace experimental {}  // namespace experimental
 }  // namespace binary::parser

@@ -29,12 +29,6 @@ namespace binary::parser {
     VcfRecord() = default;
     explicit VcfRecord(std::shared_ptr<htsFile> const& file);
 
-    // copy constructor and assignment operator
-    VcfRecord(VcfRecord const& other) = default;
-    auto operator=(VcfRecord const&) -> VcfRecord& = default;
-    VcfRecord(VcfRecord&&) noexcept = default;
-    auto operator=(VcfRecord&&) noexcept -> VcfRecord& = default;
-
     [[maybe_unused]] void check_header() const;  // will throw if header is not set
     // WARNING: all functions are unchecked for header pay attentions
     [[nodiscard]] auto fp() const -> htsFile*;
@@ -162,6 +156,197 @@ namespace binary::parser {
   auto get_info_field_string(const std::string& key, VcfRecord const& vcf_record) -> std::string;
   auto get_info_field_string(std::initializer_list<std::string> keys, VcfRecord const& vcf_record)
       -> std::vector<std::string>;
+
+  namespace experimental {
+    template <typename DataType = VcfRecord> class VcfRanges {
+    public:
+      explicit VcfRanges(std::string file_path);
+
+      VcfRanges(VcfRanges const&) = delete;
+      auto operator=(VcfRanges const&) -> VcfRanges& = delete;
+      VcfRanges(VcfRanges&&) noexcept = default;
+      auto operator=(VcfRanges&&) noexcept -> VcfRanges& = default;
+
+      class iterator {
+      public:
+        friend class VcfRanges;
+        using iterator_concept = std::forward_iterator_tag;
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = std::remove_cv_t<DataType>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const DataType*;
+        using reference = const DataType&;
+
+        // constructors
+        iterator() = default;
+        explicit iterator(std::shared_ptr<htsFile> const& file);
+        explicit iterator(value_type value) : value_{std::move(value)} {}
+
+        // public member functions
+        auto operator*() const -> value_type { return value_; }
+        auto operator++() -> iterator& {
+          if (int ret = bcf_read(value_.fp(), value_.header(), value_.record()); ret < -1) {
+            throw VcfReaderError("Failed to read line in vcf ");
+          } else if (ret == -1) {
+            value_.set_eof();
+          }
+          return *this;
+        }
+
+        // old and new iterator will change at same time
+        auto operator++(int) -> iterator {
+          auto copy = *this;
+          ++(*this);
+          return copy;
+        }
+
+        friend auto operator==(iterator const& lhs, iterator const& rhs) -> bool = default;
+
+      private:
+        value_type value_{};
+      };
+
+      [[nodiscard]] auto file_path() const -> const std::string&;
+      [[nodiscard]] auto is_open() const -> bool;
+      [[nodiscard]] auto has_index() const -> bool;
+
+      auto iter_query_record() -> VcfRanges::iterator&;
+      auto query(std::string const& chrom, pos_t start, pos_t end) -> VcfRanges::iterator&;
+
+      auto begin() -> iterator&;
+      auto end() -> iterator&;
+      auto begin() const -> iterator const&;
+      auto end() const -> iterator const&;
+
+      friend auto operator==(VcfRanges const& lhs, VcfRanges const& rhs) -> bool {
+        if (lhs.file_path_ != rhs.file_path_) return false;
+        if (lhs.fp != rhs.fp) return false;
+        return true;
+      }
+
+    private:
+      void seek() const;
+      auto check_query(const std::string& chrom) -> int;
+
+      std::string file_path_{};
+      mutable std::shared_ptr<htsFile> fp{nullptr, utils::bcf_hts_file_deleter};
+
+      mutable iterator current_{};
+      iterator sentinel_{};
+      std::unique_ptr<tbx_t, decltype(&utils::bcf_tbx_deleter)> idx{nullptr,
+                                                                    &utils::bcf_tbx_deleter};
+      std::unique_ptr<hts_itr_t, decltype(&utils::bcf_itr_deleter)> itr_ptr{
+          nullptr, &utils::bcf_itr_deleter};
+      std::unique_ptr<kstring_t, decltype(&utils::bcf_kstring_deleter)> ks_ptr{
+          new kstring_t{}, &utils::bcf_kstring_deleter};
+    };
+    template <typename DataType> VcfRanges<DataType>::VcfRanges(std::string file_path)
+        : file_path_(std::move(file_path)),
+          fp{hts_open(file_path_.c_str(), "r"), utils::bcf_hts_file_deleter} {}
+
+    /**
+     * @brief  get file path of the vcf file
+     * @return  vcf file path
+     */
+    template <typename DataType> auto VcfRanges<DataType>::file_path() const -> const std::string& {
+      return file_path_;
+    }
+
+    /**
+     * @brief  check if the vcf file is open
+     * @return  vcf file header
+     */
+    template <typename DataType> auto VcfRanges<DataType>::is_open() const -> bool {
+      return fp != nullptr;
+    }
+
+    /**
+     * @brief check if the vcf file has index
+     * @return bool
+     */
+    template <typename DataType> auto VcfRanges<DataType>::has_index() const -> bool {
+      return idx != nullptr;
+    }
+
+    template <typename DataType> auto VcfRanges<DataType>::check_query(const std::string& chrom)
+        -> int {
+      if (!has_index()) {
+        idx.reset(tbx_index_load(file_path_.c_str()));
+        if (!idx) {
+          throw VcfReaderError("Failed to load index for " + file_path_);
+        }
+      }
+
+      if (bcf_hdr_name2id(current_.value_.header(), chrom.c_str()) < 0) {
+        throw VcfReaderError(chrom + " is not in the vcf file " + file_path_);
+      }
+      auto tid = tbx_name2id(idx.get(), chrom.c_str());
+      assert(tid > 0);
+      return tid;
+    }
+
+    template <typename DataType> auto VcfRanges<DataType>::iter_query_record()
+        -> VcfRanges::iterator& {
+      if (int ret = tbx_itr_next(fp.get(), idx.get(), itr_ptr.get(), ks_ptr.get()); ret < -1) {
+        throw VcfReaderError("Query-> Failed to query ");
+      } else if (ret == -1) {
+        return sentinel_;
+      }
+      // no problem
+      vcf_parse1(ks_ptr.get(), current_.value_.header(), current_.value_.record());
+      return current_;
+    }
+
+    /**
+     * @brief  query the vcf file if has index
+     * @param chrom chromosome name
+     * @param start start position
+     * @param end end position
+     * @return vcf record
+     */
+    template <typename DataType>
+    auto VcfRanges<DataType>::query(std::string const& chrom, pos_t start, pos_t end)
+        -> VcfRanges::iterator& {
+      seek();  // seek to the first record and initialize the iterator
+
+      auto tid = check_query(chrom);  // may throw error
+      itr_ptr.reset(tbx_itr_queryi(idx.get(), tid, start, end));
+
+      if (!itr_ptr) {
+        throw VcfReaderError("Query-> Failed to query " + chrom + ":" + std::to_string(start) + "-"
+                             + std::to_string(end));
+      }
+      return iter_query_record();
+    }
+
+    template <typename DataType> void VcfRanges<DataType>::seek() const {
+      fp.reset(hts_open(file_path_.c_str(), "r"), utils::bcf_hts_file_deleter);
+      current_ = iterator{fp};
+    }
+
+    template <typename DataType> auto VcfRanges<DataType>::begin() -> VcfRanges::iterator& {
+      seek();
+      return ++current_;
+    }
+
+    template <typename DataType> auto VcfRanges<DataType>::begin() const
+        -> const VcfRanges::iterator& {
+      seek();
+      return ++current_;
+    }
+
+    template <typename DataType> auto VcfRanges<DataType>::end() -> VcfRanges::iterator& {
+      return sentinel_;
+    }
+    template <typename DataType> auto VcfRanges<DataType>::end() const
+        -> const VcfRanges::iterator& {
+      return sentinel_;
+    }
+
+    template <typename DataType>
+    VcfRanges<DataType>::iterator::iterator(const std::shared_ptr<htsFile>& file) : value_{file} {}
+
+  }  // namespace experimental
 
 }  // namespace binary::parser
 #endif  // BUILDALL_LIBRARY_INCLUDE_BINARY_PARSER_VCF_HPP_

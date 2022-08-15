@@ -10,6 +10,7 @@
 
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <algorithm>
+#include <ranges>
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
 TEST_CASE("testing vcf.hpp") {
@@ -64,5 +65,32 @@ TEST_CASE("testing vcf.hpp") {
     spdlog::info("number of chr10 {}",
                  std::count_if(reader.begin(), reader.end(),
                                [](auto& record) { return record.chrom() == "chr10"; }));
+  }
+}
+
+TEST_CASE("test c++20 vcf ") {
+  using namespace binary::parser::experimental;
+  constexpr const char* file_path = "../../test/data/debug.vcf.gz";
+  VcfRanges const reader(file_path);
+  CHECK_EQ(reader.is_open(), true);
+  CHECK_EQ(reader.file_path(), file_path);
+
+  SUBCASE("test standard algorithm") {
+    std::for_each(reader.begin(), reader.end(),
+                  [](auto const& record) { spdlog::info("chrom: {}", record.chrom()); });
+
+    spdlog::info("number of chr10 {}",
+                 std::count_if(reader.begin(), reader.end(),
+                               [](auto const& record) { return record.chrom() == "chr10"; }));
+  }
+
+  SUBCASE("test range and view") {
+    static_assert(std::forward_iterator<VcfRanges<binary::parser::VcfRecord>::iterator>);
+
+    for (auto record : reader | std::views::filter([](auto const& record) {
+                         return record.chrom() == "chr10";
+                       })) {
+      spdlog::info("chrom: {}", record.chrom());
+    }
   }
 }
