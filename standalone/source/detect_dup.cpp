@@ -23,18 +23,18 @@ auto read_csv(std::string_view file_path) -> std::vector<std::tuple<std::string,
 }
 
 void detect_dup(std::string const& vcf_path, std::string const& csv_path) {
-  auto vcf_reader = binary::VcfReader{vcf_path};
+  using namespace binary::parser;
+  auto vcf_reader = VcfReader{vcf_path};
 
   auto csv_result = read_csv(csv_path);
 
   assert(vcf_reader.is_open());
 
-  for (auto i = vcf_reader.begin(); i != vcf_reader.end(); ++i) {
+  for (auto const& i : vcf_reader) {
     auto [vcf_chrom, vcf_start] = *i;
-    auto vcf_end = binary::get_info_field_int32("SVEND", i);
-    auto vcf_type = binary::get_info_field_string("SVTYPE", i);  // use enum class
+    auto vcf_end = get_info_field_int32("SVEND", i);
+    auto vcf_type = get_info_field_string("SVTYPE", i);  // use enum class
 
-    // TODO: Reconsidering copy operations of VcfReader
     // TODO: Using enum class for SVTYPE
     // TODO: USing enum class for CHROM
 

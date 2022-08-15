@@ -6,8 +6,8 @@
 #define BINARY_STANDALONE_INCLUDE_DETECT_DUP_HPP_
 
 #include <binary/csv.hpp>
+#include <binary/parser/vcf.hpp>
 #include <binary/types.hpp>
-#include <binary/vcf_reader.hpp>
 #include <concepts>
 #include <tuple>
 
