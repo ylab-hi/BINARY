@@ -25,12 +25,9 @@ namespace binary::utils {
   void bcf_hts_file_deleter(htsFile* hts_file) noexcept { hts_close(hts_file); }
   void bcf_tbx_deleter(tbx_t* tbx) noexcept { tbx_destroy(tbx); }
   void bcf_itr_deleter(hts_itr_t* itr) noexcept { hts_itr_destroy(itr); }
-<<<<<<< HEAD
-=======
   void bcf_kstring_deleter(kstring_t* kstring) noexcept {
     free(kstring->s);
     delete kstring;
   }
->>>>>>> develop
 
 }  // namespace binary::utils
