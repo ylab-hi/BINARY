@@ -29,7 +29,6 @@ namespace binary::algorithm::tree {
   // TODO: Add Deletion and Test
   // TODO: Implement Interval Tree with information including chrom, pos, svtype.
   // TODO: Implement Interval Tree Query with Concurrency
-  // TODO: Use concepts
   // TODO: Consider to use  Move shared_ptr  and Ref shared_ptr OR std::unique_ptr
   // TODO: constexpr constructor
 
@@ -49,13 +48,13 @@ namespace binary::algorithm::tree {
       using raw_pointer = BaseNode *;
 
     public:
-      BaseNode() = default;
+      constexpr BaseNode() = default;
       BaseNode(BaseNode &&other) noexcept = default;
       auto operator=(BaseNode &&other) noexcept -> BaseNode & = default;
 
-      explicit BaseNode(key_type value) : key{value} {}
-      explicit BaseNode(Color color) : color_{color} {}
-      BaseNode(key_type value, Color color) : key{value}, color_{color} {}
+      explicit constexpr BaseNode(key_type value) : key{value} {}
+      explicit constexpr BaseNode(Color color) : color_{color} {}
+      constexpr BaseNode(key_type value, Color color) : key{value}, color_{color} {}
 
       virtual ~BaseNode() = default;
 
@@ -84,11 +83,11 @@ namespace binary::algorithm::tree {
       using reference_pointer = typename NodeType::reference_pointer;
       using raw_pointer = typename NodeType::raw_pointer;
 
-      RbTree() = default;
+      constexpr RbTree() = default;
 
       template <std::ranges::input_range R>
       requires std::constructible_from<NodeType, std::ranges::range_value_t<R>>
-      explicit RbTree(R &&range) {
+      explicit constexpr RbTree(R &&range) {
         for (auto &&item : range) {
           insert_node(std::forward<decltype(item)>(item));
         }
@@ -338,7 +337,7 @@ namespace binary::algorithm::tree {
       using BaseNode::raw_pointer;
       using BaseNode::reference_pointer;
 
-      IntNode() = default;
+      constexpr IntNode() = default;
       using BaseNode::BaseNode;
 
       IntNode(IntNode &&other) noexcept = default;
