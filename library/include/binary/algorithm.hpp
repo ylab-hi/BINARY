@@ -1,9 +1,0 @@
-//
-// Created by li002252 on 8/10/22.
-//
-
-#ifndef BINARY_LIBRARY_INCLUDE_BINARY_ALGORITHM_HPP_
-#define BINARY_LIBRARY_INCLUDE_BINARY_ALGORITHM_HPP_
-#include <binary/algorithm/interval_tree.hpp>
-
-#endif  // BINARY_LIBRARY_INCLUDE_BINARY_ALGORITHM_HPP_

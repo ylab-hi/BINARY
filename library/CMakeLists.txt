@@ -52,18 +52,18 @@ add_library(
   include/binary/csv.hpp
   include/binary/test.hpp
   include/binary/exception.hpp
-  include/binary/info_field.hpp
+  include/binary/parser/info_field.hpp
   include/binary/utils.hpp
   include/binary/types.hpp
   include/binary/algorithm/interval_tree.hpp
-  include/binary/algorithm.hpp
+  include/binary/concepts.hpp
+  include/binary/parser/vcf.hpp
+  include/binary/algorithm/all.hpp
+  include/binary/parser/all.hpp
   # sources
   source/test.cpp
   source/utils.cpp
-  include/binary/concepts.hpp
   source/vcf.cpp
-  include/binary/parser/vcf.hpp
-  include/binary/parser.hpp
 )
 
 if(NOT HTSlib_FOUND)

@@ -10,7 +10,7 @@
 #include <spdlog/spdlog.h>
 
 #include <binary/exception.hpp>
-#include <binary/info_field.hpp>
+#include <binary/parser/info_field.hpp>
 #include <binary/utils.hpp>
 #include <functional>
 #include <iostream>

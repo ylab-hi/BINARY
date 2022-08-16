@@ -4,7 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include <binary/csv.hpp>
-#include <binary/parser.hpp>
+#include <binary/parser/all.hpp>
 #include <binary/test.hpp>
 #include <iostream>
 

@@ -1,8 +1,0 @@
-//
-// Created by li002252 on 8/13/22.
-//
-
-#ifndef BUILDALL_LIBRARY_INCLUDE_BINARY_PARSER_HPP_
-#define BUILDALL_LIBRARY_INCLUDE_BINARY_PARSER_HPP_
-#include <binary/parser/vcf.hpp>
-#endif  // BUILDALL_LIBRARY_INCLUDE_BINARY_PARSER_HPP_

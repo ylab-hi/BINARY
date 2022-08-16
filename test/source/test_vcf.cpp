@@ -6,7 +6,7 @@
 //
 #include <doctest/doctest.h>
 
-#include <binary/parser.hpp>
+#include <binary/parser/all.hpp>
 
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <algorithm>
