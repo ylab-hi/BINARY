@@ -48,16 +48,27 @@ jobs:
             cc: "gcc-10"
             build: test
             build_type: Release
-          - name: "Unit Test clang13"
-            cxx: "clang++-14"
-            cc: "clang-14"
+          - name: "Unit Test gcc12"
+            cxx: "g++-12"
+            cc: "gcc-12"
+            build: test
+            build_type: Debug
+          - name: "Unit Test gcc12"
+            cxx: "g++-12"
+            cc: "gcc-12"
             build: test
             build_type: Release
-          - name: "standalone clang13"
-            cxx: "clang++-14"
-            cc: "clang-14"
-            build: standalone
-            build_type: Release
+
+    #          - name: "Unit Test clang13"
+    #            cxx: "clang++-14"
+    #            cc: "clang-14"
+    #            build: test
+    #            build_type: Release
+    #          - name: "standalone clang13"
+    #            cxx: "clang++-14"
+    #            cc: "clang-14"
+    #            build: standalone
+    #            build_type: Release
 
     steps:
       - uses: actions/checkout@v2
