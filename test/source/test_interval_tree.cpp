@@ -25,8 +25,8 @@ int black_height(auto const& root, auto const& nil) {
 }
 
 TEST_SUITE("algorithm") {
-  TEST_CASE("test for red black tree") {
-    using namespace binary::algorithm::tree;
+  TEST_CASE("test shared ptr for red black tree") {
+    using namespace binary::algorithm::tree::v1_shared_ptr;
     RbTree<IntNode> rb_tree{};
     std::array<int, 21> keys{3,  7,  10, 12, 14, 15, 16, 17, 19, 20, 29,
                              21, 23, 26, 28, 30, 35, 38, 39, 41, 47};
@@ -120,8 +120,6 @@ TEST_SUITE("algorithm") {
 
   TEST_CASE("test unique ptr black red tree") {
     using namespace binary::algorithm::tree;
-    using v2_unique_ptr::IntNode;
-    using v2_unique_ptr::RbTree;
     IntNode int_node1{2};
     IntNode int_node2{4};
     IntNode int_node3{std::move(int_node1)};

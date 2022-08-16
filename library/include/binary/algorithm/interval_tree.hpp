@@ -31,14 +31,14 @@ namespace binary::algorithm::tree {
   // TODO: Consider to use  Move shared_ptr  and Ref shared_ptr OR std::unique_ptr
   // TODO: constexpr constructor
 
-  inline namespace v1_shared_ptr {
+  namespace v1_shared_ptr {
     // define key constraints
     template <typename T>
-    concept key_concepts = std::totally_ordered<T> && std::default_initializable<T>;
+    concept KeyConcept = std::totally_ordered<T> && std::default_initializable<T>;
 
     enum class Color { Red, Black };
 
-    template <key_concepts Key> class BaseNode {
+    template <KeyConcept Key> class BaseNode {
     protected:
       using key_type = Key;
       using pointer_type = std::shared_ptr<BaseNode>;
@@ -303,26 +303,10 @@ namespace binary::algorithm::tree {
       }
     };
 
-    class IntervalNode : public BaseNode<std::uint32_t> {
-    public:
-      using BaseNode::pointer_type;
-
-      IntervalNode() = default;
-      IntervalNode(key_type min, key_type max) : BaseNode(min), min_{min}, max_{max} {}
-
-    private:
-      key_type min_{};
-      key_type max_{};
-
-      // add chrom and other information
-      // TODO: Consider how to change these information with key
-    };
-
   }  // namespace v1_shared_ptr
 
   // WARNING: this is not a complete implementation of a red-black tree.
-
-  namespace v2_unique_ptr {
+  inline namespace v2_unique_ptr {
     // define key constraints
     template <typename T>
     concept KeyConcept = std::totally_ordered<T> && std::default_initializable<T>;
@@ -394,7 +378,6 @@ namespace binary::algorithm::tree {
     // NodeType must can default initialize and copyable
     template <NodeConcept NodeType> class RbTree {
     public:
-      using node_type = NodeType;
       using pointer = typename NodeType::pointer;
       using reference_pointer = typename NodeType::reference_pointer;
       using raw_pointer = typename NodeType::raw_pointer;
@@ -422,20 +405,19 @@ namespace binary::algorithm::tree {
 
       void inorder_walk(raw_pointer node) const;
 
-      // inorder walk from root_
-      void inorder_walk() const;
-
       // Ownership transfer
       void insert_node(pointer node);
 
       template <typename... Args>
-      requires std::constructible_from<node_type, Args...>
+      requires std::constructible_from<NodeType, Args...>
       void insert_node(Args &&...args) {
-        insert_node(std::make_unique<node_type>(std::forward<Args>(args)...));
+        insert_node(std::make_unique<NodeType>(std::forward<Args>(args)...));
       }
 
     private:
       // Use reference pointer as smart pointer will be reset
+      [[nodiscard]] bool check_is_red(raw_pointer node) const;
+      void release_reset(reference_pointer to, raw_pointer source = nullptr) const;
       void left_rotate(raw_pointer node);
       void right_rotate(raw_pointer node);
       void fix_insert(raw_pointer node);
@@ -536,16 +518,13 @@ namespace binary::algorithm::tree {
       }
 
       y->parent = node->parent;
-
       if (node->parent == nullptr) {
-        root_.release();  // release old root
-        root_.reset(y);
+        // release old root and reset new root
+        release_reset(root_, y);
       } else if (node == node->parent->leftr()) {
-        node->parent->left.release();
-        node->parent->left.reset(y);
+        release_reset(node->parent->left, y);
       } else {
-        node->parent->right.release();
-        node->parent->right.reset(y);
+        release_reset(node->parent->right, y);
       }
 
       y->right.reset(node);
@@ -553,10 +532,10 @@ namespace binary::algorithm::tree {
     }
 
     template <NodeConcept NodeType> void RbTree<NodeType>::fix_insert(raw_pointer node) {
-      while (node->parent != nullptr && node->parent->is_red()) {
+      while (check_is_red(node->parent)) {
         if (node->parent == node->parent->parent->leftr()) {
           raw_pointer y = node->parent->parent->rightr();
-          if (y != nullptr && y->is_red()) {
+          if (check_is_red(y)) {
             // case 1
             node->parent->set_color(Color::Black);
             y->set_color(Color::Black);
@@ -575,7 +554,7 @@ namespace binary::algorithm::tree {
           }
         } else {
           raw_pointer y = node->parent->parent->leftr();
-          if (y != nullptr && y->is_red()) {
+          if (check_is_red(y)) {
             node->parent->set_color(Color::Black);
             y->set_color(Color::Black);
             node->parent->parent->set_color(Color::Red);
@@ -636,6 +615,19 @@ namespace binary::algorithm::tree {
     }
     template <NodeConcept NodeType> auto RbTree<NodeType>::root() const -> raw_pointer {
       return root_.get();
+    }
+
+    template <NodeConcept NodeType> bool RbTree<NodeType>::check_is_red(raw_pointer node) const {
+      if (node != nullptr && node->is_red()) {
+        return true;
+      }
+      return false;
+    }
+
+    template <NodeConcept NodeType>
+    void RbTree<NodeType>::release_reset(reference_pointer to, raw_pointer source) const {
+      to.release();
+      to.reset(source);
     }
 
     class IntNode : public BaseNode<int> {

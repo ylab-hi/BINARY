@@ -241,6 +241,7 @@ namespace binary::parser {
       std::unique_ptr<kstring_t, decltype(&utils::bcf_kstring_deleter)> ks_ptr{
           new kstring_t{}, &utils::bcf_kstring_deleter};
     };
+
     template <typename DataType> VcfRanges<DataType>::VcfRanges(std::string file_path)
         : file_path_(std::move(file_path)),
           fp{hts_open(file_path_.c_str(), "r"), utils::bcf_hts_file_deleter} {}
