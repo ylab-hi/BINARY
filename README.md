@@ -1,5 +1,3 @@
-[![MacOS](https://github.com/ylab-hi/BINARY/actions/workflows/macos.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/macos.yml)
-[![Windows](https://github.com/ylab-hi/BINARY/actions/workflows/windows.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/windows.yml)
 [![Ubuntu](https://github.com/ylab-hi/BINARY/actions/workflows/linux.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/linux.yml)
 [![Style](https://github.com/ylab-hi/BINARY/actions/workflows/style.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/style.yml)
 [![codecov](https://codecov.io/gh/ylab-hi/BINARY/branch/main/graph/badge.svg?token=RWC5iqNPVi)](https://codecov.io/gh/ylab-hi/BINARY)

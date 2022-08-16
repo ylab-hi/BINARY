@@ -6,6 +6,7 @@
 #include <binary/algorithm.hpp>
 
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
+#include <algorithm>
 #include <random>
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
@@ -26,8 +27,8 @@ TEST_SUITE("algorithm") {
   TEST_CASE("test for red black tree") {
     using namespace binary::algorithm::tree;
     RbTree<IntNode> rb_tree{};
-    std::array keys{3,  7,  10, 12, 14, 15, 16, 17, 19, 20, 29,
-                    21, 23, 26, 28, 30, 35, 38, 39, 41, 47};
+    std::array<int, 21> keys{3,  7,  10, 12, 14, 15, 16, 17, 19, 20, 29,
+                             21, 23, 26, 28, 30, 35, 38, 39, 41, 47};
 
     SUBCASE("test for inserting shareptr node") {
       for (auto k : {1, 2, 4}) {
