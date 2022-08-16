@@ -22,6 +22,16 @@ namespace binary::utils {
   void bcf_itr_deleter(hts_itr_t* itr) noexcept;
   void bcf_kstring_deleter(kstring_t* kstring) noexcept;
 
+  /**
+   * @brief print the values of a tuple
+   * @tparam T the type of the tuple
+   * @param tup the tuple to print
+   */
+  template <typename... T> constexpr void print_tuple(const std::tuple<T...>& tup) {
+    (void)std::initializer_list<int>{
+        (spdlog::debug("std::tuple values {} ", std::get<T>(tup)), 0)...};
+  }
+
 }  // namespace binary::utils
 
 #endif  // BINARY_LIBRARY_INCLUDE_BINARY_UTLS_HPP_

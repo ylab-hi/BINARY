@@ -87,7 +87,7 @@ namespace binary::algorithm::tree {
 
       template <std::ranges::input_range R>
       requires std::constructible_from<NodeType, std::ranges::range_value_t<R>>
-      explicit constexpr RbTree(R &&range) {
+      void insert_node(R &&range) {
         for (auto &&item : range) {
           insert_node(std::forward<decltype(item)>(item));
         }

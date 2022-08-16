@@ -207,7 +207,8 @@ TEST_SUITE("algorithm") {
 
     SUBCASE("test range constructor from args") {
       std::vector<int> vkeys{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-      RbTree<IntNode> tree{vkeys};
+      RbTree<IntNode> tree{};
+      tree.insert_node(vkeys);
     }
   }
 }
