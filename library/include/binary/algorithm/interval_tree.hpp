@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <ranges>
 namespace binary::algorithm::tree {
 
   /** Red Black Tree
@@ -30,7 +31,7 @@ namespace binary::algorithm::tree {
   // TODO: Consider to use  Move shared_ptr  and Ref shared_ptr OR std::unique_ptr
   // TODO: constexpr constructor
 
-  inline namespace v1 {
+  inline namespace v1_shared_ptr {
     // define key constraints
     template <typename T>
     concept key_concepts = std::totally_ordered<T> && std::default_initializable<T>;
@@ -286,11 +287,42 @@ namespace binary::algorithm::tree {
       return size(root_);
     }
 
-  }  // namespace v1
+    class IntNode : public BaseNode<int> {
+    public:
+      using BaseNode::pointer_type;
+
+      IntNode() = default;
+      using BaseNode::BaseNode;
+
+      ~IntNode() override = default;
+
+      auto operator<=>(IntNode const &other) const { return key_ <=> other.key_; }
+      // to meet equality_comparable
+      friend bool operator==(IntNode const &lhs, IntNode const &rhs) {
+        return lhs.key_ == rhs.key_;
+      }
+    };
+
+    class IntervalNode : public BaseNode<std::uint32_t> {
+    public:
+      using BaseNode::pointer_type;
+
+      IntervalNode() = default;
+      IntervalNode(key_type min, key_type max) : BaseNode(min), min_{min}, max_{max} {}
+
+    private:
+      key_type min_{};
+      key_type max_{};
+
+      // add chrom and other information
+      // TODO: Consider how to change these information with key
+    };
+
+  }  // namespace v1_shared_ptr
 
   // WARNING: this is not a complete implementation of a red-black tree.
 
-  namespace v2 {
+  namespace v2_unique_ptr {
     // define key constraints
     template <typename T>
     concept KeyConcept = std::totally_ordered<T> && std::default_initializable<T>;
@@ -309,6 +341,19 @@ namespace binary::algorithm::tree {
 
     public:
       BaseNode() = default;
+      BaseNode(BaseNode &&other) noexcept
+          : key_{std::move(other.key_)},
+            color_{std::move(other.color_)},
+            left{std::move(other.left)},
+            right{std::move(other.right)},
+            parent{other.parent} {
+        other.parent = nullptr;
+        other.left = nullptr;
+        other.right = nullptr;
+      }
+
+      auto operator=(BaseNode &&other) noexcept -> BaseNode &;
+
       explicit BaseNode(key_type key) : key_{key} {}
       explicit BaseNode(Color color) : color_{color} {}
       BaseNode(key_type key, Color color) : key_{key}, color_{color} {}
@@ -323,15 +368,31 @@ namespace binary::algorithm::tree {
       // All return raw pointers in order to make api consistent
       [[nodiscard]] auto leftr() const -> raw_pointer { return left.get(); }
       [[nodiscard]] auto rightr() const -> raw_pointer { return right.get(); }
-      [[nodiscard]] auto partentr() const -> raw_pointer { return parent; }
 
       pointer left{nullptr};
       pointer right{nullptr};
       raw_pointer parent{nullptr};
     };
 
+    template <KeyConcept Key> auto BaseNode<Key>::operator=(BaseNode &&other) noexcept
+        -> BaseNode & {
+      key_ = std::move(other.key_);
+      color_ = std::move(other.color_);
+      left = std::move(other.left);
+      right = std::move(other.right);
+      parent = other.parent;
+      other, parent = nullptr;
+      other.left = nullptr;
+      other.right = nullptr;
+
+      return *this;
+    }
+
+    template <typename T>
+    concept NodeConcept = std::movable<T> && std::default_initializable<T>;
+
     // NodeType must can default initialize and copyable
-    template <std::regular NodeType> class RbTree {
+    template <NodeConcept NodeType> class RbTree {
     public:
       using node_type = NodeType;
       using pointer = typename NodeType::pointer;
@@ -340,8 +401,17 @@ namespace binary::algorithm::tree {
 
       RbTree() = default;
 
+      template <std::ranges::input_range R>
+      requires std::constructible_from<NodeType, std::ranges::range_value_t<R>>
+      explicit RbTree(R &&range) {
+        for (auto &&item : range) {
+          insert_node(std::forward<decltype(item)>(item));
+        }
+      }
+
       [[nodiscard]] auto size(raw_pointer node) const -> size_t;
       [[nodiscard]] auto size() const -> size_t;
+      [[nodiscard]] auto root() const -> raw_pointer;
 
       // WARNING: Return raw pointer do not delete that!
       [[nodiscard]] auto minimum(raw_pointer node) const -> raw_pointer;
@@ -366,22 +436,22 @@ namespace binary::algorithm::tree {
 
     private:
       // Use reference pointer as smart pointer will be reset
-      void left_rotate(reference_pointer node);
-      void right_rotate(reference_pointer node);
-      void fix_insert(reference_pointer node);
+      void left_rotate(raw_pointer node);
+      void right_rotate(raw_pointer node);
+      void fix_insert(raw_pointer node);
 
-      void insert_node_impl(pointer node);
+      void insert_node_impl(raw_pointer node);
 
     public:
-      pointer root{nullptr};
+      pointer root_{nullptr};
     };
 
-    template <std::regular NodeType> auto RbTree<NodeType>::size(raw_pointer node) const -> size_t {
+    template <NodeConcept NodeType> auto RbTree<NodeType>::size(raw_pointer node) const -> size_t {
       if (node == nullptr) return 0;
       return 1 + size(node->leftr()) + size(node->rightr());
     }
 
-    template <std::regular NodeType> auto RbTree<NodeType>::minimum(raw_pointer node) const
+    template <NodeConcept NodeType> auto RbTree<NodeType>::minimum(raw_pointer node) const
         -> raw_pointer {
       while (node->left != nullptr) {
         node = node->leftr();
@@ -389,7 +459,7 @@ namespace binary::algorithm::tree {
       return node;
     }
 
-    template <std::regular NodeType> auto RbTree<NodeType>::maximum(raw_pointer node) const
+    template <NodeConcept NodeType> auto RbTree<NodeType>::maximum(raw_pointer node) const
         -> raw_pointer {
       while (node->right != nullptr) {
         node = node->rightr();
@@ -397,195 +467,217 @@ namespace binary::algorithm::tree {
       return node;
     }
 
-    template <std::regular NodeType> auto RbTree<NodeType>::successor(raw_pointer node) const
+    template <NodeConcept NodeType> auto RbTree<NodeType>::successor(raw_pointer node) const
         -> raw_pointer {
       if (node->right != nullptr) {
         return minimum(node->rightr());
       }
 
-      auto *temp = node->parentr();  // return raw pointer
+      auto *temp = node->parent;  // return raw pointer
 
       while (temp != nullptr && temp->rightr() == node) {
         // use move
         node = temp;
-        temp = temp->parentr();
+        temp = temp->parent;
       }
 
       return temp;
     }
 
-    template <std::regular NodeType> auto RbTree<NodeType>::predecessor(raw_pointer node) const
+    template <NodeConcept NodeType> auto RbTree<NodeType>::predecessor(raw_pointer node) const
         -> raw_pointer {
       if (node->left != nullptr) {
         return maximum(node->leftr());
       }
 
-      auto *temp = node->parentr();
+      auto *temp = node->parent;
 
       while (temp != nullptr && temp->leftr() == node) {
         node = temp;
-        temp = temp->parentr();
+        temp = temp->parent;
       }
 
       return temp;
     }
 
-    //    template <std::regular NodeType> void RbTree<NodeType>::left_rotate(reference_pointer
-    //    node) {
-    //      reference_pointer y = node->right;  // cannot be nil
-    //      assert(y != nullptr);
-    //      node->set_right(y->left());
-    //      if (y->left() != nullptr) {
-    //        y->left()->set_parent(node);
-    //      }
-    //      y->set_parent(node->parent());
-    //      if (node->parent() == nullptr) {
-    //        root = y;
-    //      } else if (node == node->parent()->left()) {
-    //        node->parent()->set_left(y);
-    //      } else {
-    //        node->parent()->set_right(y);
-    //      }
-    //      y->set_left(node);
-    //      node->set_parent(y);
-    //    }
-
-    template <std::regular NodeType> void RbTree<NodeType>::left_rotate(reference_pointer node) {
-      raw_pointer y = node->right.release();
-      raw_pointer x = node.release();
+    template <NodeConcept NodeType> void RbTree<NodeType>::left_rotate(raw_pointer node) {
+      raw_pointer y = node->right.release();  // cannot be nil
       assert(y != nullptr);
-      x->right.reset(y->left.release());
-      if (x->right != nullptr) {
-        x->right->parent = x;
+      node->right.reset(y->left.release());
+
+      if (node->right != nullptr) {
+        node->right->parent = node;
       }
-      node.reset(y);  // do not need to set parent again
-      node->left.reset(x);
+
+      y->parent = node->parent;
+
+      if (node->parent == nullptr) {
+        root_.release();  // release old root
+        root_.reset(y);
+      } else if (node == node->parent->leftr()) {
+        node->parent->left.release();  // release old pointer do not delete
+        node->parent->left.reset(y);
+      } else {
+        node->parent->right.release();
+        node->parent->right.reset(y);
+      }
+
+      y->left.reset(node);
+      node->parent = y;
     }
 
-    template <std::regular NodeType> void RbTree<NodeType>::right_rotate(reference_pointer node) {
-      raw_pointer y = node->left.release();
-      raw_pointer x = node.release();
+    template <NodeConcept NodeType> void RbTree<NodeType>::right_rotate(raw_pointer node) {
+      auto y = node->left.release();
       assert(y != nullptr);
-      x->left.reset(y->right.release());
-      if (x->left != nullptr) {
-        x->left->parent = x;
+      node->left.reset(y->right.release());
+
+      if (node->left != nullptr) {
+        node->left->parent = node;
       }
-      node.reset(y);
-      node->right.reset(x);
+
+      y->parent = node->parent;
+
+      if (node->parent == nullptr) {
+        root_.release();  // release old root
+        root_.reset(y);
+      } else if (node == node->parent->leftr()) {
+        node->parent->left.release();
+        node->parent->left.reset(y);
+      } else {
+        node->parent->right.release();
+        node->parent->right.reset(y);
+      }
+
+      y->right.reset(node);
+      node->parent = y;
     }
 
-    template <std::regular NodeType> void RbTree<NodeType>::fix_insert(reference_pointer node) {
-      while (node->parent->is_red()) {
-        if (node->parentr() == node->parentr()->parentr()->leftr()) {
-          raw_pointer y = node->parentr()->parentr()->rightr();
-          if (y->is_red()) {
+    template <NodeConcept NodeType> void RbTree<NodeType>::fix_insert(raw_pointer node) {
+      while (node->parent != nullptr && node->parent->is_red()) {
+        if (node->parent == node->parent->parent->leftr()) {
+          raw_pointer y = node->parent->parent->rightr();
+          if (y != nullptr && y->is_red()) {
             // case 1
-            node->parentr()->set_color(Color::Black);
+            node->parent->set_color(Color::Black);
             y->set_color(Color::Black);
-            node->parentr()->parentr()->set_color(Color::Red);
-            node = node->parentr()->parentr();
+            node->parent->parent->set_color(Color::Red);
+            node = node->parent->parent;
           } else {
-            if (node == node->parentr()->rightr()) {
+            if (node == node->parent->rightr()) {
               // case 2
-              node = node->parentr();
+              node = node->parent;
               left_rotate(node);
             }
             // case 3
-            node->parent()->set_color(Color::Black);
-            node->parent()->parent()->set_color(Color::Red);
-            right_rotate(node->parent()->parent());
+            node->parent->set_color(Color::Black);
+            node->parent->parent->set_color(Color::Red);
+            right_rotate(node->parent->parent);
           }
         } else {
-          pointer y = node->parent()->parent()->left();
-          if (y->is_red()) {
-            node->parent()->set_color(Color::Black);
+          raw_pointer y = node->parent->parent->leftr();
+          if (y != nullptr && y->is_red()) {
+            node->parent->set_color(Color::Black);
             y->set_color(Color::Black);
-            node->parent()->parent()->set_color(Color::Red);
-            node = node->parent()->parent();
+            node->parent->parent->set_color(Color::Red);
+            node = node->parent->parent;
           } else {
-            if (node == node->parent()->left()) {
-              node = node->parent();
+            if (node == node->parent->leftr()) {
+              node = node->parent;
               right_rotate(node);
             }
-            node->parent()->set_color(Color::Black);
-            node->parent()->parent()->set_color(Color::Red);
-            left_rotate(node->parent()->parent());
+            node->parent->set_color(Color::Black);
+            node->parent->parent->set_color(Color::Red);
+            left_rotate(node->parent->parent);
           }
         }
       }
-      root->set_color(Color::Black);
+      root_->set_color(Color::Black);
     }
 
-    template <std::regular NodeType> void RbTree<NodeType>::insert_node_impl(pointer node) {
-      pointer x = root;
-      pointer y = nullptr;
+    template <NodeConcept NodeType> void RbTree<NodeType>::insert_node_impl(raw_pointer node) {
+      raw_pointer x = root_.get();
+      raw_pointer y = nullptr;
+
       while (x != nullptr) {
         y = x;
         if (node->key() < x->key()) {
-          x = x->left();
+          x = x->leftr();
         } else {
-          x = x->right();
+          x = x->rightr();
         }
       }
-      node->set_parent(y);
+
+      node->parent = y;
       if (y == nullptr) {
-        root = node;
+        root_.reset(node);
       } else if (node->key() < y->key()) {
-        y->set_left(node);
+        y->left.reset(node);
       } else {
-        y->set_right(node);
+        y->right.reset(node);
       }
-      node->set_left(nullptr);
-      node->set_right(nullptr);
+
       node->set_color(Color::Red);
       fix_insert(node);
     }
 
-    template <std::regular NodeType> void RbTree<NodeType>::insert_node(pointer node) {
-      insert_node_impl(std::move(node));
+    template <NodeConcept NodeType> void RbTree<NodeType>::insert_node(pointer node) {
+      insert_node_impl(node.release());
     }
 
-    template <std::regular NodeType> void RbTree<NodeType>::inorder_walk(raw_pointer node) const {
+    template <NodeConcept NodeType> void RbTree<NodeType>::inorder_walk(raw_pointer node) const {
       if (node != nullptr) {
-        inorder_walk(node->left());
+        inorder_walk(node->leftr());
         std::cout << node->key() << ' ' << node->is_black() << '\n';
-        inorder_walk(node->right());
+        inorder_walk(node->rightr());
       }
     }
-    template <std::regular NodeType> auto RbTree<NodeType>::size() const -> size_t {
-      return size(root);
+    template <NodeConcept NodeType> auto RbTree<NodeType>::size() const -> size_t {
+      return size(root_.get());
+    }
+    template <NodeConcept NodeType> auto RbTree<NodeType>::root() const -> raw_pointer {
+      return root_.get();
     }
 
-  }  // namespace v2
+    class IntNode : public BaseNode<int> {
+    public:
+      using BaseNode::pointer;
+      using BaseNode::raw_pointer;
+      using BaseNode::reference_pointer;
 
-  class IntNode : public BaseNode<int> {
-  public:
-    using BaseNode::pointer_type;
+      IntNode() = default;
+      using BaseNode::BaseNode;
 
-    IntNode() = default;
-    using BaseNode::BaseNode;
+      IntNode(IntNode &&other) noexcept = default;
+      IntNode &operator=(IntNode &&other) noexcept = default;
 
-    ~IntNode() override = default;
+      ~IntNode() override = default;
 
-    auto operator<=>(IntNode const &other) const { return key_ <=> other.key_; }
-    // to meet equality_comparable
-    friend bool operator==(IntNode const &lhs, IntNode const &rhs) { return lhs.key_ == rhs.key_; }
-  };
+      auto operator<=>(IntNode const &other) const { return key_ <=> other.key_; }
+      // to meet equality_comparable
+      friend bool operator==(IntNode const &lhs, IntNode const &rhs) {
+        return lhs.key_ == rhs.key_;
+      }
+    };
 
-  class IntervalNode : public BaseNode<std::uint32_t> {
-  public:
-    using BaseNode::pointer_type;
+    class IntervalNode : public BaseNode<std::uint32_t> {
+    public:
+      using BaseNode::pointer;
+      using BaseNode::raw_pointer;
+      using BaseNode::reference_pointer;
 
-    IntervalNode() = default;
-    IntervalNode(key_type min, key_type max) : BaseNode(min), min_{min}, max_{max} {}
+      IntervalNode() = default;
+      IntervalNode(IntervalNode &&other) noexcept = default;
+      IntervalNode &operator=(IntervalNode &&other) noexcept = default;
+      IntervalNode(key_type min, key_type max) : BaseNode(min), min_{min}, max_{max} {}
 
-  private:
-    [[maybe_unused]] key_type min_{};
-    [[maybe_unused]] key_type max_{};
+    private:
+      key_type min_{};
+      key_type max_{};
 
-    // add chrom and other information
-    // TODO: Consider how to change these information with key
-  };
+      // add chrom and other information
+      // TODO: Consider how to change these information with key
+    };
+  }  // namespace v2_unique_ptr
 
 }  // namespace binary::algorithm::tree
 

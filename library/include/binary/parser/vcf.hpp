@@ -25,27 +25,27 @@ namespace binary::parser {
   // TODO: create a impl to hold vcf record data in every iterator
 
   using namespace types;
-  class [[deprecated("VcfRecord is changing to VcfRanges")]] VcfRecord {
+  class VcfRecord {
   public:
     VcfRecord() = default;
     explicit VcfRecord(std::shared_ptr<htsFile> const& file);
 
     [[maybe_unused]] void check_header() const;  // will throw if header is not set
     // WARNING: all functions are unchecked for header pay attentions
-    [[nodiscard]] auto fp() const->htsFile*;
-    [[nodiscard]] auto record() const->bcf1_t*;
-    [[nodiscard]] auto header() const->bcf_hdr_t*;
-    [[nodiscard]] auto chrom() const->std::string;
-    [[nodiscard]] auto pos() const->pos_t;
-    [[nodiscard]] auto rlen() const->pos_t;
-    [[nodiscard]] auto is_valid() const->bool;
+    [[nodiscard]] auto fp() const -> htsFile*;
+    [[nodiscard]] auto record() const -> bcf1_t*;
+    [[nodiscard]] auto header() const -> bcf_hdr_t*;
+    [[nodiscard]] auto chrom() const -> std::string;
+    [[nodiscard]] auto pos() const -> pos_t;
+    [[nodiscard]] auto rlen() const -> pos_t;
+    [[nodiscard]] auto is_valid() const -> bool;
     void set_eof();
 
     // overload operators
-    auto operator*() const->std::tuple<std::string, pos_t>;
+    auto operator*() const -> std::tuple<std::string, pos_t>;
 
-    friend auto operator==(VcfRecord const& lhs, VcfRecord const& rhs)->bool;
-    friend auto operator<<(std::ostream& os, VcfRecord const& record)->std::ostream&;
+    friend auto operator==(VcfRecord const& lhs, VcfRecord const& rhs) -> bool;
+    friend auto operator<<(std::ostream& os, VcfRecord const& record) -> std::ostream&;
 
   private:
     std::weak_ptr<htsFile> fp_{};  // may become weak pointer
