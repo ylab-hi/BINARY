@@ -137,7 +137,7 @@ TEST_SUITE("algorithm") {
         rb_tree.insert_node(std::make_unique<IntNode>(k));
       }
       CHECK_EQ(rb_tree.size(), 3);
-      CHECK_EQ(rb_tree.root()->key(), 2);
+      CHECK_EQ(rb_tree.root()->key, 2);
       CHECK_EQ(black_height2(rb_tree.root()), 1);
     }
 
@@ -146,7 +146,7 @@ TEST_SUITE("algorithm") {
         rb_tree.insert_node(k);
       }
       CHECK_EQ(rb_tree.size(), 5);
-      CHECK_EQ(rb_tree.root()->key(), 2);
+      CHECK_EQ(rb_tree.root()->key, 2);
       CHECK_EQ(black_height2(rb_tree.root()), 2);
     }
 
@@ -157,8 +157,8 @@ TEST_SUITE("algorithm") {
       auto root = rb_tree.root();
       auto left = root->leftr();
       auto right = root->rightr();
-      CHECK_EQ(rb_tree.successor(root)->key(), 4);
-      CHECK_EQ(rb_tree.predecessor(root)->key(), 1);
+      CHECK_EQ(rb_tree.successor(root)->key, 4);
+      CHECK_EQ(rb_tree.predecessor(root)->key, 1);
       CHECK_EQ(left->parent, root);
       CHECK_EQ(right->parent, root);
     }
@@ -168,7 +168,7 @@ TEST_SUITE("algorithm") {
         rb_tree.insert_node(key);
       }
       CHECK_EQ(rb_tree.size(), keys.size());
-      CHECK_EQ(rb_tree.root()->key(), 17);
+      CHECK_EQ(rb_tree.root()->key, 17);
     }
 
     SUBCASE("test for inserting multiple nodes fuzzy case") {

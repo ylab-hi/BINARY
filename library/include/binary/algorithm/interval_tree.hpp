@@ -48,29 +48,27 @@ namespace binary::algorithm::tree {
       using reference_pointer = pointer &;
       using raw_pointer = BaseNode *;
 
-      Key key_{};
-      Color color_{Color::Black};
-
     public:
       BaseNode() = default;
       BaseNode(BaseNode &&other) noexcept = default;
       auto operator=(BaseNode &&other) noexcept -> BaseNode & = default;
 
-      explicit BaseNode(key_type key) : key_{key} {}
+      explicit BaseNode(key_type value) : key{value} {}
       explicit BaseNode(Color color) : color_{color} {}
-      BaseNode(key_type key, Color color) : key_{key}, color_{color} {}
+      BaseNode(key_type value, Color color) : key{value}, color_{color} {}
 
       virtual ~BaseNode() = default;
 
       void set_color(Color color) { color_ = color; }
       [[nodiscard]] auto is_black() const -> bool { return color_ == Color::Black; }
       [[nodiscard]] auto is_red() const -> bool { return color_ == Color::Red; }
-      [[nodiscard]] auto key() const -> key_type const & { return key_; }
 
       // All return raw pointers in order to make api consistent
       [[nodiscard]] auto leftr() const -> raw_pointer { return left.get(); }
       [[nodiscard]] auto rightr() const -> raw_pointer { return right.get(); }
 
+      Key key{};
+      Color color_{Color::Black};
       pointer left{nullptr};
       pointer right{nullptr};
       raw_pointer parent{nullptr};
@@ -130,9 +128,30 @@ namespace binary::algorithm::tree {
       pointer root_{nullptr};
     };
 
+    template <NodeConcept NodeType> auto RbTree<NodeType>::size() const -> size_t {
+      return size(root_.get());
+    }
+
     template <NodeConcept NodeType> auto RbTree<NodeType>::size(raw_pointer node) const -> size_t {
       if (node == nullptr) return 0;
       return 1 + size(node->leftr()) + size(node->rightr());
+    }
+
+    template <NodeConcept NodeType> auto RbTree<NodeType>::root() const -> raw_pointer {
+      return root_.get();
+    }
+
+    template <NodeConcept NodeType> bool RbTree<NodeType>::check_is_red(raw_pointer node) const {
+      if (node != nullptr && node->is_red()) {
+        return true;
+      }
+      return false;
+    }
+
+    template <NodeConcept NodeType>
+    void RbTree<NodeType>::release_reset(reference_pointer to, raw_pointer source) const {
+      to.release();
+      to.reset(source);
     }
 
     template <NodeConcept NodeType> auto RbTree<NodeType>::minimum(raw_pointer node) const
@@ -281,7 +300,7 @@ namespace binary::algorithm::tree {
 
       while (x != nullptr) {
         y = x;
-        if (node->key() < x->key()) {
+        if (node->key < x->key) {
           x = x->leftr();
         } else {
           x = x->rightr();
@@ -291,7 +310,7 @@ namespace binary::algorithm::tree {
       node->parent = y;
       if (y == nullptr) {
         root_.reset(node);
-      } else if (node->key() < y->key()) {
+      } else if (node->key < y->key) {
         y->left.reset(node);
       } else {
         y->right.reset(node);
@@ -308,28 +327,9 @@ namespace binary::algorithm::tree {
     template <NodeConcept NodeType> void RbTree<NodeType>::inorder_walk(raw_pointer node) const {
       if (node != nullptr) {
         inorder_walk(node->leftr());
-        fmt::print("{} is_black {} ", node->key(), node->is_black());
+        fmt::print("{} is_black {} ", node->key, node->is_black());
         inorder_walk(node->rightr());
       }
-    }
-    template <NodeConcept NodeType> auto RbTree<NodeType>::size() const -> size_t {
-      return size(root_.get());
-    }
-    template <NodeConcept NodeType> auto RbTree<NodeType>::root() const -> raw_pointer {
-      return root_.get();
-    }
-
-    template <NodeConcept NodeType> bool RbTree<NodeType>::check_is_red(raw_pointer node) const {
-      if (node != nullptr && node->is_red()) {
-        return true;
-      }
-      return false;
-    }
-
-    template <NodeConcept NodeType>
-    void RbTree<NodeType>::release_reset(reference_pointer to, raw_pointer source) const {
-      to.release();
-      to.reset(source);
     }
 
     class IntNode : public BaseNode<int> {
@@ -346,11 +346,9 @@ namespace binary::algorithm::tree {
 
       ~IntNode() override = default;
 
-      auto operator<=>(IntNode const &other) const { return key_ <=> other.key_; }
+      auto operator<=>(IntNode const &other) const { return key <=> other.key; }
       // to meet equality_comparable
-      friend bool operator==(IntNode const &lhs, IntNode const &rhs) {
-        return lhs.key_ == rhs.key_;
-      }
+      friend bool operator==(IntNode const &lhs, IntNode const &rhs) { return lhs.key == rhs.key; }
     };
 
     class IntervalNode : public BaseNode<std::uint32_t> {
