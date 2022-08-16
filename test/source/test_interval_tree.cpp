@@ -205,7 +205,7 @@ TEST_SUITE("algorithm") {
       } while (counter > 0);
     }
 
-    SUBCASE("test range contructor") {
+    SUBCASE("test range constructor from args") {
       std::vector<int> vkeys{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
       RbTree<IntNode> tree{vkeys};
     }
