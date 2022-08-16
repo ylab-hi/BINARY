@@ -288,14 +288,16 @@ namespace binary::algorithm::tree {
 
   }  // namespace v1
 
+  // WARNING: this is not a complete implementation of a red-black tree.
+
   namespace v2 {
     // define key constraints
     template <typename T>
-    concept key_concepts = std::totally_ordered<T> && std::default_initializable<T>;
+    concept KeyConcept = std::totally_ordered<T> && std::default_initializable<T>;
 
     enum class Color { Red, Black };
 
-    template <key_concepts Key> class BaseNode {
+    template <KeyConcept Key> class BaseNode {
     protected:
       using key_type = std::remove_cv_t<Key>;
       using pointer = std::unique_ptr<BaseNode>;

@@ -53,10 +53,10 @@ jobs:
             cc: "gcc-12"
             build: test
             build_type: Debug
-          - name: "Unit Test gcc12"
+          - name: "standalone gcc12"
             cxx: "g++-12"
             cc: "gcc-12"
-            build: test
+            build: standalone
             build_type: Release
 
     #          - name: "Unit Test clang13"

@@ -1,16 +1,24 @@
 [![Ubuntu](https://github.com/ylab-hi/BINARY/actions/workflows/linux.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/linux.yml)
 [![Style](https://github.com/ylab-hi/BINARY/actions/workflows/style.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/style.yml)
 [![codecov](https://codecov.io/gh/ylab-hi/BINARY/branch/main/graph/badge.svg?token=RWC5iqNPVi)](https://codecov.io/gh/ylab-hi/BINARY)
+[![c++20](https://img.shields.io/badge/C++-c%2B%2B20-green)](https://en.cppreference.com/w/cpp/20)
 [![CodeQL](https://github.com/ylab-hi/BINARY/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/codeql-analysis.yml)
 [![License](https://img.shields.io/github/license/ylab-hi/BINARY)](https://github.com/ylab-hi/BINARY/blob/main/LICENSE)
-
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat?logoWidth=80)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+![compiler](https://img.shields.io/badge/Compiler-GCC10%20%7C%20GCC11%20%7C%20GCC12-green)
 
 # <center> **BI**oi**N**formatics **A**lgorithms lib**R**ar**Y** aka **BINARY**
 
-## :star: Features
+## Index
+
+* [News](#news)
+* [Features](#features)
+* [Introduction](#library-introduction)
+
+## News
+
+- New version of the library: 0.1.0
+
+## Features
 
 - Embrace C++20 standard
 - Supports modern C++ features
