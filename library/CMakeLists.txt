@@ -64,6 +64,7 @@ add_library(
   source/test.cpp
   source/utils.cpp
   source/vcf.cpp
+  include/binary/algorithm/experimental.hpp
 )
 
 if(NOT HTSlib_FOUND)
