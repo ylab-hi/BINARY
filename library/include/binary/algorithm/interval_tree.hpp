@@ -91,6 +91,7 @@ namespace binary::algorithm::tree {
       }
     }
 
+    [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size(raw_pointer node) const -> size_t;
     [[nodiscard]] auto size() const -> size_t;
     [[nodiscard]] auto root() const -> raw_pointer;
@@ -114,10 +115,12 @@ namespace binary::algorithm::tree {
     }
 
     void delete_node(reference_pointer node);
+    void delete_node(raw_pointer node);
 
   private:
     // Use reference pointer as smart pointer will be reset
-    [[nodiscard]] bool check_is_red(raw_pointer node) const;
+    [[nodiscard]] auto check_is_red(raw_pointer node) const -> bool;
+    [[nodiscard]] auto check_is_black(raw_pointer node) const -> bool;
     void release_reset(reference_pointer target, raw_pointer source = nullptr) const;
     void left_rotate(raw_pointer node);
     void right_rotate(raw_pointer node);
@@ -125,7 +128,7 @@ namespace binary::algorithm::tree {
     auto transplant(raw_pointer target, raw_pointer source) -> raw_pointer;
     void fix_delete(raw_pointer node, bool is_left_child);
 
-    auto delete_check_is_left_child(raw_pointer node, bool is_left_child) const -> bool;
+    auto check_is_left_child_when_delete(raw_pointer node, bool is_left_child) const -> bool;
 
     void insert_node_impl(raw_pointer node);
 
@@ -142,6 +145,10 @@ namespace binary::algorithm::tree {
     return 1 + size(node->leftr()) + size(node->rightr());
   }
 
+  template <NodeConcept NodeType> auto RbTree<NodeType>::empty() const -> bool {
+    return size() == 0;
+  }
+
   template <NodeConcept NodeType> auto RbTree<NodeType>::root() const -> raw_pointer {
     return root_.get();
   }
@@ -151,6 +158,11 @@ namespace binary::algorithm::tree {
       return true;
     }
     return false;
+  }
+
+  template <NodeConcept NodeType> auto RbTree<NodeType>::check_is_black(raw_pointer node) const
+      -> bool {
+    return !check_is_red(node);
   }
 
   template <NodeConcept NodeType>
@@ -332,7 +344,7 @@ namespace binary::algorithm::tree {
   template <NodeConcept NodeType> void RbTree<NodeType>::inorder_walk(raw_pointer node) const {
     if (node != nullptr) {
       inorder_walk(node->leftr());
-      fmt::print("{} is_black {} ", node->key, node->is_black());
+      fmt::print("{} is_black {} \n", node->key, node->is_black());
       inorder_walk(node->rightr());
     }
   }
@@ -353,9 +365,84 @@ namespace binary::algorithm::tree {
 
     return ret;
   }
+  template <NodeConcept NodeType>
+  void RbTree<NodeType>::fix_delete(raw_pointer node, bool is_left_child) {
+    while (node != root() && check_is_black(node)) {
+      if (check_is_left_child_when_delete(node, is_left_child)) {
+        raw_pointer w = node->parent->rightr();
+        if (w->is_red()) {
+          // case 1
+          w->set_color(Color::Black);
+          node->parent->set_color(Color::Red);
+          left_rotate(node->parent);
+          w = node->parent->rightr();
+        }
+        if (check_is_black(w->leftr()) && check_is_black(w->rightr())) {
+          // case 2
+          w->set_color(Color::Red);
+          node = node->parent;
+        } else {
+          if (check_is_black(w->rightr())) {
+            // case 3
+            assert(w->leftr() != nullptr);
+            w->left->set_color(Color::Black);  // w->left may be nullptr
+            w->set_color(Color::Red);
+            right_rotate(w);
+            w = node->parent->rightr();
+          }
+          // case 4
+          w->set_color(node->parent->color_);
+          node->parent->set_color(Color::Black);
+          w->right->set_color(Color::Black);
+          left_rotate(node->parent);
+          node = root_.get();
+        }
+      } else {
+        raw_pointer w = node->parent->leftr();
+        if (w->is_red()) {
+          // case 1
+          w->set_color(Color::Black);
+          node->parent->set_color(Color::Red);
+          right_rotate(node->parent);
+          w = node->parent->leftr();
+        }
+        if (check_is_black(w->leftr()) && check_is_black(w->rightr())) {
+          // case 2
+          w->set_color(Color::Red);
+          node = node->parent;
+        } else {
+          if (check_is_black(w->leftr())) {
+            // case 3
+            w->right->set_color(Color::Black);
+            w->set_color(Color::Red);
+            left_rotate(w);
+            w = node->parent->leftr();
+          }
+          // case 4
+          w->set_color(node->parent->color_);
+          node->parent->set_color(Color::Black);
+          w->left->set_color(Color::Black);
+          right_rotate(node->parent);
+          node = root_.get();
+        }
+      }
+    }
 
-  template <NodeConcept NodeType> void RbTree<NodeType>::delete_node(reference_pointer node) {
-    raw_pointer y = node.get();
+    node->set_color(Color::Black);
+  }
+
+  template <NodeConcept NodeType>
+  auto RbTree<NodeType>::check_is_left_child_when_delete(raw_pointer node, bool is_left_child) const
+      -> bool {
+    if (node == nil_.get()) {
+      return is_left_child;
+    }
+    return node == node->parent->leftr();
+  }
+
+  template <NodeConcept NodeType> void RbTree<NodeType>::delete_node(raw_pointer node) {
+    raw_pointer node_copy = node;
+    raw_pointer y = node;
     raw_pointer x{nullptr};
     raw_pointer x_parent{nullptr};
     bool x_is_left = false;
@@ -378,11 +465,12 @@ namespace binary::algorithm::tree {
       if (y != node->rightr()) {
         node->copy_key(y);
         x_parent = transplant(y, x);  // y is not valid after this
+        x_is_left = true;
       } else {
         raw_pointer node_left = node->left.release();
         node->right.release();  // release y
         y->set_color(node->color_);
-        transplant(node.get(), y);  //  release node raw pointer
+        transplant(node_copy, y);  //  release node raw pointer
         y->left.reset(node_left);
         y->right.reset(x);
         x_parent = y;
@@ -390,87 +478,19 @@ namespace binary::algorithm::tree {
     }
 
     // WARN: node may be nullptr
-    if (y_origin_is_black) {
+    if (y_origin_is_black && x_parent != nullptr) {
       if (x == nullptr) {
         x = nil_.get();
         x->parent = x_parent;
       }
-
       fix_delete(x, x_is_left);
     }
   }
 
-  template <NodeConcept NodeType>
-  void RbTree<NodeType>::fix_delete(raw_pointer node, bool is_left_child) {
-    while (node != root() && !check_is_red(node)) {
-      if (delete_check_is_left_child(node, is_left_child)) {
-        raw_pointer w = node->parent->rightr();
-        if (w->is_red()) {
-          // case 1
-          w->set_color(Color::Black);
-          node->parent->set_color(Color::Red);
-          left_rotate(node->parent);
-          w = node->parent->rightr();
-        }
-        if (w->left->is_black() && w->right->is_black()) {
-          // case 2
-          w->set_color(Color::Red);
-          node = node->parent;
-        } else {
-          if (w->right->is_black()) {
-            // case 3
-            w->left->set_color(Color::Black);
-            w->set_color(Color::Red);
-            right_rotate(w);
-            w = node->parent->rightr();
-          }
-          // case 4
-          w->set_color(node->parent->color_);
-          node->parent->set_color(Color::Black);
-          w->right->set_color(Color::Black);
-          left_rotate(node->parent);
-          node = root_.get();
-        }
-      } else {
-        raw_pointer w = node->parent->leftr();
-        if (w->is_red()) {
-          // case 1
-          w->set_color(Color::Black);
-          node->parent->set_color(Color::Red);
-          right_rotate(node->parent);
-          w = node->parent->leftr();
-        }
-        if (w->right->is_black() && w->left->is_black()) {
-          // case 2
-          w->set_color(Color::Red);
-          node = node->parent;
-        } else {
-          if (w->left->is_black()) {
-            // case 3
-            w->right->set_color(Color::Black);
-            w->set_color(Color::Red);
-            left_rotate(w);
-            w = node->parent->leftr();
-          }
-          // case 4
-          w->set_color(node->parent->color_);
-          node->parent->set_color(Color::Black);
-          w->left->set_color(Color::Black);
-          right_rotate(node->parent);
-          node = root_.get();
-        }
-      }
+  template <NodeConcept NodeType> void RbTree<NodeType>::delete_node(reference_pointer node) {
+    if (node != nullptr) {
+      delete_node(node.get());
     }
-
-    node->set_color(Color::Black);
-  }
-  template <NodeConcept NodeType>
-  auto RbTree<NodeType>::delete_check_is_left_child(raw_pointer node, bool is_left_child) const
-      -> bool {
-    if (node == nil_.get()) {
-      return is_left_child;
-    }
-    return node == node->parent->leftr();
   }
 
   class IntNode : public BaseNode<int> {

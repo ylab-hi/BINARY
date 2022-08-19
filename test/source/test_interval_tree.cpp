@@ -25,7 +25,7 @@ int black_height(auto const& root, auto const& nil) {
 }
 
 TEST_SUITE("algorithm") {
-  TEST_CASE("test shared ptr for red black tree") {
+  TEST_CASE("test shared ptr for red black tree insert") {
     using namespace binary::algorithm::tree::v1_shared_ptr;
     RbTree<IntNode> rb_tree{};
     std::array<int, 21> keys{3,  7,  10, 12, 14, 15, 16, 17, 19, 20, 29,
@@ -118,7 +118,7 @@ TEST_SUITE("algorithm") {
     return static_cast<int>(root->is_black()) + temp;
   }
 
-  TEST_CASE("test unique ptr black red tree") {
+  TEST_CASE("test unique ptr black red tree for insert") {
     using namespace binary::algorithm::tree;
     IntNode int_node1{2};
     IntNode int_node2{4};
@@ -126,6 +126,7 @@ TEST_SUITE("algorithm") {
     RbTree<IntNode> rb_tree{};
     std::array<int, 21> keys{3,  7,  10, 12, 14, 15, 16, 17, 19, 20, 29,
                              21, 23, 26, 28, 30, 35, 38, 39, 41, 47};
+
     SUBCASE("test for inserting one node") {
       rb_tree.insert_node(std::make_unique<IntNode>(1));
       rb_tree.insert_node(std::make_unique<IntNode>(2));
@@ -209,6 +210,76 @@ TEST_SUITE("algorithm") {
       std::vector<int> vkeys{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
       RbTree<IntNode> tree{};
       tree.insert_node(vkeys);
+    }
+  }
+
+  TEST_CASE("test unique ptr red black tree for delete") {
+    using namespace binary::algorithm::tree;
+
+    RbTree<IntNode> rb_tree{};
+    std::array<int, 21> keys{3,  7,  10, 12, 14, 15, 16, 17, 19, 20, 29,
+                             21, 23, 26, 28, 30, 35, 38, 39, 41, 47};
+
+    SUBCASE("test for deleting one node from smart ptr") {
+      for (auto k : {1, 2, 4}) {
+        rb_tree.insert_node(k);
+      }
+      auto& left_child = rb_tree.root()->left;
+      rb_tree.delete_node(left_child);
+      CHECK_EQ(rb_tree.size(), 2);
+    }
+
+    SUBCASE("test for deleting one node from raw ptr") {
+      RbTree<IntNode> tree{};
+
+      tree.insert_node(keys);
+
+      CHECK_EQ(tree.size(), 21);
+      CHECK_NOTHROW(black_height2(tree.root()));
+      CHECK_EQ(tree.root()->key, 17);
+      tree.delete_node(tree.root());
+      tree.delete_node(tree.root());
+      CHECK_EQ(tree.size(), 19);
+    }
+
+    SUBCASE("test for deleting multi nodes from raw ptr") {
+      RbTree<IntNode> tree{};
+      tree.insert_node(keys);
+
+      CHECK_EQ(tree.size(), 21);
+      CHECK_NOTHROW(black_height2(tree.root()));
+
+      for ([[maybe_unused]] auto i : keys) {
+        tree.delete_node(tree.root());
+      }
+
+      CHECK(tree.empty());
+    }
+
+    SUBCASE("test for delete random key fuzzy case") {
+      constexpr int kNum = 5000;
+      int counter = 10;
+      std::random_device rd;
+      std::mt19937 gen(rd());
+      std::uniform_int_distribution<> dis(1, 100000);
+      std::vector<int> random_keys(kNum);
+
+      do {
+        std::generate(random_keys.begin(), random_keys.end(), [&]() { return dis(gen); });
+        random_keys.erase(std::unique(random_keys.begin(), random_keys.end()), random_keys.end());
+        RbTree<IntNode> tree{};
+        for (auto key : random_keys) {
+          tree.insert_node(key);
+        }
+        --counter;
+        CHECK_EQ(tree.size(), random_keys.size());
+        CHECK_NOTHROW(black_height2(tree.root()));
+
+        for ([[maybe_unused]] auto i : random_keys) {
+          tree.delete_node(tree.root());
+        }
+        CHECK(tree.empty());
+      } while (counter > 0);
     }
   }
 }
