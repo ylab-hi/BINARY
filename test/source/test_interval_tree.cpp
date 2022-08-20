@@ -257,8 +257,8 @@ TEST_SUITE("algorithm") {
     }
 
     SUBCASE("test for delete random key fuzzy case") {
-      constexpr int kNum = 20;
-      int counter = 1;
+      constexpr int kNum = 5000;
+      int counter = 10;
       std::random_device rd;
       std::mt19937 gen(rd());
       std::uniform_int_distribution<> dis(1, 100000);
@@ -270,12 +270,14 @@ TEST_SUITE("algorithm") {
         RbTree<IntNode> tree{};
         for (auto key : random_keys) {
           tree.insert_node(key);
-          std::cout << ", " << key;
         }
-        std::cout << '\n';
         --counter;
         CHECK_EQ(tree.size(), random_keys.size());
         CHECK_NOTHROW(black_height2(tree.root()));
+
+        for ([[maybe_unused]] auto key : random_keys) {
+          tree.delete_node(tree.root());
+        }
       } while (counter > 0);
     }
   }
