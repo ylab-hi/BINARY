@@ -31,6 +31,13 @@ namespace binary::algorithm::tree {
     interval.low <= interval.high;
   };
 
+  template <typename Node>
+  concept IntervalNodeConcept = requires(Node &node) {
+    requires NodeConcept<Node>;
+    node.max;
+    node.interval;
+  };
+
   template <IntervalConcept Interval, KeyConcept KeyType = std::uint32_t> class IntervalNode
       : public BaseNode<KeyType> {
   public:
@@ -63,13 +70,6 @@ namespace binary::algorithm::tree {
     Interval interval{};
   };
 
-  template <typename Node>
-  concept IntervalNodeConcept = requires(Node &node) {
-    requires NodeConcept<Node>;
-    node.max;
-    node.interval;
-  };
-
   template <IntervalNodeConcept NodeType> class IntervalTree : public RbTree<NodeType> {
   public:
     using typename RbTree<NodeType>::raw_pointer;
@@ -80,10 +80,11 @@ namespace binary::algorithm::tree {
     void delete_node(raw_pointer node);
 
   private:
-    void left_rotate(raw_pointer node);
-    void right_rotate(raw_pointer node);
+    void left_rotate(raw_pointer node) override;
+    void right_rotate(raw_pointer node) override;
+    void insert_node_impl(raw_pointer node) override;
+
     auto transplant(raw_pointer target, raw_pointer source) -> raw_pointer;
-    void insert_node_impl(raw_pointer node);
 
     auto get_max(raw_pointer node) const;
     void update_max(raw_pointer node, key_type key) const;
@@ -95,61 +96,18 @@ namespace binary::algorithm::tree {
 
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::left_rotate(raw_pointer node) {
-    raw_pointer y = node->right.release();  // cannot be nil
-    assert(y != nullptr);
-    node->right.reset(y->left.release());
-
-    if (node->right != nullptr) {
-      node->right->parent = node;
-    }
-
-    y->parent = node->parent;
-
-    if (node->parent == nullptr) {
-      // release old root
-      release_reset(root_, y);
-    } else if (node == node->parent->leftr()) {
-      // release old pointer do not delete
-      release_reset(node->parent->left, y);
-    } else {
-      // release old pointer do not delete
-      release_reset(node->parent->right, y);
-    }
-
-    y->left.reset(node);
-    node->parent = y;
-
+    RbTree<NodeType>::left_rotate(node);
     // update argument info
-    update_max(y, node->max);
-    update_max(node);
+    update_max(node->parent, node->max);  // update node->parent->max
+    update_max(node);                     // update node->max
   }
 
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::right_rotate(raw_pointer node) {
-    auto y = node->left.release();
-    assert(y != nullptr);
-    node->left.reset(y->right.release());
-
-    if (node->left != nullptr) {
-      node->left->parent = node;
-    }
-
-    y->parent = node->parent;
-    if (node->parent == nullptr) {
-      // release old root and reset new root
-      release_reset(root_, y);
-    } else if (node == node->parent->leftr()) {
-      release_reset(node->parent->left, y);
-    } else {
-      release_reset(node->parent->right, y);
-    }
-
-    y->right.reset(node);
-    node->parent = y;
-
+    RbTree<NodeType>::right_rotate(node);
     // update argument info
-    update_max(y, node->max);
-    update_max(node);
+    update_max(node->parent, node->max);  // update node->parent->max
+    update_max(node);                     // update node->max
   }
 
   template <IntervalNodeConcept NodeType>
@@ -181,23 +139,6 @@ namespace binary::algorithm::tree {
 
     node->set_color(Color::Red);
     fix_insert(node);
-  }
-
-  template <IntervalNodeConcept NodeType>
-  auto IntervalTree<NodeType>::transplant(raw_pointer target, raw_pointer source) -> raw_pointer {
-    auto ret = target->parent;
-    if (source != nullptr) {
-      source->parent = ret;
-    }
-    if (target->parent == nullptr) {
-      root_.reset(source);  // delete target and reset root
-    } else if (target == target->parent->leftr()) {
-      target->parent->left.reset(source);  // delete target and reset left
-    } else {
-      target->parent->right.reset(source);  // delete target and reset right
-    }
-
-    return ret;
   }
 
   template <IntervalNodeConcept NodeType>

@@ -143,18 +143,20 @@ namespace binary::algorithm::tree {
     void delete_node(reference_pointer node);
     void delete_node(raw_pointer node);
 
+  protected:
+    virtual void left_rotate(raw_pointer node);
+    virtual void right_rotate(raw_pointer node);
+    virtual void insert_node_impl(raw_pointer node);
+    void fix_insert(raw_pointer node);
+    auto transplant(raw_pointer target, raw_pointer source) -> raw_pointer;
+    void fix_delete(raw_pointer node, bool is_left_child);
+    auto check_is_left_child_when_delete(raw_pointer node, bool is_left_child) const -> bool;
+
   private:
     // Use reference pointer as smart pointer will be reset
     [[nodiscard]] auto check_is_red(raw_pointer node) const -> bool;
     [[nodiscard]] auto check_is_black(raw_pointer node) const -> bool;
     void release_reset(reference_pointer target, raw_pointer source = nullptr) const;
-    void left_rotate(raw_pointer node);
-    void right_rotate(raw_pointer node);
-    void fix_insert(raw_pointer node);
-    auto transplant(raw_pointer target, raw_pointer source) -> raw_pointer;
-    void fix_delete(raw_pointer node, bool is_left_child);
-    auto check_is_left_child_when_delete(raw_pointer node, bool is_left_child) const -> bool;
-    void insert_node_impl(raw_pointer node);
 
     pointer root_{nullptr};
     pointer nil_{std::make_unique<NodeType>()};  // only for delete and tree is always owner
