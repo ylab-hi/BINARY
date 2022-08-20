@@ -83,7 +83,7 @@ namespace binary::algorithm::tree {
 
     ~IntNode() override = default;
 
-    auto operator<=>(IntNode const &other) const = default;
+    auto operator<=>(IntNode const &other) const { return key <=> other.key; };
     // to meet equality_comparable
     friend bool operator==(IntNode const &lhs, IntNode const &rhs) { return lhs.key == rhs.key; }
   };

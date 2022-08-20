@@ -159,12 +159,23 @@ namespace binary::algorithm::tree {
     node->max = std::max(node->interval.high, get_max(node->leftr()), get_max(node->rightr()));
   }
 
-  class VcfInvterval {
+  class VcfInterval {
   public:
     std::uint32_t low;
     std::uint32_t high;
 
     // TODO: Add vcfrecord or enough info to the class
+  };
+
+  class VcfIntervalNode : public IntervalNode<VcfInterval> {
+  public:
+    VcfIntervalNode() = default;
+    using IntervalNode<VcfInterval>::IntervalNode;
+
+    auto operator<=>(VcfIntervalNode const &other) const { return key <=> other.key; }
+    friend auto operator==(VcfIntervalNode const &lhs, VcfIntervalNode const &rhs) -> bool {
+      return lhs.key == rhs.key;
+    }
   };
 
 }  // namespace binary::algorithm::tree
