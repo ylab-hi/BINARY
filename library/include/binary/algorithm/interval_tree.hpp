@@ -13,6 +13,7 @@
 #include <iostream>
 #include <memory>
 #include <ranges>
+
 namespace binary::algorithm::tree {
 
   /** Red Black Tree
@@ -26,7 +27,6 @@ namespace binary::algorithm::tree {
 
   **/
 
-  // TODO: Add Deletion and Test
   // TODO: Implement Interval Tree with information including chrom, pos, svtype.
   // TODO: Implement Interval Tree Query with Concurrency
 
@@ -90,6 +90,8 @@ namespace binary::algorithm::tree {
         insert_node(std::forward<decltype(item)>(item));
       }
     }
+
+    auto search(const typename NodeType::key_type &key) const -> const raw_pointer;
 
     [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto size(raw_pointer node) const -> size_t;
@@ -480,7 +482,7 @@ namespace binary::algorithm::tree {
       }
     }
 
-    // WARN: node may be nullptr
+    //  node may be nullptr
     if (y_origin_is_black && x_parent != nullptr) {
       if (x == nullptr) {
         x = nil_.get();
@@ -494,8 +496,24 @@ namespace binary::algorithm::tree {
     delete_node(node.get());
   }
 
+  template <NodeConcept NodeType>
+  auto RbTree<NodeType>::search(const typename NodeType::key_type &key) const -> const raw_pointer {
+    raw_pointer node = root();
+    while (node != nullptr) {
+      if (key == node->key) {
+        return node;
+      } else if (key < node->key) {
+        node = node->leftr();
+      } else {
+        node = node->rightr();
+      }
+    }
+    return nullptr;
+  }
+
   class IntNode : public BaseNode<int> {
   public:
+    using BaseNode::key_type;
     using BaseNode::pointer;
     using BaseNode::raw_pointer;
     using BaseNode::reference_pointer;
@@ -518,6 +536,7 @@ namespace binary::algorithm::tree {
     using raw_pointer = IntervalNode *;
     using pointer = std::unique_ptr<IntervalNode>;
     using reference_pointer = std::unique_ptr<IntervalNode> &;
+    using BaseNode::key_type;
 
     IntervalNode() = default;
     IntervalNode(IntervalNode &&other) noexcept = default;

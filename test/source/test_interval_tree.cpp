@@ -24,7 +24,7 @@ int black_height(auto const& root, auto const& nil) {
   return static_cast<int>(root->is_black()) + temp;
 }
 
-TEST_SUITE("algorithm") {
+TEST_SUITE("algorithm-interval-tree") {
   TEST_CASE("test shared ptr for red black tree insert") {
     using namespace binary::algorithm::tree::v1_shared_ptr;
     RbTree<IntNode> rb_tree{};
@@ -292,10 +292,22 @@ TEST_SUITE("algorithm") {
     tree.insert_node(k1);
     CHECK_EQ(tree.size(), 20);
     CHECK_NOTHROW(black_height2(tree.root()));
-    tree.inorder_walk(tree.root());
     for ([[maybe_unused]] auto i : k1) {
       tree.delete_node(tree.root());
     }
     CHECK(tree.empty());
+  }
+
+  TEST_CASE("test for search in tree ") {
+    using namespace binary::algorithm::tree;
+    std::array<IntNode::key_type, 20> k1{54942, 75803, 49212, 64167, 14933, 44543, 10072,
+                                         90303, 45511, 70641, 59710, 3100,  98544, 55068,
+                                         45575, 4994,  66267, 24721, 17128, 72975};
+    RbTree<IntNode> tree{};
+    tree.insert_node(k1);
+    CHECK_EQ(tree.size(), 20);
+    CHECK_NOTHROW(black_height2(tree.root()));
+    auto const* ptr1 = tree.search(54942);
+    CHECK_EQ(ptr1->key, 54942);
   }
 }
