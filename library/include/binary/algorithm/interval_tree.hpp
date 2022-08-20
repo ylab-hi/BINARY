@@ -413,6 +413,7 @@ namespace binary::algorithm::tree {
         } else {
           if (check_is_black(w->leftr())) {
             // case 3
+            assert(w->rightr() != nullptr);
             w->right->set_color(Color::Black);
             w->set_color(Color::Red);
             left_rotate(w);
@@ -441,7 +442,8 @@ namespace binary::algorithm::tree {
   }
 
   template <NodeConcept NodeType> void RbTree<NodeType>::delete_node(raw_pointer node) {
-    raw_pointer node_copy = node;
+    if (node == nullptr) return;
+
     raw_pointer y = node;
     raw_pointer x{nullptr};
     raw_pointer x_parent{nullptr};
@@ -470,8 +472,9 @@ namespace binary::algorithm::tree {
         raw_pointer node_left = node->left.release();
         node->right.release();  // release y
         y->set_color(node->color_);
-        transplant(node_copy, y);  //  release node raw pointer
+        transplant(node, y);  //  release node raw pointer
         y->left.reset(node_left);
+        node_left->parent = y;  // add parent to node_left
         y->right.reset(x);
         x_parent = y;
       }
@@ -488,9 +491,7 @@ namespace binary::algorithm::tree {
   }
 
   template <NodeConcept NodeType> void RbTree<NodeType>::delete_node(reference_pointer node) {
-    if (node != nullptr) {
-      delete_node(node.get());
-    }
+    delete_node(node.get());
   }
 
   class IntNode : public BaseNode<int> {

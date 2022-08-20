@@ -257,8 +257,8 @@ TEST_SUITE("algorithm") {
     }
 
     SUBCASE("test for delete random key fuzzy case") {
-      constexpr int kNum = 5000;
-      int counter = 10;
+      constexpr int kNum = 20;
+      int counter = 1;
       std::random_device rd;
       std::mt19937 gen(rd());
       std::uniform_int_distribution<> dis(1, 100000);
@@ -270,16 +270,30 @@ TEST_SUITE("algorithm") {
         RbTree<IntNode> tree{};
         for (auto key : random_keys) {
           tree.insert_node(key);
+          std::cout << ", " << key;
         }
+        std::cout << '\n';
         --counter;
         CHECK_EQ(tree.size(), random_keys.size());
         CHECK_NOTHROW(black_height2(tree.root()));
-
-        for ([[maybe_unused]] auto i : random_keys) {
-          tree.delete_node(tree.root());
-        }
-        CHECK(tree.empty());
       } while (counter > 0);
     }
+  }
+
+  TEST_CASE("test for issue  use deleted memory") {
+    using namespace binary::algorithm::tree;
+    // commit: 61ef34c - fix twice delete issue
+    std::array<int, 20> k1{54942, 75803, 49212, 64167, 14933, 44543, 10072, 90303, 45511, 70641,
+                           59710, 3100,  98544, 55068, 45575, 4994,  66267, 24721, 17128, 72975};
+
+    RbTree<IntNode> tree{};
+    tree.insert_node(k1);
+    CHECK_EQ(tree.size(), 20);
+    CHECK_NOTHROW(black_height2(tree.root()));
+    tree.inorder_walk(tree.root());
+    for ([[maybe_unused]] auto i : k1) {
+      tree.delete_node(tree.root());
+    }
+    CHECK(tree.empty());
   }
 }
