@@ -152,7 +152,6 @@ namespace binary::algorithm::tree {
     void fix_delete(raw_pointer node, bool is_left_child);
     auto check_is_left_child_when_delete(raw_pointer node, bool is_left_child) const -> bool;
 
-  private:
     // Use reference pointer as smart pointer will be reset
     [[nodiscard]] auto check_is_red(raw_pointer node) const -> bool;
     [[nodiscard]] auto check_is_black(raw_pointer node) const -> bool;

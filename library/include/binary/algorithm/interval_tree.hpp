@@ -29,6 +29,7 @@ namespace binary::algorithm::tree {
     requires std::semiregular<Interval>;
     requires std::same_as<decltype(interval.low), decltype(interval.high)>;
     interval.low <= interval.high;
+    Interval::key_type;
   };
 
   template <typename Node>
@@ -38,13 +39,13 @@ namespace binary::algorithm::tree {
     node.interval;
   };
 
-  template <IntervalConcept Interval, KeyConcept KeyType = std::uint32_t> class IntervalNode
-      : public BaseNode<KeyType> {
+  template <IntervalConcept Interval> class IntervalNode
+      : public BaseNode<typename Interval::key_type> {
   public:
     using raw_pointer = IntervalNode *;
     using pointer = std::unique_ptr<IntervalNode>;
     using reference_pointer = std::unique_ptr<IntervalNode> &;
-    using key_type = KeyType;
+    using key_type = typename Interval::key_type;
 
     IntervalNode() = default;
 
@@ -54,10 +55,10 @@ namespace binary::algorithm::tree {
     IntervalNode &operator=(IntervalNode &&other) noexcept = default;
 
     explicit IntervalNode(Interval const &interval_)
-        : BaseNode<KeyType>(interval_.low), interval{interval_}, max{interval_.high} {}
+        : BaseNode<key_type>(interval_.low), interval{interval_}, max{interval_.high} {}
 
     explicit IntervalNode(Interval &&interval_)
-        : BaseNode<KeyType>(interval_.low), max{interval_.high}, interval{std::move(interval_)} {}
+        : BaseNode<key_type>(interval_.low), max{interval_.high}, interval{std::move(interval_)} {}
 
     ~IntervalNode() override = default;
 
@@ -66,8 +67,32 @@ namespace binary::algorithm::tree {
       max = other->max;
     }
 
-    KeyType max{};
+    key_type max{};
     Interval interval{};
+  };
+
+  /** Interval Tree node
+   *
+   */
+  template <KeyConcept KeyType = std::uint32_t> class BaseInterval {
+  public:
+    using key_type = KeyType;
+
+    BaseInterval() = default;
+    key_type low{};
+    key_type high{};
+  };
+
+  class VcfInterval : public BaseInterval<std::uint32_t> {
+  public:
+    using BaseInterval::BaseInterval;
+    using BaseInterval::key_type;
+
+    VcfInterval() = default;
+
+  private:
+    std::string chrom{};
+    std::string svtype{};
   };
 
   template <IntervalNodeConcept NodeType> class IntervalTree : public RbTree<NodeType> {
@@ -158,25 +183,6 @@ namespace binary::algorithm::tree {
   void IntervalTree<NodeType>::update_max(raw_pointer node) const {
     node->max = std::max(node->interval.high, get_max(node->leftr()), get_max(node->rightr()));
   }
-
-  class VcfInterval {
-  public:
-    std::uint32_t low;
-    std::uint32_t high;
-
-    // TODO: Add vcfrecord or enough info to the class
-  };
-
-  class VcfIntervalNode : public IntervalNode<VcfInterval> {
-  public:
-    VcfIntervalNode() = default;
-    using IntervalNode<VcfInterval>::IntervalNode;
-
-    auto operator<=>(VcfIntervalNode const &other) const { return key <=> other.key; }
-    friend auto operator==(VcfIntervalNode const &lhs, VcfIntervalNode const &rhs) -> bool {
-      return lhs.key == rhs.key;
-    }
-  };
 
 }  // namespace binary::algorithm::tree
 
