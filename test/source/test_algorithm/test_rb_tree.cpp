@@ -1,9 +1,8 @@
 //
 // Created by li002252 on 8/10/22.
 //
-#include <doctest/doctest.h>
-
-#include <binary/algorithm/all.hpp>
+#include "binary/algorithm/all.hpp"
+#include "doctest/doctest.h"
 
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <algorithm>
@@ -24,7 +23,7 @@ int black_height(auto const& root, auto const& nil) {
   return static_cast<int>(root->is_black()) + temp;
 }
 
-TEST_SUITE("algorithm-interval-tree") {
+TEST_SUITE("algorithm-red-black-tree") {
   TEST_CASE("test shared ptr for red black tree insert") {
     using namespace binary::algorithm::tree::v1_shared_ptr;
     RbTree<IntNode> rb_tree{};

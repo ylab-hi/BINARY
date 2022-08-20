@@ -30,7 +30,9 @@ endif()
 # ---- Create binary ----
 
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/*.cpp)
-add_executable(${PROJECT_NAME} ${sources})
+file(GLOB algorithm CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/test_algorithm/*.cpp)
+
+add_executable(${PROJECT_NAME} ${sources} ${algorithm})
 target_link_libraries(${PROJECT_NAME} doctest::doctest binary::binary)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 

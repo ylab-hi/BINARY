@@ -6,4 +6,5 @@
 #define BUILDALL_LIBRARY_INCLUDE_BINARY_ALGORITHM_ALL_HPP_
 #include <binary/algorithm/experimental.hpp>
 #include <binary/algorithm/interval_tree.hpp>
+#include <binary/algorithm/rb_tree.hpp>
 #endif  // BUILDALL_LIBRARY_INCLUDE_BINARY_ALGORITHM_ALL_HPP_
