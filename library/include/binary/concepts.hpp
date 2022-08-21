@@ -7,7 +7,9 @@
 #include <concepts>
 
 namespace binary::concepts {
-  // define key constraints for tree
+
+  template <typename T, typename... U>
+  concept IsAnyOf = (std::same_as<T, U> || ...);
 
 }  // namespace binary::concepts
 
