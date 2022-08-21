@@ -19,7 +19,6 @@ namespace binary::algorithm::tree {
     descendant leaves contain the same number of black nodes.
   **/
 
-  // TODO: Implement Interval Tree with information including chrom, pos, svtype.
   // TODO: Implement Interval Tree Query with Concurrency
 
   /** Interval Node and Interval Tree */
@@ -39,48 +38,57 @@ namespace binary::algorithm::tree {
     node.interval;
   };
 
-  template <IntervalConcept Interval> class IntervalNode
-      : public BaseNode<typename Interval::key_type> {
+  /** Interval Tree node
+   *
+   */
+  template <IntervalConcept Interval> class IntervalNode {
   public:
-    using raw_pointer = IntervalNode *;
-    using pointer = std::unique_ptr<IntervalNode>;
-    using reference_pointer = std::unique_ptr<IntervalNode> &;
     using key_type = typename Interval::key_type;
+    using pointer = std::unique_ptr<IntervalNode>;
+    using reference_pointer = pointer &;
+    using raw_pointer = IntervalNode *;
 
     constexpr IntervalNode() = default;
+
+    constexpr IntervalNode(IntervalNode const &other) = delete;
+    constexpr IntervalNode &operator=(IntervalNode const &other) = delete;
+    constexpr IntervalNode(IntervalNode &&other) noexcept = default;
+    constexpr IntervalNode &operator=(IntervalNode &&other) noexcept = default;
 
     template <typename... Arg>
     requires std::constructible_from<Interval, Arg...>
     explicit constexpr IntervalNode(Arg &&...args)
-        : BaseNode<key_type>(), interval{std::forward<Arg>(args)...}, max{interval.high} {
-      BaseNode<key_type>::key = interval.low;
-    }
-
-    constexpr IntervalNode(IntervalNode const &other) = default;
-    constexpr IntervalNode &operator=(IntervalNode const &other) = default;
-    constexpr IntervalNode(IntervalNode &&other) noexcept = default;
-    constexpr IntervalNode &operator=(IntervalNode &&other) noexcept = default;
+        : interval{std::forward<Arg>(args)...}, max{interval.high}, key{interval.low} {}
 
     explicit constexpr IntervalNode(Interval const &interval_)
-        : BaseNode<key_type>(interval_.low), interval{interval_}, max{interval_.high} {}
+        : interval{interval_}, max{interval_.high}, key{interval.low} {}
 
     explicit constexpr IntervalNode(Interval &&interval_)
-        : BaseNode<key_type>(interval_.low), interval{std::move(interval_)}, max{interval.high} {}
-
-    ~IntervalNode() override = default;
+        : interval{std::move(interval_)}, max{interval.high}, key{interval.low} {}
 
     void copy_key(const raw_pointer other) noexcept {
-      interval = other->interval;
+      key = other->key;
       max = other->max;
+      interval = other->interval;
     }
+
+    void set_color(Color color) { color_ = color; }
+    [[nodiscard]] auto is_black() const -> bool { return color_ == Color::Black; }
+    [[nodiscard]] auto is_red() const -> bool { return color_ == Color::Red; }
+
+    // All return raw pointers in order to make api consistent
+    [[nodiscard]] auto leftr() const -> raw_pointer { return left.get(); }
+    [[nodiscard]] auto rightr() const -> raw_pointer { return right.get(); }
 
     Interval interval{};
     key_type max{};
+    key_type key{};
+    Color color_{Color::Black};
+    pointer left{nullptr};
+    pointer right{nullptr};
+    raw_pointer parent{nullptr};
   };
 
-  /** Interval Tree node
-   *
-   */
   template <KeyConcept KeyType = std::uint32_t> class BaseInterval {
   public:
     using key_type = std::remove_cv_t<KeyType>;
@@ -107,10 +115,10 @@ namespace binary::algorithm::tree {
 
   template <IntervalNodeConcept NodeType> class IntervalTree : public RbTree<NodeType> {
   public:
-    using typename RbTree<NodeType>::raw_pointer;
-    using typename RbTree<NodeType>::pointer;
-    using typename RbTree<NodeType>::reference_pointer;
-    using typename NodeType::key_type;
+    using key_type = typename NodeType::key_type;
+    using pointer = typename NodeType::pointer;
+    using raw_pointer = typename NodeType::raw_pointer;
+    using reference_pointer = typename NodeType::reference_pointer;
 
     void delete_node(raw_pointer node);
 
@@ -173,7 +181,7 @@ namespace binary::algorithm::tree {
     }
 
     node->set_color(Color::Red);
-    fix_insert(node);
+    RbTree<NodeType>::fix_insert(node);
   }
 
   template <IntervalNodeConcept NodeType>
@@ -191,7 +199,7 @@ namespace binary::algorithm::tree {
 
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::update_max(raw_pointer node) const {
-    node->max = std::max(node->interval.high, get_max(node->leftr()), get_max(node->rightr()));
+    node->max = std::max({node->interval.high, get_max(node->leftr()), get_max(node->rightr())});
   }
 
 }  // namespace binary::algorithm::tree

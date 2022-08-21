@@ -22,6 +22,10 @@ namespace binary::algorithm::tree {
   template <typename Node>
   concept NodeConcept = requires(Node &node) {
     requires std::movable<Node> && std::default_initializable<Node>;
+    typename Node::key_type;
+    typename Node::pointer;
+    typename Node::reference_pointer;
+    typename Node::raw_pointer;
     node.key;
     node.left;
     node.right;
@@ -59,7 +63,7 @@ namespace binary::algorithm::tree {
     [[nodiscard]] auto leftr() const -> raw_pointer { return left.get(); }
     [[nodiscard]] auto rightr() const -> raw_pointer { return right.get(); }
 
-    void copy_key(const raw_pointer other) noexcept { key = other->key; }
+    virtual void copy_key(const raw_pointer other) noexcept { key = other->key; }
 
     Key key{};
     Color color_{Color::Black};
