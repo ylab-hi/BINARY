@@ -24,6 +24,7 @@ namespace binary::algorithm::tree {
     descendant leaves contain the same number of black nodes.
   **/
 
+  // TODO: implement delete operation in interval tree
   /** Interval Node and Interval Tree */
 
   template <typename Interval>
@@ -118,6 +119,8 @@ namespace binary::algorithm::tree {
       return low <= other.high && other.low <= high;
     }
 
+    virtual ~BaseInterval() = default;
+
     friend std::ostream &operator<<(std::ostream &os, BaseInterval const &base_interval) {
       os << "BaseInterval: " << base_interval.low << "-" << base_interval.high;
       return os;
@@ -133,11 +136,26 @@ namespace binary::algorithm::tree {
   using IntIntervalNode = IntervalNode<IntInterval>;
   using UIntIntervalNode = IntervalNode<UIntInterval>;
 
+  // TODO: move to vcf parser library
   class VcfInterval : public UIntInterval {
   public:
     constexpr VcfInterval() = default;
+    VcfInterval(std::string chrom_, std::string svtype_)
+        : chrom{std::move(chrom_)}, svtype{std::move(svtype_)} {}
 
-  private:
+    VcfInterval(VcfInterval const &other) = default;
+    VcfInterval &operator=(VcfInterval const &other) = default;
+    VcfInterval(VcfInterval &&other) noexcept = default;
+    VcfInterval &operator=(VcfInterval &&other) noexcept = default;
+
+    ~VcfInterval() override = default;
+
+    friend std::ostream &operator<<(std::ostream &os, VcfInterval const &vcf_interval) {
+      os << "VcfInterval: " << vcf_interval.low << "-" << vcf_interval.high << " "
+         << vcf_interval.chrom << " " << vcf_interval.svtype;
+      return os;
+    }
+
     std::string chrom{};
     std::string svtype{};
   };
@@ -156,7 +174,6 @@ namespace binary::algorithm::tree {
 
     void inorder_walk(raw_pointer node, int indent = 0) const override;
 
-    // TODO: Implement Interval Tree Query with Concurrency
     auto find_overlap(interval_type const &interval) const -> std::optional<interval_type>;
 
     template <typename... Args>
