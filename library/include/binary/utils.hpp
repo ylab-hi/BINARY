@@ -27,13 +27,15 @@ namespace binary::utils {
    * @tparam T the type of the tuple
    * @param tup the tuple to print
    */
-  template <typename... T> constexpr void print_tuple(const std::tuple<T...>& tup) {
+  template <typename... T>
+  [[maybe_unused]] constexpr void print_tuple(const std::tuple<T...>& tup) {
     (void)std::initializer_list<int>{
         (spdlog::debug("std::tuple values {} ", std::get<T>(tup)), 0)...};
   }
 
-  inline void set_debug() { spdlog::set_level(spdlog::level::debug); }
-  inline void set_trace() { spdlog::set_level(spdlog::level::trace); }
+  [[maybe_unused]] inline void set_debug() { spdlog::set_level(spdlog::level::debug); }
+  [[maybe_unused]] inline void set_trace() { spdlog::set_level(spdlog::level::trace); }
+  [[maybe_unused]] inline void set_info() { spdlog::set_level(spdlog::level::info); }
 
 }  // namespace binary::utils
 

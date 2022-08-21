@@ -210,31 +210,31 @@ namespace binary::algorithm::tree {
 
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::left_rotate(raw_pointer node) {
-    spdlog::debug("left_rotate {}", *node);
-    spdlog::debug("left_rotate right child {}", *(node->right));
+    spdlog::trace("left_rotate {}", *node);
+    spdlog::trace("left_rotate right child {}", *(node->right));
     RbTree<NodeType>::left_rotate(node);
     // update argument info
     update_max(node->parent, node->max);  // update node->parent->max
     update_max(node);                     // update node->max
-    spdlog::debug("after left_rotate {}", *node);
-    spdlog::debug("after left_rotate {}", *(node->parent));
+    spdlog::trace("after left_rotate {}", *node);
+    spdlog::trace("after left_rotate {}", *(node->parent));
   }
 
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::right_rotate(raw_pointer node) {
-    spdlog::debug("right_rotate {}", *node);
-    spdlog::debug("right_rotate left child {}", *(node->left));
+    spdlog::trace("right_rotate {}", *node);
+    spdlog::trace("right_rotate left child {}", *(node->left));
     RbTree<NodeType>::right_rotate(node);
     // update argument info
     update_max(node->parent, node->max);  // update node->parent->max
     update_max(node);                     // update node->max
-    spdlog::debug("after right_rotate {}", *node);
-    spdlog::debug("after right_rotate {}", *(node->parent));
+    spdlog::trace("after right_rotate {}", *node);
+    spdlog::trace("after right_rotate {}", *(node->parent));
   }
 
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::insert_node_impl(raw_pointer node) {
-    spdlog::debug("insert_node {}", *node);
+    spdlog::trace("insert_node {}", *node);
     raw_pointer x = root_.get();
     raw_pointer y = nullptr;
 
