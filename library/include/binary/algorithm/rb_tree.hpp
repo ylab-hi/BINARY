@@ -112,6 +112,7 @@ namespace binary::algorithm::tree {
     }
 
     auto search(const typename NodeType::key_type &key) const -> const raw_pointer;
+    auto search(const typename NodeType::key_type &key) -> raw_pointer;
 
     /**
      * @brief return if the tree is empty
@@ -523,6 +524,21 @@ namespace binary::algorithm::tree {
 
   template <NodeConcept NodeType>
   auto RbTree<NodeType>::search(const typename NodeType::key_type &key) const -> const raw_pointer {
+    raw_pointer node = root();
+    while (node != nullptr) {
+      if (key == node->key) {
+        return node;
+      } else if (key < node->key) {
+        node = node->leftr();
+      } else {
+        node = node->rightr();
+      }
+    }
+    return nullptr;
+  }
+
+  template <NodeConcept NodeType>
+  auto RbTree<NodeType>::search(const typename NodeType::key_type &key) -> raw_pointer {
     raw_pointer node = root();
     while (node != nullptr) {
       if (key == node->key) {
