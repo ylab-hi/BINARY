@@ -9,6 +9,7 @@
 #include <spdlog/spdlog.h>
 
 #include <binary/algorithm/rb_tree.hpp>
+#include <optional>
 namespace binary::algorithm::tree {
 
   /** Interval Tree Based on Red Black Tree
@@ -20,8 +21,6 @@ namespace binary::algorithm::tree {
   5. For each node, all simple paths from the node to
     descendant leaves contain the same number of black nodes.
   **/
-
-  // TODO: Implement Interval Tree Query with Concurrency
 
   /** Interval Node and Interval Tree */
 
@@ -36,6 +35,7 @@ namespace binary::algorithm::tree {
   template <typename Node>
   concept IntervalNodeConcept = requires(Node &node) {
     requires NodeConcept<Node>;
+    typename Node::interval_type;
     node.max;
     node.interval;
   };
@@ -45,6 +45,7 @@ namespace binary::algorithm::tree {
    */
   template <IntervalConcept Interval> class IntervalNode {
   public:
+    using interval_type = Interval;
     using key_type = typename Interval::key_type;
     using pointer = std::unique_ptr<IntervalNode>;
     using reference_pointer = pointer &;
@@ -110,6 +111,10 @@ namespace binary::algorithm::tree {
       assert(low <= high);
     }
 
+    auto check_overlap(BaseInterval const &other) const -> bool {
+      return low <= other.high && other.low <= high;
+    }
+
     friend std::ostream &operator<<(std::ostream &os, BaseInterval const &base_interval) {
       os << "BaseInterval: " << base_interval.low << "-" << base_interval.high;
       return os;
@@ -121,8 +126,8 @@ namespace binary::algorithm::tree {
 
   // set template alias for interval
   using IntInterval = BaseInterval<std::int32_t>;
-  using IntIntervalNode = IntervalNode<IntInterval>;
   using UIntInterval = BaseInterval<std::uint32_t>;
+  using IntIntervalNode = IntervalNode<IntInterval>;
   using UIntIntervalNode = IntervalNode<UIntInterval>;
 
   class VcfInterval : public UIntInterval {
@@ -142,10 +147,16 @@ namespace binary::algorithm::tree {
     using pointer = typename NodeType::pointer;
     using raw_pointer = typename NodeType::raw_pointer;
     using reference_pointer = typename NodeType::reference_pointer;
+    using interval_type = typename NodeType::interval_type;
 
     void delete_node(raw_pointer node);
 
     void inorder_walk(raw_pointer node, int indent = 0) const override;
+
+    // TODO: Implement Interval Tree Query with Concurrency
+    auto find_overlap(interval_type const &interval) const -> std::optional<interval_type>;
+    auto find_overlaps(interval_type interval, raw_pointer node = root_.get()) const
+        -> std::vector<interval_type>;
 
   private:
     void left_rotate(raw_pointer node) override;
@@ -244,6 +255,43 @@ namespace binary::algorithm::tree {
                  node->is_black(), node->max);
       inorder_walk(node->rightr(), indent);
     }
+  }
+
+  template <IntervalNodeConcept NodeType>
+  auto IntervalTree<NodeType>::find_overlap(interval_type const &interval) const
+      -> std::optional<interval_type> {
+    raw_pointer x = root_.get();
+    while (x != nullptr) {
+      if (interval.check_overlap(x->interval)) {
+        return x->interval;
+      } else if (interval.low < x->max) {
+        x = x->leftr();
+      } else {
+        x = x->rightr();
+      }
+    }
+    return {};
+  }
+
+  template <IntervalNodeConcept NodeType>
+  auto IntervalTree<NodeType>::find_overlaps(interval_type interval, raw_pointer node) const
+      -> std::vector<interval_type> {
+    std::vector<interval_type> ret{};
+    if (node == nullptr) {
+      return ret;
+    }
+
+    if (interval.low <= node->interval.high && interval.high >= node->interval.low) {
+      ret.push_back(node->interval);
+    }
+
+    if (interval.low <= node->left->max) {
+      ret.insert(ret.end(), find_overlaps(interval, node->leftr()));
+    } else {
+      ret.insert(ret.end(), find_overlaps(interval, node->rightr()));
+    }
+
+    return ret;
   }
 
 }  // namespace binary::algorithm::tree

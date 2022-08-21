@@ -106,6 +106,21 @@ TEST_SUITE("algorithm-interval-tree") {
     CHECK_NOTHROW(check_black_height(interval_tree.root()));
   }
 
+  TEST_CASE("test find overlaps") {
+    std::array<UIntInterval, 10> nodes{UIntInterval(16u, 21u), UIntInterval(8u, 9u),
+                                       UIntInterval(5u, 8u),   UIntInterval(0u, 3u),
+                                       UIntInterval(6u, 10u),  UIntInterval(15u, 23u),
+                                       UIntInterval(25u, 30u), UIntInterval(17u, 19u),
+                                       UIntInterval(19u, 20u), UIntInterval(26u, 26u)};
+
+    IntervalTree<UIntIntervalNode> interval_tree{};
+    interval_tree.insert_node(nodes);
+    auto intervals = interval_tree.find_overlap(UIntInterval(22u, 25u));
+    CHECK(intervals.has_value());
+    CHECK_EQ(intervals->low, 15u);
+    CHECK_EQ(intervals->high, 23u);
+  }
+
   TEST_CASE("test delete") {}
 
   TEST_CASE("test find overlaps") {}
