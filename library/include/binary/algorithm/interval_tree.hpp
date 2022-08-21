@@ -11,6 +11,7 @@
 #include <binary/algorithm/rb_tree.hpp>
 #include <binary/concepts.hpp>
 #include <optional>
+#include <ranges>
 namespace binary::algorithm::tree {
 
   /** Interval Tree Based on Red Black Tree
@@ -28,6 +29,7 @@ namespace binary::algorithm::tree {
   template <typename Interval>
   concept IntervalConcept = requires(Interval const &interval) {
     requires std::semiregular<Interval>;
+    requires std::movable<Interval>;
     requires std::same_as<decltype(interval.low), decltype(interval.high)>;
     interval.low <= interval.high;
     typename Interval::key_type;
@@ -163,10 +165,18 @@ namespace binary::algorithm::tree {
       return find_overlap(interval_type{std::forward<Args>(args)...});
     }
 
-    auto find_overlaps(interval_type interval, raw_pointer node = root_.get()) const
-        -> std::vector<interval_type>;
+    auto find_overlaps(interval_type &&interval) const -> std::vector<interval_type>;
+
+    template <typename... Args>
+    requires binary::concepts::ArgsConstructible<interval_type, Args...>
+    auto find_overlaps(Args &&...args) const -> std::vector<interval_type> {
+      return find_overlaps(interval_type{std::forward<Args>(args)...});
+    }
 
   private:
+    auto find_overlaps_impl(interval_type const &interval, raw_pointer node) const
+        -> std::vector<interval_type>;
+
     void left_rotate(raw_pointer node) override;
     void right_rotate(raw_pointer node) override;
     void insert_node_impl(raw_pointer node) override;
@@ -282,24 +292,31 @@ namespace binary::algorithm::tree {
   }
 
   template <IntervalNodeConcept NodeType>
-  auto IntervalTree<NodeType>::find_overlaps(interval_type interval, raw_pointer node) const
+  auto IntervalTree<NodeType>::find_overlaps_impl(interval_type const &interval,
+                                                  raw_pointer node) const
       -> std::vector<interval_type> {
     std::vector<interval_type> ret{};
     if (node == nullptr) {
       return ret;
     }
 
-    if (interval.low <= node->interval.high && interval.high >= node->interval.low) {
+    if (interval.is_overlap(node->interval)) {
       ret.push_back(node->interval);
     }
 
     if (interval.low <= get_max(node->leftr())) {
-      ret.insert(ret.end(), find_overlaps(interval, node->leftr()));
+      std::ranges::move(find_overlaps_impl(interval, node->leftr()), std::back_inserter(ret));
     } else {
-      ret.insert(ret.end(), find_overlaps(interval, node->rightr()));
+      std::ranges::move(find_overlaps_impl(interval, node->rightr()), std::back_inserter(ret));
     }
 
     return ret;
+  }
+
+  template <IntervalNodeConcept NodeType>
+  auto IntervalTree<NodeType>::find_overlaps(interval_type &&interval) const
+      -> std::vector<interval_type> {
+    return find_overlaps_impl(std::forward<interval_type>(interval), root_.get());
   }
 
 }  // namespace binary::algorithm::tree
