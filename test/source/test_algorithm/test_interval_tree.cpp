@@ -3,14 +3,12 @@
 //
 
 #include <binary/algorithm/all.hpp>
-#include <binary/utils.hpp>
 
 #include "doctest/doctest.h"
 
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <algorithm>
 #include <array>
-#include <random>
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
 TEST_SUITE("algorithm-interval-tree") {
@@ -54,7 +52,7 @@ TEST_SUITE("algorithm-interval-tree") {
 
     SUBCASE("test construct for uint  node from rvalue node") {
       UIntInterval int_interval{100u, 2000u};
-      UIntIntervalNode int_interval_node{std::move(int_interval)};
+      UIntIntervalNode int_interval_node{int_interval};
       CHECK_EQ(int_interval_node.interval.low, 100);
       CHECK_EQ(int_interval_node.interval.high, 2000);
       CHECK_EQ(int_interval_node.max, 2000);
@@ -95,6 +93,16 @@ TEST_SUITE("algorithm-interval-tree") {
     interval_tree.insert_node(nodes);
     CHECK_EQ(interval_tree.size(), nodes.size());
     CHECK_EQ(interval_tree.root()->key, 16);
+    CHECK_NOTHROW(check_black_height(interval_tree.root()));
+  }
+
+  TEST_CASE("test insert nodes fuzzy test") {
+    IntervalTree<IntIntervalNode> interval_tree{};
+
+    for (int i = 0; i < 1000; i += 2) {
+      interval_tree.insert_node(i, i + 3);
+    }
+    CHECK_EQ(interval_tree.size(), 500);
     CHECK_NOTHROW(check_black_height(interval_tree.root()));
   }
 
