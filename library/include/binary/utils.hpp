@@ -32,6 +32,9 @@ namespace binary::utils {
         (spdlog::debug("std::tuple values {} ", std::get<T>(tup)), 0)...};
   }
 
+  inline void set_debug() { spdlog::set_level(spdlog::level::debug); }
+  inline void set_trace() { spdlog::set_level(spdlog::level::trace); }
+
 }  // namespace binary::utils
 
 #endif  // BINARY_LIBRARY_INCLUDE_BINARY_UTLS_HPP_

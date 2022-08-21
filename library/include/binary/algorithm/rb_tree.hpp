@@ -92,7 +92,7 @@ namespace binary::algorithm::tree {
     friend bool operator==(IntNode const &lhs, IntNode const &rhs) { return lhs.key == rhs.key; }
   };
 
-  // NodeType must can default initialize and copyable
+  // NodeType must can default initialize and  movable
   template <NodeConcept NodeType> class RbTree {
   public:
     using pointer = typename NodeType::pointer;
@@ -134,7 +134,7 @@ namespace binary::algorithm::tree {
     [[nodiscard]] auto successor(raw_pointer node) const -> raw_pointer;
     [[nodiscard]] auto predecessor(raw_pointer node) const -> raw_pointer;
 
-    void inorder_walk(raw_pointer node) const;
+    virtual void inorder_walk(raw_pointer node, int indent = 0) const;
 
     // Ownership transfer
     void insert_node(pointer node);
@@ -372,11 +372,12 @@ namespace binary::algorithm::tree {
     insert_node_impl(node.release());
   }
 
-  template <NodeConcept NodeType> void RbTree<NodeType>::inorder_walk(raw_pointer node) const {
+  template <NodeConcept NodeType>
+  void RbTree<NodeType>::inorder_walk(raw_pointer node, int indent) const {
     if (node != nullptr) {
-      inorder_walk(node->leftr());
-      fmt::print("{} is_black {} \n", node->key, node->is_black());
-      inorder_walk(node->rightr());
+      inorder_walk(node->leftr(), indent);
+      fmt::print("{:{}} is_black {} \n", node->key, indent + 4, node->is_black());
+      inorder_walk(node->rightr(), indent);
     }
   }
 

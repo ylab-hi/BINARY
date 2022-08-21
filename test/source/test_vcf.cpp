@@ -28,7 +28,7 @@ TEST_CASE("testing vcf.hpp") {
 
     auto begin_record_iterator = *reader.begin();
 
-    spdlog::info("{} {}", begin_record_iterator.chrom(), begin_record_iterator.pos());
+    spdlog::debug("{} {}", begin_record_iterator.chrom(), begin_record_iterator.pos());
     CHECK_EQ(begin_record_iterator.chrom(), "chr10");
     CHECK_EQ(begin_record_iterator.pos(), 93567288 - 1);
     // 0-based
@@ -39,8 +39,8 @@ TEST_CASE("testing vcf.hpp") {
     for (auto& record : reader) {
       auto chrom = record.chrom();
       auto pos = record.pos();
-      spdlog::info("Chrom: {} Pos: {} SVTYPE: {} SVEND: {}", chrom, pos,
-                   get_info_field_string("SVTYPE", record), get_info_field_int32("SVEND", record));
+      spdlog::debug("Chrom: {} Pos: {} SVTYPE: {} SVEND: {}", chrom, pos,
+                    get_info_field_string("SVTYPE", record), get_info_field_int32("SVEND", record));
     }
   }
 
@@ -52,19 +52,19 @@ TEST_CASE("testing vcf.hpp") {
       auto& record = *iterator;
       auto chrom = record.chrom();
       auto pos = record.pos();
-      spdlog::info("Chrom: {} Pos: {} SVTYPE: {} SVEND: {}", chrom, pos,
-                   get_info_field_string("SVTYPE", *iterator),
-                   get_info_field_int32("SVEND", *iterator));
+      spdlog::debug("Chrom: {} Pos: {} SVTYPE: {} SVEND: {}", chrom, pos,
+                    get_info_field_string("SVTYPE", *iterator),
+                    get_info_field_int32("SVEND", *iterator));
     }
   }
 
   SUBCASE("test std algorithm usage") {
     std::for_each(reader.begin(), reader.end(),
-                  [](auto& record) { spdlog::info("chrom: {}", record.chrom()); });
+                  [](auto& record) { spdlog::debug("chrom: {}", record.chrom()); });
 
-    spdlog::info("number of chr10 {}",
-                 std::count_if(reader.begin(), reader.end(),
-                               [](auto& record) { return record.chrom() == "chr10"; }));
+    spdlog::debug("number of chr10 {}",
+                  std::count_if(reader.begin(), reader.end(),
+                                [](auto& record) { return record.chrom() == "chr10"; }));
   }
 }
 
@@ -77,11 +77,11 @@ TEST_CASE("test c++20 vcf ") {
 
   SUBCASE("test standard algorithm") {
     std::for_each(reader.begin(), reader.end(),
-                  [](auto const& record) { spdlog::info("chrom: {}", record.chrom()); });
+                  [](auto const& record) { spdlog::debug("chrom: {}", record.chrom()); });
 
-    spdlog::info("number of chr10 {}",
-                 std::count_if(reader.begin(), reader.end(),
-                               [](auto const& record) { return record.chrom() == "chr10"; }));
+    spdlog::debug("number of chr10 {}",
+                  std::count_if(reader.begin(), reader.end(),
+                                [](auto const& record) { return record.chrom() == "chr10"; }));
   }
 
   SUBCASE("test range and view") {
@@ -90,7 +90,7 @@ TEST_CASE("test c++20 vcf ") {
     for (auto record : reader | std::views::filter([](auto const& record) {
                          return record.chrom() == "chr10";
                        })) {
-      spdlog::info("chrom: {}", record.chrom());
+      spdlog::debug("chrom: {}", record.chrom());
     }
   }
 }

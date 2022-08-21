@@ -5,8 +5,10 @@
 #ifndef BINARY_LIBRARY_INCLUDE_BINARY_INTERVAL_TREE_HPP_
 #define BINARY_LIBRARY_INCLUDE_BINARY_INTERVAL_TREE_HPP_
 
-#include <binary/algorithm/rb_tree.hpp>
+#include <spdlog/fmt/ostr.h>
+#include <spdlog/spdlog.h>
 
+#include <binary/algorithm/rb_tree.hpp>
 namespace binary::algorithm::tree {
 
   /** Interval Tree Based on Red Black Tree
@@ -72,6 +74,11 @@ namespace binary::algorithm::tree {
       interval = other->interval;
     }
 
+    friend std::ostream &operator<<(std::ostream &os, IntervalNode const &node) {
+      os << "IntervalNode: " << node.interval << " max: " << node.max << " key: " << node.key;
+      return os;
+    }
+
     void set_color(Color color) { color_ = color; }
     [[nodiscard]] auto is_black() const -> bool { return color_ == Color::Black; }
     [[nodiscard]] auto is_red() const -> bool { return color_ == Color::Red; }
@@ -94,15 +101,31 @@ namespace binary::algorithm::tree {
     using key_type = std::remove_cv_t<KeyType>;
 
     constexpr BaseInterval() = default;
-    constexpr BaseInterval(key_type low_, key_type high_) : low{low_}, high{high_} {}
+    constexpr BaseInterval(BaseInterval const &other) = default;
+    constexpr BaseInterval &operator=(BaseInterval const &other) = default;
+    constexpr BaseInterval(BaseInterval &&other) noexcept = default;
+
+    constexpr BaseInterval &operator=(BaseInterval &&other) noexcept = default;
+    constexpr BaseInterval(key_type low_, key_type high_) : low{low_}, high{high_} {
+      assert(low <= high);
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, BaseInterval const &base_interval) {
+      os << "BaseInterval: " << base_interval.low << "-" << base_interval.high;
+      return os;
+    }
+
     key_type low{};
     key_type high{};
   };
 
-  using IntInterval = BaseInterval<std::uint32_t>;
+  // set template alias for interval
+  using IntInterval = BaseInterval<std::int32_t>;
   using IntIntervalNode = IntervalNode<IntInterval>;
+  using UIntInterval = BaseInterval<std::uint32_t>;
+  using UIntIntervalNode = IntervalNode<UIntInterval>;
 
-  class VcfInterval : public IntInterval {
+  class VcfInterval : public UIntInterval {
   public:
     constexpr VcfInterval() = default;
 
@@ -122,6 +145,8 @@ namespace binary::algorithm::tree {
 
     void delete_node(raw_pointer node);
 
+    void inorder_walk(raw_pointer node, int indent = 0) const override;
+
   private:
     void left_rotate(raw_pointer node) override;
     void right_rotate(raw_pointer node) override;
@@ -139,22 +164,31 @@ namespace binary::algorithm::tree {
 
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::left_rotate(raw_pointer node) {
+    spdlog::debug("left_rotate {}", *node);
+    spdlog::debug("left_rotate right child {}", *(node->right));
     RbTree<NodeType>::left_rotate(node);
     // update argument info
     update_max(node->parent, node->max);  // update node->parent->max
     update_max(node);                     // update node->max
+    spdlog::debug("after left_rotate {}", *node);
+    spdlog::debug("after left_rotate {}", *(node->parent));
   }
 
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::right_rotate(raw_pointer node) {
+    spdlog::debug("right_rotate {}", *node);
+    spdlog::debug("right_rotate left child {}", *(node->left));
     RbTree<NodeType>::right_rotate(node);
     // update argument info
     update_max(node->parent, node->max);  // update node->parent->max
     update_max(node);                     // update node->max
+    spdlog::debug("after right_rotate {}", *node);
+    spdlog::debug("after right_rotate {}", *(node->parent));
   }
 
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::insert_node_impl(raw_pointer node) {
+    spdlog::debug("insert_node {}", *node);
     raw_pointer x = root_.get();
     raw_pointer y = nullptr;
 
@@ -162,7 +196,7 @@ namespace binary::algorithm::tree {
       y = x;
 
       // update argument info
-      update_max(x, node->key);
+      update_max(x, node->max);
 
       if (node->key < x->key) {
         x = x->leftr();
@@ -200,6 +234,16 @@ namespace binary::algorithm::tree {
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::update_max(raw_pointer node) const {
     node->max = std::max({node->interval.high, get_max(node->leftr()), get_max(node->rightr())});
+  }
+
+  template <IntervalNodeConcept NodeType>
+  void IntervalTree<NodeType>::inorder_walk(raw_pointer node, int indent) const {
+    if (node != nullptr) {
+      inorder_walk(node->leftr(), indent);
+      fmt::print("{:{}}-{} is_black:{} max:{} \n", node->key, indent, node->interval.high,
+                 node->is_black(), node->max);
+      inorder_walk(node->rightr(), indent);
+    }
   }
 
 }  // namespace binary::algorithm::tree
