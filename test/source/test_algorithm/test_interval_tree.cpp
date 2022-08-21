@@ -115,10 +115,14 @@ TEST_SUITE("algorithm-interval-tree") {
 
     IntervalTree<UIntIntervalNode> interval_tree{};
     interval_tree.insert_node(nodes);
-    auto intervals = interval_tree.find_overlap(UIntInterval(22u, 25u));
+    auto intervals = interval_tree.find_overlap(22u, 25u);
+
     CHECK(intervals.has_value());
     CHECK_EQ(intervals->low, 15u);
     CHECK_EQ(intervals->high, 23u);
+
+    auto non_found = interval_tree.find_overlap(UIntInterval{100u, 111u});
+    CHECK_FALSE(non_found.has_value());
   }
 
   TEST_CASE("test delete") {}

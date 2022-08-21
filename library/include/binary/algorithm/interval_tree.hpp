@@ -9,6 +9,7 @@
 #include <spdlog/spdlog.h>
 
 #include <binary/algorithm/rb_tree.hpp>
+#include <binary/concepts.hpp>
 #include <optional>
 namespace binary::algorithm::tree {
 
@@ -111,7 +112,7 @@ namespace binary::algorithm::tree {
       assert(low <= high);
     }
 
-    auto check_overlap(BaseInterval const &other) const -> bool {
+    [[nodiscard]] auto is_overlap(BaseInterval const &other) const -> bool {
       return low <= other.high && other.low <= high;
     }
 
@@ -155,6 +156,13 @@ namespace binary::algorithm::tree {
 
     // TODO: Implement Interval Tree Query with Concurrency
     auto find_overlap(interval_type const &interval) const -> std::optional<interval_type>;
+
+    template <typename... Args>
+    requires binary::concepts::ArgsConstructible<interval_type, Args...>
+    auto find_overlap(Args &&...args) const -> std::optional<interval_type> {
+      return find_overlap(interval_type{std::forward<Args>(args)...});
+    }
+
     auto find_overlaps(interval_type interval, raw_pointer node = root_.get()) const
         -> std::vector<interval_type>;
 
@@ -165,7 +173,7 @@ namespace binary::algorithm::tree {
 
     auto transplant(raw_pointer target, raw_pointer source) -> raw_pointer;
 
-    auto get_max(raw_pointer node) const;
+    auto get_max(raw_pointer node) const -> key_type;
     void update_max(raw_pointer node, key_type key) const;
     void update_max(raw_pointer node) const;
 
@@ -230,7 +238,7 @@ namespace binary::algorithm::tree {
   }
 
   template <IntervalNodeConcept NodeType>
-  auto IntervalTree<NodeType>::get_max(raw_pointer node) const {
+  auto IntervalTree<NodeType>::get_max(raw_pointer node) const -> key_type {
     if (node == nullptr) {
       return std::numeric_limits<key_type>::lowest();
     }
@@ -262,9 +270,9 @@ namespace binary::algorithm::tree {
       -> std::optional<interval_type> {
     raw_pointer x = root_.get();
     while (x != nullptr) {
-      if (interval.check_overlap(x->interval)) {
+      if (interval.is_overlap(x->interval)) {
         return x->interval;
-      } else if (interval.low < x->max) {
+      } else if (interval.low <= get_max(x->leftr())) {
         x = x->leftr();
       } else {
         x = x->rightr();
@@ -285,7 +293,7 @@ namespace binary::algorithm::tree {
       ret.push_back(node->interval);
     }
 
-    if (interval.low <= node->left->max) {
+    if (interval.low <= get_max(node->leftr())) {
       ret.insert(ret.end(), find_overlaps(interval, node->leftr()));
     } else {
       ret.insert(ret.end(), find_overlaps(interval, node->rightr()));
