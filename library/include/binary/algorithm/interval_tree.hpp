@@ -29,7 +29,7 @@ namespace binary::algorithm::tree {
     requires std::semiregular<Interval>;
     requires std::same_as<decltype(interval.low), decltype(interval.high)>;
     interval.low <= interval.high;
-    Interval::key_type;
+    typename Interval::key_type;
   };
 
   template <typename Node>
@@ -49,6 +49,12 @@ namespace binary::algorithm::tree {
 
     IntervalNode() = default;
 
+    template <typename... Arg>
+    requires std::constructible_from<Interval, Arg...>
+    explicit IntervalNode(Arg &&...args)
+        : interval{std::forward<Arg>(args)...},
+          BaseNode<typename Interval::key_type>(interval.low) {}
+
     IntervalNode(IntervalNode const &other) = default;
     IntervalNode &operator=(IntervalNode const &other) = default;
     IntervalNode(IntervalNode &&other) noexcept = default;
@@ -58,7 +64,7 @@ namespace binary::algorithm::tree {
         : BaseNode<key_type>(interval_.low), interval{interval_}, max{interval_.high} {}
 
     explicit IntervalNode(Interval &&interval_)
-        : BaseNode<key_type>(interval_.low), max{interval_.high}, interval{std::move(interval_)} {}
+        : BaseNode<key_type>(interval_.low), interval{std::move(interval_)}, max{interval.high} {}
 
     ~IntervalNode() override = default;
 
@@ -67,8 +73,8 @@ namespace binary::algorithm::tree {
       max = other->max;
     }
 
-    key_type max{};
     Interval interval{};
+    key_type max{};
   };
 
   /** Interval Tree node
@@ -76,24 +82,27 @@ namespace binary::algorithm::tree {
    */
   template <KeyConcept KeyType = std::uint32_t> class BaseInterval {
   public:
-    using key_type = KeyType;
+    using key_type = std::remove_cv_t<KeyType>;
 
     BaseInterval() = default;
+    BaseInterval(key_type low_, key_type high_) : low{low_}, high{high_} {}
     key_type low{};
     key_type high{};
   };
 
-  class VcfInterval : public BaseInterval<std::uint32_t> {
-  public:
-    using BaseInterval::BaseInterval;
-    using BaseInterval::key_type;
+  using IntInterval = BaseInterval<std::uint32_t>;
+  using IntIntervalNode = IntervalNode<IntInterval>;
 
+  class VcfInterval : public IntInterval {
+  public:
     VcfInterval() = default;
 
   private:
     std::string chrom{};
     std::string svtype{};
   };
+
+  using VcfIntervalNode = IntervalNode<VcfInterval>;
 
   template <IntervalNodeConcept NodeType> class IntervalTree : public RbTree<NodeType> {
   public:
