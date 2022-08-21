@@ -23,7 +23,7 @@
 - Embrace C++20 standard
 - Supports modern C++ features
 - Support concurrency and thread safety
-- Safety, security and clean Over performance
+- Priority is given to safety and clean design
 - Hard to use wrongly
 - Testing extensively
 - Python bindings
