@@ -6,12 +6,45 @@
 //
 #include <doctest/doctest.h>
 
+#include <binary/csv.hpp>
 #include <binary/parser/all.hpp>
 
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <algorithm>
 #include <ranges>
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
+
+void test_vcf(std::string const& file_path) {
+  using namespace binary::parser;
+
+  auto vcf_reader = VcfReader{file_path};
+  assert(vcf_reader.is_open());
+
+  for (auto i = vcf_reader.query("chr17", 7707250, 7798250); i != vcf_reader.end();
+       i = vcf_reader.iter_query_record()) {
+    auto record = *i;
+    auto [chrom, pos] = *record;
+    spdlog::debug("Chrom: {} Pos: {} SVTYPE: {} SVEND: {}", chrom, pos,
+                  get_info_field_string("SVTYPE", record), get_info_field_int32("SVEND", record));
+  }
+}
+
+void read_tsv(std::string_view file_path) {
+  io::CSVReader<3, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in(
+      std::string(file_path).data());
+  in.read_header(io::ignore_extra_column, "chr", "start", "end");
+  std::string chr;
+  int start;
+  int end;
+  while (in.read_row(chr, start, end)) {
+    spdlog::debug("chr {} start {} ", chr, start);
+  }
+}
+
+TEST_CASE("smoke test for tsv") {
+  constexpr const char* tsv_path = "../../test/data/rck.scnt.tsv";
+  CHECK_NOTHROW(read_tsv(std::string(tsv_path)));
+}
 
 TEST_CASE("testing vcf.hpp") {
   using namespace binary::parser;
@@ -20,6 +53,9 @@ TEST_CASE("testing vcf.hpp") {
   VcfReader reader(file_path);
   CHECK_EQ(reader.is_open(), true);
   CHECK_EQ(reader.file_path(), file_path);
+
+  SUBCASE("smoke test for vcf") { CHECK_NOTHROW(test_vcf(std::string(file_path))); }
+
   SUBCASE("testing read record") {
     // test case
     // chr10   93567288        1       .       <TRA>

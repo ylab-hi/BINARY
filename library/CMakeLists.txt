@@ -50,7 +50,6 @@ add_library(
   ${PROJECT_NAME}
   # headers
   include/binary/csv.hpp
-  include/binary/test.hpp
   include/binary/exception.hpp
   include/binary/parser/info_field.hpp
   include/binary/utils.hpp
@@ -61,7 +60,6 @@ add_library(
   include/binary/algorithm/all.hpp
   include/binary/parser/all.hpp
   # sources
-  source/test.cpp
   source/utils.cpp
   source/vcf.cpp
   include/binary/algorithm/experimental.hpp

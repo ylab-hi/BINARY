@@ -44,8 +44,6 @@ auto main(int argc, char* argv[]) -> int {
     spdlog::debug("adjacent file path: {}", adjacent_path);
     spdlog::debug("non-linear file path: {}", nonlinear_path);
 
-    //    sv2nl::test_vcf(nonlinear_path);
-
     detect_dup(nonlinear_path, segment_path);
 
   } catch (const cxxopts::option_has_no_value_exception& err) {

@@ -30,7 +30,7 @@ namespace binary::utils {
   template <typename... T>
   [[maybe_unused]] constexpr void print_tuple(const std::tuple<T...>& tup) {
     (void)std::initializer_list<int>{
-        (spdlog::debug("std::tuple values {} ", std::get<T>(tup)), 0)...};
+        (spdlog::trace("std::tuple values {} ", std::get<T>(tup)), 0)...};
   }
 
   [[maybe_unused]] inline void set_debug() { spdlog::set_level(spdlog::level::debug); }
