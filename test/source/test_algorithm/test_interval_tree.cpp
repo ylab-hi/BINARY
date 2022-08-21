@@ -22,7 +22,28 @@ TEST_SUITE("algorithm-interval-tree") {
     CHECK_EQ(int_interval2.high, 2);
   }
 
-  TEST_CASE("test construct interval node") { IntIntervalNode int_interval_node{}; }
+  TEST_CASE("test construct interval node") {
+    IntIntervalNode int_interval_node{1u, 10u};
+    CHECK_EQ(int_interval_node.interval.low, 1);
+    CHECK_EQ(int_interval_node.interval.high, 10);
+    CHECK_EQ(int_interval_node.max, 10);
+
+    IntInterval int_interval{1u, 2u};
+    IntIntervalNode int_interval_node2{int_interval};
+    CHECK_EQ(int_interval_node2.interval.low, 1);
+    CHECK_EQ(int_interval_node2.interval.high, 2);
+    CHECK_EQ(int_interval_node2.max, 2);
+
+    IntIntervalNode int_interval_node3{{1u, 20u}};
+    CHECK_EQ(int_interval_node3.interval.low, 1);
+    CHECK_EQ(int_interval_node3.interval.high, 20);
+    CHECK_EQ(int_interval_node3.max, 20);
+
+    IntervalNode<BaseInterval<int>> interval_node{1, 10};
+    CHECK_EQ(interval_node.interval.low, 1);
+    CHECK_EQ(interval_node.interval.high, 10);
+    CHECK_EQ(interval_node.max, 10);
+  }
 
   TEST_CASE("test delete") {}
 

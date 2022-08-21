@@ -47,23 +47,24 @@ namespace binary::algorithm::tree {
     using reference_pointer = std::unique_ptr<IntervalNode> &;
     using key_type = typename Interval::key_type;
 
-    IntervalNode() = default;
+    constexpr IntervalNode() = default;
 
     template <typename... Arg>
     requires std::constructible_from<Interval, Arg...>
-    explicit IntervalNode(Arg &&...args)
-        : interval{std::forward<Arg>(args)...},
-          BaseNode<typename Interval::key_type>(interval.low) {}
+    explicit constexpr IntervalNode(Arg &&...args)
+        : BaseNode<key_type>(), interval{std::forward<Arg>(args)...}, max{interval.high} {
+      BaseNode<key_type>::key = interval.low;
+    }
 
-    IntervalNode(IntervalNode const &other) = default;
-    IntervalNode &operator=(IntervalNode const &other) = default;
-    IntervalNode(IntervalNode &&other) noexcept = default;
-    IntervalNode &operator=(IntervalNode &&other) noexcept = default;
+    constexpr IntervalNode(IntervalNode const &other) = default;
+    constexpr IntervalNode &operator=(IntervalNode const &other) = default;
+    constexpr IntervalNode(IntervalNode &&other) noexcept = default;
+    constexpr IntervalNode &operator=(IntervalNode &&other) noexcept = default;
 
-    explicit IntervalNode(Interval const &interval_)
+    explicit constexpr IntervalNode(Interval const &interval_)
         : BaseNode<key_type>(interval_.low), interval{interval_}, max{interval_.high} {}
 
-    explicit IntervalNode(Interval &&interval_)
+    explicit constexpr IntervalNode(Interval &&interval_)
         : BaseNode<key_type>(interval_.low), interval{std::move(interval_)}, max{interval.high} {}
 
     ~IntervalNode() override = default;
@@ -84,8 +85,8 @@ namespace binary::algorithm::tree {
   public:
     using key_type = std::remove_cv_t<KeyType>;
 
-    BaseInterval() = default;
-    BaseInterval(key_type low_, key_type high_) : low{low_}, high{high_} {}
+    constexpr BaseInterval() = default;
+    constexpr BaseInterval(key_type low_, key_type high_) : low{low_}, high{high_} {}
     key_type low{};
     key_type high{};
   };
@@ -95,7 +96,7 @@ namespace binary::algorithm::tree {
 
   class VcfInterval : public IntInterval {
   public:
-    VcfInterval() = default;
+    constexpr VcfInterval() = default;
 
   private:
     std::string chrom{};
