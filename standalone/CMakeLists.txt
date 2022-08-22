@@ -30,7 +30,7 @@ find_package(spdlog REQUIRED)
 # ---- Create standalone executable ----
 
 add_executable(
-  ${PROJECT_NAME} source/main.cpp source/detect_dup.cpp include/detect_dup.hpp source/util.cpp
+  ${PROJECT_NAME} source/sv2nl.cpp source/detect_dup.cpp include/detect_dup.hpp source/util.cpp
                   include/util.hpp
 )
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

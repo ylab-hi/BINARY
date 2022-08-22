@@ -30,7 +30,7 @@ namespace binary {
   template <typename Datatype> struct InfoField {
     using result_type = Datatype;
     const int data_id = BINARY_BCF_HT_DEFAULT;
-    auto get_result(Datatype const* data, int32_t /**unused**/) const -> result_type {
+    static auto get_result(Datatype const* data, int32_t /**unused**/) -> result_type {
       return *data;
     }
   };
