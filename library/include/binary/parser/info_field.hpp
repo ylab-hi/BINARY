@@ -4,6 +4,7 @@
 
 #ifndef BINARY_LIBRARY_INCLUDE_BINARY_INFO_FIELD_H_
 #define BINARY_LIBRARY_INCLUDE_BINARY_INFO_FIELD_H_
+#include <binary/concepts.hpp>
 #include <binary/types.hpp>
 #include <string>
 
@@ -24,7 +25,9 @@ namespace binary {
   constexpr int BINARY_BCF_HT_STR = 3;
   constexpr int BINARY_BCF_HT_LONG = (BINARY_BCF_HT_INT | 0x100);
 
-  template <typename Datatype> struct InfoField {
+  template <typename Datatype>
+  requires binary::concepts::IsAnyOf<Datatype, int, float, char, types::pos_t, int64_t>
+  struct InfoField {
     Datatype* data{nullptr};
     int32_t count{};
     int data_id{BINARY_BCF_HT_DEFAULT};

@@ -21,10 +21,8 @@
 #include <utility>
 
 namespace binary::parser {
-
-  // TODO: create a impl to hold vcf record data in every iterator
-
   using namespace types;
+
   class VcfRecord {
   public:
     VcfRecord() = default;
@@ -125,14 +123,6 @@ namespace binary::parser {
 
   template <typename DataType>
   auto get_info_field(const std::string& key, VcfRecord const& vcf_record) {
-    /**
-  #define BCF_HT_FLAG 0  header type
-  #define BCF_HT_INT  1
-  #define BCF_HT_REAL 2
-  #define BCF_HT_STR  3
-  #define BCF_HT_LONG (BCF_HT_INT | 0x100)  BCF_HT_INT, but for int64_t values; VCF only!
-  **/
-
     auto info_field = InfoField<DataType>{};
 
     if (int ret
