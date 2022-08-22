@@ -29,7 +29,7 @@ namespace binary {
     int32_t count{};
     int data_id{BINARY_BCF_HT_DEFAULT};
 
-    InfoField() {
+    constexpr InfoField() {
       if constexpr (std::same_as<Datatype, types::pos_t>) {
         data_id = BINARY_BCF_HT_INT;
       } else if constexpr (std::same_as<Datatype, float>) {
