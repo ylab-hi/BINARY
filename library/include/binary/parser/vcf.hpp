@@ -137,18 +137,13 @@ namespace binary::parser {
     auto info_field = InfoField<DataType>{};
     auto data_id = info_field.data_id;
 
-    DataType* data{nullptr};
-    int32_t count{};
-
     if (int ret = bcf_get_info_values(vcf_record.header(), vcf_record.record(), key.c_str(),
-                                      (void**)(&data), &count, data_id);
+                                      (void**)(&info_field.data), &info_field.count, data_id);
         ret < 0) {
       throw VcfReaderError("Failed to get info " + key);
     }
 
-    typename InfoField<DataType>::result_type result = info_field.get_result(data, count);
-    free(data);
-    return result;
+    return info_field.get_result(info_field.data, info_field.count);
   }
 
   auto get_info_field_int32(const std::string& key, VcfRecord const& vcf_record) -> pos_t;

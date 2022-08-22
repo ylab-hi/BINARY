@@ -28,6 +28,12 @@ namespace binary {
   constexpr int BINARY_BCF_HT_LONG = (BINARY_BCF_HT_INT | 0x100);
 
   template <typename Datatype> struct InfoField {
+    Datatype* data{nullptr};
+    int32_t count{};
+
+    InfoField() = default;
+    ~InfoField() { free(data); }
+
     using result_type = Datatype;
     const int data_id = BINARY_BCF_HT_DEFAULT;
     static auto get_result(Datatype const* data, int32_t /**unused**/) -> result_type {
@@ -36,12 +42,24 @@ namespace binary {
   };
 
   template <> struct InfoField<pos_t> {
+    pos_t* data{nullptr};
+    int32_t count{};
+
+    InfoField() = default;
+    ~InfoField() { free(data); }
+
     using result_type = pos_t;
     const int data_id = BINARY_BCF_HT_INT;
     static auto get_result(pos_t const* data, int32_t /**unused**/) -> result_type { return *data; }
   };
 
   template <> struct InfoField<int64_t> {
+    int64_t* data{nullptr};
+    int32_t count{};
+
+    InfoField() = default;
+    ~InfoField() { free(data); }
+
     using result_type = int64_t;
     const int data_id = BINARY_BCF_HT_LONG;
     static auto get_result(int64_t const* data, int32_t /**unused**/) -> result_type {
@@ -50,12 +68,24 @@ namespace binary {
   };
 
   template <> struct InfoField<float> {
+    float* data{nullptr};
+    int32_t count{};
+
+    InfoField() = default;
+    ~InfoField() { free(data); }
+
     using result_type = float;
     const int data_id = BINARY_BCF_HT_REAL;
     static auto get_result(float const* data, int32_t /**unused**/) -> result_type { return *data; }
   };
 
   template <> struct InfoField<char> {
+    char* data{nullptr};
+    int32_t count{};
+
+    InfoField() = default;
+    ~InfoField() { free(data); }
+
     using result_type = std::string;
     const int data_id = BINARY_BCF_HT_STR;
     static auto get_result(char const* data, int32_t count) -> result_type {
