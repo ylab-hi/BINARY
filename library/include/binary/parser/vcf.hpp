@@ -124,8 +124,7 @@ namespace binary::parser {
   };
 
   template <typename DataType>
-  auto get_info_field(const std::string& key, VcfRecord const& vcf_record) ->
-      typename InfoField<DataType>::result_type {
+  auto get_info_field(const std::string& key, VcfRecord const& vcf_record) {
     /**
   #define BCF_HT_FLAG 0  header type
   #define BCF_HT_INT  1
@@ -135,15 +134,15 @@ namespace binary::parser {
   **/
 
     auto info_field = InfoField<DataType>{};
-    auto data_id = info_field.data_id;
 
-    if (int ret = bcf_get_info_values(vcf_record.header(), vcf_record.record(), key.c_str(),
-                                      (void**)(&info_field.data), &info_field.count, data_id);
+    if (int ret
+        = bcf_get_info_values(vcf_record.header(), vcf_record.record(), key.c_str(),
+                              (void**)(&info_field.data), &info_field.count, info_field.data_id);
         ret < 0) {
       throw VcfReaderError("Failed to get info " + key);
     }
 
-    return info_field.get_result(info_field.data, info_field.count);
+    return info_field.result();
   }
 
   auto get_info_field_int32(const std::string& key, VcfRecord const& vcf_record) -> pos_t;
