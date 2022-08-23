@@ -46,7 +46,7 @@ namespace binary::parser::vcf {
       }
     }
 
-    template <typename T> auto get_deleter() {
+    template <typename T> auto deleter() {
       if constexpr (std::same_as<T, kstring_t>) {
         return std::unique_ptr<T, decltype(&bcf_deleter<T>)>{new kstring_t{}, &bcf_deleter<T>};
       } else {
@@ -129,12 +129,12 @@ namespace binary::parser::vcf {
       DataImpl(DataImpl&&) noexcept = default;
       auto operator=(DataImpl&&) noexcept -> DataImpl& = default;
 
-      decltype(get_deleter<htsFile>()) fp = get_deleter<htsFile>();
-      decltype(get_deleter<bcf_hdr_t>()) header = get_deleter<bcf_hdr_t>();
-      decltype(get_deleter<bcf1_t>()) record = get_deleter<bcf1_t>();
-      decltype(get_deleter<hts_itr_t>()) itr_ptr = get_deleter<hts_itr_t>();
-      decltype(get_deleter<tbx_t>()) idx_ptr = get_deleter<tbx_t>();
-      decltype(get_deleter<kstring_t>()) ks_ptr = get_deleter<kstring_t>();
+      decltype(deleter<htsFile>()) fp = deleter<htsFile>();
+      decltype(deleter<bcf_hdr_t>()) header = deleter<bcf_hdr_t>();
+      decltype(deleter<bcf1_t>()) record = deleter<bcf1_t>();
+      decltype(deleter<hts_itr_t>()) itr_ptr = deleter<hts_itr_t>();
+      decltype(deleter<tbx_t>()) idx_ptr = deleter<tbx_t>();
+      decltype(deleter<kstring_t>()) ks_ptr = deleter<kstring_t>();
     };
   }  // namespace details
 

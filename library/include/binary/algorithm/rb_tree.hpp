@@ -115,8 +115,8 @@ namespace binary::algorithm::tree {
       }
     }
 
-    auto search(const typename NodeType::key_type &key) const -> const raw_pointer;
-    auto search(const typename NodeType::key_type &key) -> raw_pointer;
+    [[maybe_unused]] auto search(const typename NodeType::key_type &key) const -> raw_pointer;
+    [[maybe_unused]] auto search(const typename NodeType::key_type &key) -> raw_pointer;
 
     /**
      * @brief return if the tree is empty
@@ -131,13 +131,13 @@ namespace binary::algorithm::tree {
     [[nodiscard]] auto minimum(raw_pointer node) const -> raw_pointer;
     [[nodiscard]] auto maximum(raw_pointer node) const -> raw_pointer;
 
-    [[nodiscard]] auto successor(raw_pointer node) const -> raw_pointer;
-    [[nodiscard]] auto predecessor(raw_pointer node) const -> raw_pointer;
+    [[maybe_unused]] [[nodiscard]] auto successor(raw_pointer node) const -> raw_pointer;
+    [[maybe_unused]] [[nodiscard]] auto predecessor(raw_pointer node) const -> raw_pointer;
 
-    virtual void inorder_walk(raw_pointer node, int indent = 0) const;
+    virtual void inorder_walk(raw_pointer node, int indent) const;
 
     // Ownership transfer
-    void insert_node(pointer node);
+    [[maybe_unused]] void insert_node(pointer node);
 
     template <typename... Args>
     requires std::constructible_from<NodeType, Args...>
@@ -218,8 +218,8 @@ namespace binary::algorithm::tree {
     return node;
   }
 
-  template <NodeConcept NodeType> auto RbTree<NodeType>::successor(raw_pointer node) const
-      -> raw_pointer {
+  template <NodeConcept NodeType>
+  [[maybe_unused]] auto RbTree<NodeType>::successor(raw_pointer node) const -> raw_pointer {
     if (node->right != nullptr) {
       return minimum(node->rightr());
     }
@@ -235,8 +235,8 @@ namespace binary::algorithm::tree {
     return temp;
   }
 
-  template <NodeConcept NodeType> auto RbTree<NodeType>::predecessor(raw_pointer node) const
-      -> raw_pointer {
+  template <NodeConcept NodeType>
+  [[maybe_unused]] auto RbTree<NodeType>::predecessor(raw_pointer node) const -> raw_pointer {
     if (node->left != nullptr) {
       return maximum(node->leftr());
     }
@@ -368,7 +368,8 @@ namespace binary::algorithm::tree {
     fix_insert(node);
   }
 
-  template <NodeConcept NodeType> void RbTree<NodeType>::insert_node(pointer node) {
+  template <NodeConcept NodeType>
+  [[maybe_unused]] void RbTree<NodeType>::insert_node(pointer node) {
     insert_node_impl(node.release());
   }
 
@@ -528,7 +529,8 @@ namespace binary::algorithm::tree {
   }
 
   template <NodeConcept NodeType>
-  auto RbTree<NodeType>::search(const typename NodeType::key_type &key) const -> const raw_pointer {
+  [[maybe_unused]] auto RbTree<NodeType>::search(const typename NodeType::key_type &key) const
+      -> raw_pointer {
     raw_pointer node = root();
     while (node != nullptr) {
       if (key == node->key) {
@@ -543,7 +545,8 @@ namespace binary::algorithm::tree {
   }
 
   template <NodeConcept NodeType>
-  auto RbTree<NodeType>::search(const typename NodeType::key_type &key) -> raw_pointer {
+  [[maybe_unused]] auto RbTree<NodeType>::search(const typename NodeType::key_type &key)
+      -> raw_pointer {
     raw_pointer node = root();
     while (node != nullptr) {
       if (key == node->key) {
