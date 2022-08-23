@@ -25,26 +25,24 @@ CPMAddPackage(
 )
 
 CPMAddPackage(NAME binary SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
-find_package(spdlog REQUIRED)
 
+function(add_standalone targetName source)
+  message("Adding standalone ${targetName}")
+  file(GLOB ${targetName}_source CONFIGURE_DEPENDS
+       ${CMAKE_CURRENT_LIST_DIR}/${targetName}/source/*.cpp
+  )
+  add_executable(${targetName} ${source} ${${targetName}_source})
+  target_compile_features(${targetName} PRIVATE cxx_std_20)
+  target_link_libraries(${targetName} PRIVATE binary::binary cxxopts stdc++fs)
+  target_include_directories(
+    ${targetName} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include
+                          ${CMAKE_CURRENT_LIST_DIR}/${targetName}/include
+  )
+  target_compile_options(${targetName} PRIVATE -Wall -Wextra -Wnon-virtual-dtor -pedantic)
+  set_target_properties(${targetName} PROPERTIES CXX_EXTENSIONS OFF)
+endfunction()
 # ---- Create standalone executable ----
 
 file(GLOB source CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/*.cpp)
-file(GLOB header CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/include/*.hpp)
 
-# Add standalone executable sv2nl
-file(GLOB sv2nl_source CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/sv2nl/source/*.cpp)
-file(GLOB sv2nl_header CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/sv2nl/source/*.hpp)
-
-add_executable(${PROJECT_NAME} ${source} ${header} ${sv2nl_source} ${sv2nl_header})
-
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "sv2nl")
-target_link_libraries(${PROJECT_NAME} PRIVATE binary::binary cxxopts stdc++fs)
-target_include_directories(
-  ${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/sv2nl/include
-)
-
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wnon-virtual-dtor -pedantic)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
+add_standalone(sv2nl ${source})
