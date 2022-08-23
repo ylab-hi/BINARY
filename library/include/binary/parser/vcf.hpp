@@ -338,7 +338,7 @@ namespace binary::parser::vcf {
   template <typename DataType>
   requires std::derived_from<DataType, BaseVcfRecord>
   constexpr auto VcfRanges<DataType>::has_index() const -> bool {
-    return pdata_->idx_ptr != nullptr;
+    return pdata_ == nullptr ? false : pdata_->idx_ptr != nullptr;
   }
 
   template <typename DataType>
