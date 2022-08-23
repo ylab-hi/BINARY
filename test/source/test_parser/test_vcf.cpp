@@ -32,7 +32,7 @@ TEST_SUITE("test vcf") {
   using namespace binary::parser::vcf;
   constexpr const char* file_path = "../../test/data/debug.vcf.gz";
 
-  VcfRanges<BaseVcfRecord> reader(file_path);
+  VcfRanges<VcfRecord> reader(file_path);
 
   TEST_CASE("testing vcf.hpp") {
     SUBCASE("test file path") { CHECK_EQ(reader.file_path(), file_path); }
@@ -50,7 +50,7 @@ TEST_SUITE("test vcf") {
     auto begin_iter = reader.begin();
     spdlog::debug("[testing read record {}", *begin_iter);
     CHECK_EQ(begin_iter->chrom, "chr10");
-    CHECK_EQ(begin_iter->svtype, "TRA");
+    CHECK_EQ(begin_iter->info_data->svtype, "TRA");
     // 0-based
     CHECK_EQ(begin_iter->pos, 93567288 - 1);
   }
@@ -77,7 +77,7 @@ TEST_SUITE("test vcf") {
 
   TEST_CASE("test c++20 vcf ") {
     VcfRanges<VcfRecord> reader(file_path);
-    static_assert(std::forward_iterator<VcfRanges<BaseVcfRecord>::iterator>);
+    static_assert(std::forward_iterator<VcfRanges<VcfRecord>::iterator>);
     static_assert(std::forward_iterator<VcfRanges<VcfRecord>::iterator>);
 
     for (auto record :
