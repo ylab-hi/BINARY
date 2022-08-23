@@ -1,3 +1,17 @@
+/**
+ * Mapping structure variations to non-linear splicing
+ * author: li002252
+ * date:   8/2/22
+ * license: MIT
+ *
+ * algorithm:
+ *
+ * 1. detect duplications
+ * 2. detect inversions
+ * 3. detect translocations
+ *
+ */
+
 #include <spdlog/spdlog.h>
 
 #include <binary/utils.hpp>
