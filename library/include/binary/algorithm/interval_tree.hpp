@@ -172,7 +172,7 @@ namespace binary::algorithm::tree {
 
     void delete_node(raw_pointer node);
 
-    void inorder_walk(raw_pointer node, int indent = 0) const override;
+    void inorder_walk(raw_pointer node, int indent) const override;
 
     auto find_overlap(interval_type const &interval) const -> std::optional<interval_type>;
 
