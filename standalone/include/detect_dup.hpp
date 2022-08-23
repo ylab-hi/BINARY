@@ -6,11 +6,10 @@
 #define BINARY_STANDALONE_INCLUDE_DETECT_DUP_HPP_
 
 #include <binary/parser/vcf.hpp>
-#include <binary/types.hpp>
 #include <concepts>
 #include <tuple>
 
-using binary::types::pos_t;
+using binary::parser::vcf::pos_t;
 
 template <std::integral T> auto overlap(T /**unused**/, T p2, T p3, T /**unused**/) -> bool {
   if (p3 > p2) return false;

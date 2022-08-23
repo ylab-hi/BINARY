@@ -7,8 +7,6 @@
 #include "util.hpp"
 
 void detect_dup(std::string const& vcf_path) {
-  using namespace binary::parser;
-  auto vcf_reader = VcfReader{vcf_path};
-
-  assert(vcf_reader.is_open());
+  using namespace binary::parser::vcf;
+  auto vcf_reader = VcfRanges<VcfRecord>{vcf_path};
 }

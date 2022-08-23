@@ -27,14 +27,31 @@ namespace binary::parser::vcf {
 
   namespace details {
 
-    void bcf_record_deleter(bcf1_t* record) noexcept { bcf_destroy(record); }
-    void bcf_hdr_deleter(bcf_hdr_t* hdr) noexcept { bcf_hdr_destroy(hdr); }
-    void bcf_hts_file_deleter(htsFile* hts_file) noexcept { hts_close(hts_file); }
-    void bcf_tbx_deleter(tbx_t* tbx) noexcept { tbx_destroy(tbx); }
-    void bcf_itr_deleter(hts_itr_t* itr) noexcept { hts_itr_destroy(itr); }
-    void bcf_kstring_deleter(kstring_t* kstring) noexcept {
-      free(kstring->s);
-      delete kstring;
+    template <typename T> constexpr void bcf_deleter(T* record) noexcept {
+      if constexpr (std::same_as<T, bcf1_t>) {
+        bcf_destroy(record);
+      } else if constexpr (std::same_as<T, bcf_hdr_t>) {
+        bcf_hdr_destroy(record);
+      } else if constexpr (std::same_as<T, htsFile>) {
+        hts_close(record);
+      } else if constexpr (std::same_as<T, hts_itr_t>) {
+        hts_itr_destroy(record);
+      } else if constexpr (std::same_as<T, tbx_t>) {
+        tbx_destroy(record);
+      } else if constexpr (std::same_as<T, kstring_t>) {
+        free(record->s);
+        delete record;
+      } else {
+        delete record;
+      }
+    }
+
+    template <typename T> auto get_deleter() {
+      if constexpr (std::same_as<T, kstring_t>) {
+        return std::unique_ptr<T, decltype(&bcf_deleter<T>)>{new kstring_t{}, &bcf_deleter<T>};
+      } else {
+        return std::unique_ptr<T, decltype(&bcf_deleter<T>)>{nullptr, &bcf_deleter<T>};
+      }
     }
 
     // #define BCF_HT_FLAG 0  header type
@@ -100,63 +117,24 @@ namespace binary::parser::vcf {
       return info_field.result();
     }
 
-    constexpr auto get_info_field_int32(std::string_view key, const bcf_hdr_t* hdr,
-                                        bcf1_t* record) {
-      return get_info_field<pos_t>(key, hdr, record);
-    }
-
-    auto get_info_field_int32(std::initializer_list<std::string_view> keys, const bcf_hdr_t* hdr,
-                              bcf1_t* record) -> std::vector<pos_t> {
-      std::vector<pos_t> result;
-      for (auto& key : keys) {
-        result.push_back(get_info_field_int32(key, hdr, record));
-      }
-      return result;
-    }
-
-    auto get_info_field_string(std::string_view key, const bcf_hdr_t* hdr, bcf1_t* record)
-        -> std::string {
-      return get_info_field<char>(key, hdr, record);
-    }
-
-    auto get_info_field_string(std::initializer_list<std::string_view> keys, const bcf_hdr_t* hdr,
-                               bcf1_t* record) -> std::vector<std::string> {
-      std::vector<std::string> result;
-      for (auto& key : keys) {
-        result.push_back(get_info_field_string(key, hdr, record));
-      }
-      return result;
-    }
-
     struct DataImpl {
       constexpr DataImpl() = default;
       explicit DataImpl(std::string_view file)
-          : fp{hts_open(file.data(), "r"), &details::bcf_hts_file_deleter},
-            header{bcf_hdr_read(fp.get()), &details::bcf_hdr_deleter},
-            record{bcf_init1(), &details::bcf_record_deleter} {}
+          : fp{hts_open(file.data(), "r"), &bcf_deleter<htsFile>},
+            header{bcf_hdr_read(fp.get()), &bcf_deleter<bcf_hdr_t>},
+            record{bcf_init1(), &bcf_deleter<bcf1_t>} {}
 
       DataImpl(DataImpl const&) = delete;
       auto operator=(DataImpl const&) -> DataImpl& = delete;
       DataImpl(DataImpl&&) noexcept = default;
       auto operator=(DataImpl&&) noexcept -> DataImpl& = default;
 
-      std::unique_ptr<htsFile, decltype(&details::bcf_hts_file_deleter)> fp{
-          nullptr, &details::bcf_hts_file_deleter};
-
-      std::unique_ptr<bcf_hdr_t, decltype(&details::bcf_hdr_deleter)> header{
-          nullptr, &details::bcf_hdr_deleter};
-
-      std::unique_ptr<bcf1_t, decltype(&details::bcf_record_deleter)> record{
-          nullptr, &details::bcf_record_deleter};
-
-      std::unique_ptr<tbx_t, decltype(&details::bcf_tbx_deleter)> idx_ptr{
-          nullptr, &details::bcf_tbx_deleter};
-
-      std::unique_ptr<hts_itr_t, decltype(&details::bcf_itr_deleter)> itr_ptr{
-          nullptr, &details::bcf_itr_deleter};
-
-      std::unique_ptr<kstring_t, decltype(&details::bcf_kstring_deleter)> ks_ptr{
-          new kstring_t{}, &details::bcf_kstring_deleter};
+      decltype(get_deleter<htsFile>()) fp = get_deleter<htsFile>();
+      decltype(get_deleter<bcf_hdr_t>()) header = get_deleter<bcf_hdr_t>();
+      decltype(get_deleter<bcf1_t>()) record = get_deleter<bcf1_t>();
+      decltype(get_deleter<hts_itr_t>()) itr_ptr = get_deleter<hts_itr_t>();
+      decltype(get_deleter<tbx_t>()) idx_ptr = get_deleter<tbx_t>();
+      decltype(get_deleter<kstring_t>()) ks_ptr = get_deleter<kstring_t>();
     };
   }  // namespace details
 
@@ -176,8 +154,8 @@ namespace binary::parser::vcf {
     constexpr void set_eof() { eof_ = true; }
 
     void init_info(std::shared_ptr<details::DataImpl> const& data) {
-      svtype = details::get_info_field_string("SVTYPE", data->header.get(), data->record.get());
-      svend = details::get_info_field_int32("SVEND", data->header.get(), data->record.get());
+      svtype = details::get_info_field<char>("SVTYPE", data->header.get(), data->record.get());
+      svend = details::get_info_field<pos_t>("SVEND", data->header.get(), data->record.get());
     }
 
     void next() {
@@ -225,7 +203,7 @@ namespace binary::parser::vcf {
 
   template <typename DataType> class VcfRanges {
   public:
-    explicit constexpr VcfRanges(std::string file_path);
+    explicit VcfRanges(std::string file_path);
 
     VcfRanges(VcfRanges const&) = delete;
     auto operator=(VcfRanges const&) -> VcfRanges& = delete;
@@ -312,7 +290,7 @@ namespace binary::parser::vcf {
     mutable std::shared_ptr<details::DataImpl> pdata_{nullptr};
   };
 
-  template <typename DataType> constexpr VcfRanges<DataType>::VcfRanges(std::string file_path)
+  template <typename DataType> VcfRanges<DataType>::VcfRanges(std::string file_path)
       : file_path_(std::move(file_path)) {}
 
   /**
