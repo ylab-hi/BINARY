@@ -6,6 +6,7 @@
 #include <string>
 
 #include "detect_dup.hpp"
+#include "util.hpp"
 
 auto main(int argc, char* argv[]) -> int {
   cxxopts::Options options("sv2nl", "Map structural Variation to Non-Linear Transcription");

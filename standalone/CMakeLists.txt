@@ -29,17 +29,22 @@ find_package(spdlog REQUIRED)
 
 # ---- Create standalone executable ----
 
-add_executable(
-  ${PROJECT_NAME} source/sv2nl.cpp source/detect_dup.cpp include/detect_dup.hpp source/util.cpp
-                  include/util.hpp
-)
+file(GLOB source CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/*.cpp)
+file(GLOB header CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/include/*.hpp)
+
+# Add standalone executable sv2nl
+file(GLOB sv2nl_source CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/sv2nl/source/*.cpp)
+file(GLOB sv2nl_header CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/sv2nl/source/*.hpp)
+
+add_executable(${PROJECT_NAME} ${source} ${header} ${sv2nl_source} ${sv2nl_header})
+
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "sv2nl")
 target_link_libraries(${PROJECT_NAME} PRIVATE binary::binary cxxopts stdc++fs)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include)
+target_include_directories(
+  ${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include ${CMAKE_CURRENT_LIST_DIR}/sv2nl/include
+)
 
-# target_link_libraries_system(${PROJECT_NAME} PRIVATE argparse) # suppress unused parameters
-# warning
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wnon-virtual-dtor -pedantic)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
