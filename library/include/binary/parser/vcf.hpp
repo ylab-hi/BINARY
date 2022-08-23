@@ -139,6 +139,7 @@ namespace binary::parser::vcf {
   }  // namespace details
 
   // TODO: extract base class
+  // TODO: add constraints
   class VcfRecord {
   public:
     constexpr VcfRecord() = default;

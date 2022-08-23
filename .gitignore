@@ -1,6 +1,7 @@
 ### C++ template
 # ide
 .idea
+.gdbinit
 # Prerequisites
 *.d
 
