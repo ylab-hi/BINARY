@@ -8,5 +8,5 @@
 
 void detect_dup(std::string const& vcf_path) {
   using namespace binary::parser::vcf;
-  auto vcf_reader = VcfRanges<VcfRecord>{vcf_path};
+  auto vcf_reader = VcfRanges<BaseVcfRecord>{vcf_path};
 }

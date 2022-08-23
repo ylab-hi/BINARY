@@ -23,7 +23,7 @@
 namespace binary::parser::vcf {
   using pos_t = std::uint32_t;
   using chrom_t = std::string;
-  class VcfRecord;
+  class BaseVcfRecord;
 
   namespace details {
 
@@ -138,26 +138,24 @@ namespace binary::parser::vcf {
     };
   }  // namespace details
 
-  // TODO: extract base class
-  // TODO: add constraints
-  class VcfRecord {
+  class BaseVcfRecord {
   public:
-    constexpr VcfRecord() = default;
-    explicit VcfRecord(std::shared_ptr<details::DataImpl> const& data) : data_{data}, eof_{false} {
+    constexpr BaseVcfRecord() = default;
+    explicit BaseVcfRecord(std::shared_ptr<details::DataImpl> const& data)
+        : data_{data}, eof_{false} {
       next();
     }
 
-    VcfRecord(VcfRecord const&) = default;
-    VcfRecord(VcfRecord&&) noexcept = default;
-    VcfRecord& operator=(VcfRecord const&) = default;
-    VcfRecord& operator=(VcfRecord&&) noexcept = default;
+    BaseVcfRecord(BaseVcfRecord const&) = default;
+    BaseVcfRecord(BaseVcfRecord&&) noexcept = default;
+    BaseVcfRecord& operator=(BaseVcfRecord const&) = default;
+    BaseVcfRecord& operator=(BaseVcfRecord&&) noexcept = default;
 
     constexpr void set_eof() { eof_ = true; }
 
-    void init_info(std::shared_ptr<details::DataImpl> const& data) {
-      svtype = details::get_info_field<char>("SVTYPE", data->header.get(), data->record.get());
-      svend = details::get_info_field<pos_t>("SVEND", data->header.get(), data->record.get());
-    }
+    void init_info(std::shared_ptr<details::DataImpl> const&) const {};
+
+    virtual ~BaseVcfRecord() = default;
 
     void next() {
       if (auto data = data_.lock()) {
@@ -173,14 +171,13 @@ namespace binary::parser::vcf {
       }
     }
 
-    friend auto operator<<(std::ostream& os, VcfRecord const& record) -> std::ostream& {
-      return os << "[VcfRecord chrom: " << record.chrom << " pos: " << record.pos
-                << " rlen: " << record.rlen << " svtype: " << record.svtype << ']';
+    friend auto operator<<(std::ostream& os, BaseVcfRecord const& record) -> std::ostream& {
+      return os << "[BaseVcfRecord chrom: " << record.chrom << " pos: " << record.pos
+                << " rlen: " << record.rlen << ']';
     }
 
-    friend auto operator==(VcfRecord const& lhs, VcfRecord const& rhs) -> bool {
-      return lhs.chrom == rhs.chrom && lhs.pos == rhs.pos && lhs.rlen == rhs.rlen
-             && lhs.svtype == rhs.svtype && lhs.svend == rhs.svend;
+    friend auto operator==(BaseVcfRecord const& lhs, BaseVcfRecord const& rhs) -> bool {
+      return lhs.chrom == rhs.chrom && lhs.pos == rhs.pos && lhs.rlen == rhs.rlen;
     };
 
     std::weak_ptr<details::DataImpl> data_{};
@@ -189,11 +186,8 @@ namespace binary::parser::vcf {
     std::string chrom{};
     pos_t pos{};
     pos_t rlen{};
-    // info field
-    std::string svtype{};
-    pos_t svend{};
 
-  private:
+  protected:
     void update(std::shared_ptr<details::DataImpl> const& data) {
       chrom = bcf_seqname_safe(data->header.get(), data->record.get());
       pos = static_cast<pos_t>(data->record->pos);
@@ -202,7 +196,40 @@ namespace binary::parser::vcf {
     }
   };
 
-  template <typename DataType> class VcfRanges {
+  class VcfRecord : public BaseVcfRecord {
+  public:
+    constexpr VcfRecord() = default;
+    explicit VcfRecord(std::shared_ptr<details::DataImpl> const& data) : BaseVcfRecord(data) {
+      init_info(data);
+    }
+    VcfRecord(VcfRecord const&) = default;
+    VcfRecord(VcfRecord&&) noexcept = default;
+    VcfRecord& operator=(VcfRecord const&) = default;
+    VcfRecord& operator=(VcfRecord&&) noexcept = default;
+
+    void init_info(std::shared_ptr<details::DataImpl> const& data) {
+      svtype = details::get_info_field<char>("SVTYPE", data->header.get(), data->record.get());
+      svend = details::get_info_field<pos_t>("SVEND", data->header.get(), data->record.get());
+    }
+
+    friend auto operator<<(std::ostream& os, VcfRecord const& record) -> std::ostream& {
+      return os << "[VcfRecord chrom: " << record.chrom << " pos: " << record.pos
+                << " rlen: " << record.rlen << " svtype: " << record.svtype
+                << " svend: " << record.svend << ']';
+    }
+
+    friend auto operator==(VcfRecord const& lhs, VcfRecord const& rhs) -> bool {
+      return lhs.chrom == rhs.chrom && lhs.pos == rhs.pos && lhs.rlen == rhs.rlen
+             && lhs.svtype == rhs.svtype && lhs.svend == rhs.svend;
+    };
+
+    pos_t svend{};
+    std::string svtype{};
+  };
+
+  template <typename DataType>
+  requires std::derived_from<DataType, BaseVcfRecord>
+  class VcfRanges {
   public:
     explicit VcfRanges(std::string file_path);
 
@@ -291,27 +318,31 @@ namespace binary::parser::vcf {
     mutable std::shared_ptr<details::DataImpl> pdata_{nullptr};
   };
 
-  template <typename DataType> VcfRanges<DataType>::VcfRanges(std::string file_path)
+  template <typename DataType>
+  requires std::derived_from<DataType, BaseVcfRecord> VcfRanges<DataType>::VcfRanges(
+      std::string file_path)
       : file_path_(std::move(file_path)) {}
 
   /**
    * @brief  get file path of the vcf file
    * @return  vcf file path
    */
-  template <typename DataType> constexpr auto VcfRanges<DataType>::file_path() const
-      -> const std::string& {
-    return file_path_;
-  }
+  template <typename DataType>
+  requires std::derived_from<DataType, BaseVcfRecord>
+  constexpr auto VcfRanges<DataType>::file_path() const -> const std::string& { return file_path_; }
 
   /**
    * @brief check if the vcf file has index
    * @return bool
    */
-  template <typename DataType> constexpr auto VcfRanges<DataType>::has_index() const -> bool {
+  template <typename DataType>
+  requires std::derived_from<DataType, BaseVcfRecord>
+  constexpr auto VcfRanges<DataType>::has_index() const -> bool {
     return pdata_->idx_ptr != nullptr;
   }
 
   template <typename DataType>
+  requires std::derived_from<DataType, BaseVcfRecord>
   constexpr auto VcfRanges<DataType>::check_query(std::string_view chrom) const -> int {
     if (!has_index()) {
       pdata_->idx_ptr.reset(tbx_index_load(file_path_.c_str()));
@@ -328,8 +359,9 @@ namespace binary::parser::vcf {
     return tid;
   }
 
-  template <typename DataType> constexpr auto VcfRanges<DataType>::iter_query_record() const
-      -> VcfRanges::iterator {
+  template <typename DataType>
+  requires std::derived_from<DataType, BaseVcfRecord>
+  constexpr auto VcfRanges<DataType>::iter_query_record() const -> VcfRanges::iterator {
     if (int ret = tbx_itr_next(pdata_->fp.get(), pdata_->idx_ptr.get(), pdata_->itr_ptr.get(),
                                pdata_->ks_ptr.get());
         ret < -1) {
@@ -351,6 +383,7 @@ namespace binary::parser::vcf {
    * @return vcf record
    */
   template <typename DataType>
+  requires std::derived_from<DataType, BaseVcfRecord>
   constexpr auto VcfRanges<DataType>::query(std::string const& chrom, pos_t start, pos_t end) const
       -> VcfRanges::iterator {
     seek();  // seek to the first record and initialize the iterator
@@ -365,19 +398,22 @@ namespace binary::parser::vcf {
     return iter_query_record();
   }
 
-  template <typename DataType> constexpr void VcfRanges<DataType>::seek() const {
-    pdata_ = std::make_shared<details::DataImpl>(file_path_);
-  }
-
-  template <typename DataType> constexpr auto VcfRanges<DataType>::begin() const
-      -> VcfRanges::iterator {
+  template <typename DataType>
+  requires std::derived_from<DataType, BaseVcfRecord>
+  constexpr auto VcfRanges<DataType>::begin() const -> VcfRanges::iterator {
     seek();
     return iterator{pdata_};
   }
 
-  template <typename DataType> constexpr auto VcfRanges<DataType>::end() const
-      -> std::default_sentinel_t {
+  template <typename DataType>
+  requires std::derived_from<DataType, BaseVcfRecord>
+  constexpr auto VcfRanges<DataType>::end() const -> std::default_sentinel_t {
     return std::default_sentinel;
+  }
+  template <typename DataType>
+  requires std::derived_from<DataType, BaseVcfRecord>
+  constexpr void VcfRanges<DataType>::seek() const {
+    pdata_ = std::make_shared<details::DataImpl>(file_path_);
   }
 
 }  // namespace binary::parser::vcf

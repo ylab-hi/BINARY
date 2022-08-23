@@ -17,7 +17,7 @@ DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 void test_vcf(std::string_view file_path) {
   using namespace binary::parser::vcf;
 
-  auto vcf_reader = VcfRanges<VcfRecord>{std::string(file_path)};
+  auto vcf_reader = VcfRanges<BaseVcfRecord>{std::string(file_path)};
   spdlog::debug("[test vcf] {}", vcf_reader.file_path());
   for (auto i = vcf_reader.query("chr17", 7707250, 7798250); i != vcf_reader.end();
        i = vcf_reader.iter_query_record()) {
@@ -30,7 +30,7 @@ TEST_SUITE("test vcf") {
   using namespace binary::parser::vcf;
   constexpr const char* file_path = "../../test/data/debug.vcf.gz";
 
-  VcfRanges<VcfRecord> reader(file_path);
+  VcfRanges<BaseVcfRecord> reader(file_path);
 
   TEST_CASE("testing vcf.hpp") {
     SUBCASE("test file path") { CHECK_EQ(reader.file_path(), file_path); }
@@ -44,6 +44,7 @@ TEST_SUITE("test vcf") {
     // .       .       CANONICAL;BOUNDARY=NEITHER;SVTYPE=TRA;
     // SR=2;OSR=1;CHR2=chr17;SVEND=7705262
 
+    VcfRanges<VcfRecord> reader(file_path);
     auto begin_iter = reader.begin();
     spdlog::debug("[testing read record {}", *begin_iter);
     CHECK_EQ(begin_iter->chrom, "chr10");
@@ -71,7 +72,7 @@ TEST_SUITE("test vcf") {
   }
 
   TEST_CASE("test c++20 vcf ") {
-    static_assert(std::forward_iterator<VcfRanges<VcfRecord>::iterator>);
+    static_assert(std::forward_iterator<VcfRanges<BaseVcfRecord>::iterator>);
 
     for (auto record :
          reader | std::views::filter([](auto const& record) { return record.chrom == "chr10"; })) {
