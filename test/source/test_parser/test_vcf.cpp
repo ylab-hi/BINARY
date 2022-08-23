@@ -51,6 +51,7 @@ TEST_SUITE("test vcf") {
     spdlog::debug("[testing read record {}", *begin_iter);
     CHECK_EQ(begin_iter->chrom, "chr10");
     CHECK_EQ(begin_iter->info_data->svtype, "TRA");
+
     // 0-based
     CHECK_EQ(begin_iter->pos, 93567288 - 1);
   }
@@ -77,7 +78,6 @@ TEST_SUITE("test vcf") {
 
   TEST_CASE("test c++20 vcf ") {
     VcfRanges<VcfRecord> reader(file_path);
-    static_assert(std::forward_iterator<VcfRanges<VcfRecord>::iterator>);
     static_assert(std::forward_iterator<VcfRanges<VcfRecord>::iterator>);
 
     for (auto record :
