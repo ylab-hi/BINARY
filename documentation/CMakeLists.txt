@@ -15,7 +15,7 @@ CPMAddPackage(NAME binary SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
 
 # set Doxyfile variables
 set(DOXYGEN_PROJECT_NAME binary)
-set(DOXYGEN_PROJECT_VERSION ${Greeter_VERSION})
+set(DOXYGEN_PROJECT_VERSION ${binary_VERSION})
 set(DOXYGEN_PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}/../library")
 set(DOXYGEN_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
 
@@ -24,9 +24,9 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/Doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Do
 configure_file(${CMAKE_CURRENT_LIST_DIR}/conf.py ${CMAKE_CURRENT_BINARY_DIR}/conf.py)
 
 add_custom_target(
-  BinaryDocs
-  ${CMAKE_COMMAND} -E make_directory "${DOXYGEN_OUTPUT_DIRECTORY}"
-  COMMAND "${m.css_SOURCE_DIR}/documentation/doxygen.py" "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
-  COMMAND echo "Docs written to: ${DOXYGEN_OUTPUT_DIRECTORY}"
-  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    BinaryDocs
+    ${CMAKE_COMMAND} -E make_directory "${DOXYGEN_OUTPUT_DIRECTORY}"
+    COMMAND "${m.css_SOURCE_DIR}/documentation/doxygen.py" "${CMAKE_CURRENT_BINARY_DIR}/conf.py"
+    COMMAND echo "Docs written to: ${DOXYGEN_OUTPUT_DIRECTORY}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )

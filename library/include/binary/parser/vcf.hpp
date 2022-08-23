@@ -294,7 +294,16 @@ namespace binary::parser::vcf {
       std::unique_ptr<value_type> value_{};
     };
 
+    /**
+     * Get file path
+     * @return vcf file path
+     */
     [[nodiscard]] constexpr auto file_path() const -> const std::string&;
+
+    /**
+     * Check is vcf file has index
+     * @return bool
+     */
     [[nodiscard]] constexpr auto has_index() const -> bool;
 
     constexpr auto iter_query_record() const -> VcfRanges::iterator;
