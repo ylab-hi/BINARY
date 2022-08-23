@@ -31,8 +31,9 @@ endif()
 
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/*.cpp)
 file(GLOB algorithm CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/test_algorithm/*.cpp)
+file(GLOB parsers CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/source/test_parser/*.cpp)
 
-add_executable(${PROJECT_NAME} ${sources} ${algorithm})
+add_executable(${PROJECT_NAME} ${sources} ${algorithm} ${parsers})
 target_link_libraries(${PROJECT_NAME} doctest::doctest binary::binary)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 

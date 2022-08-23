@@ -49,11 +49,9 @@ CPMAddPackage(
 add_library(
   ${PROJECT_NAME}
   # headers
-  include/binary/csv.hpp
+  include/binary/parser/csv.hpp
   include/binary/exception.hpp
-  include/binary/parser/info_field.hpp
   include/binary/utils.hpp
-  include/binary/types.hpp
   include/binary/algorithm/interval_tree.hpp
   include/binary/concepts.hpp
   include/binary/parser/vcf.hpp
@@ -61,7 +59,6 @@ add_library(
   include/binary/parser/all.hpp
   # sources
   source/utils.cpp
-  source/vcf.cpp
   include/binary/algorithm/experimental.hpp
   include/binary/algorithm/rb_tree.hpp
 )
