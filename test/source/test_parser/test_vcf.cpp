@@ -17,13 +17,15 @@ DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 void test_vcf(std::string_view file_path) {
   using namespace binary::parser::vcf;
 
-  auto vcf_reader = VcfRanges<BaseVcfRecord>{std::string(file_path)};
+  auto vcf_reader = VcfRanges<VcfRecord>{std::string(file_path)};
   spdlog::debug("[test vcf] {}", vcf_reader.file_path());
+  CHECK_EQ(vcf_reader.has_index(), false);
   for (auto i = vcf_reader.query("chr17", 7707250, 7798250); i != vcf_reader.end();
        i = vcf_reader.iter_query_record()) {
     auto record = *i;
     spdlog::info("[test vcf] {}", record);
   }
+  CHECK_EQ(vcf_reader.has_index(), true);
 }
 
 TEST_SUITE("test vcf") {
@@ -54,12 +56,14 @@ TEST_SUITE("test vcf") {
   }
 
   TEST_CASE("testing read all record") {
+    VcfRanges<VcfRecord> reader(file_path);
     for (auto record : reader) {
       spdlog::debug("[testing read all record {}", record);
     }
   }
 
   TEST_CASE("test std algorithm usage") {
+    VcfRanges<VcfRecord> reader(file_path);
     auto begin = reader.begin();
     auto end = reader.end();
     auto v = std::views::common(std::ranges::subrange{begin, end});
@@ -72,7 +76,9 @@ TEST_SUITE("test vcf") {
   }
 
   TEST_CASE("test c++20 vcf ") {
+    VcfRanges<VcfRecord> reader(file_path);
     static_assert(std::forward_iterator<VcfRanges<BaseVcfRecord>::iterator>);
+    static_assert(std::forward_iterator<VcfRanges<VcfRecord>::iterator>);
 
     for (auto record :
          reader | std::views::filter([](auto const& record) { return record.chrom == "chr10"; })) {
