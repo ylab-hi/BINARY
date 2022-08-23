@@ -138,6 +138,7 @@ namespace binary::parser::vcf {
     };
   }  // namespace details
 
+  // TODO: Use Pointer to INFO field to replace inheritance
   class BaseVcfRecord {
   public:
     constexpr BaseVcfRecord() = default;
