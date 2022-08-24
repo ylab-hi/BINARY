@@ -101,6 +101,14 @@ namespace binary::parser::vcf {
           return *data;
         }
       }
+
+      [[maybe_unused]] static constexpr auto result_type() {
+        if constexpr (std::same_as<Datatype, char>) {
+          return std::string{};
+        } else {
+          return Datatype{};
+        }
+      }
     };
 
     template <typename DataType>
@@ -178,6 +186,9 @@ namespace binary::parser::vcf {
 
       constexpr void set_eof() { eof_ = true; }
 
+      template <typename... T> void init_info_keys(T&&... args) {
+        info_data->init_keys(std::forward<T>(args)...);
+      }
       void next() {
         if (auto data = data_.lock()) {
           if (int ret = bcf_read(data->fp.get(), data->header.get(), data->record.get());
@@ -223,6 +234,35 @@ namespace binary::parser::vcf {
         pos = static_cast<pos_t>(data->record->pos);
         rlen = static_cast<pos_t>(data->record->rlen);
         info_data->update(data);
+      }
+    };
+
+    template <typename... T> struct InfoFieldFactory : public details::BaseInfoField {
+      std::tuple<decltype(InfoGetter<T>::result_type())...> data_tuple{};
+      std::array<std::string, sizeof...(T)> keys_array{};
+
+      template <typename... U>
+      requires(std::convertible_to<U, std::string>&&...) explicit InfoFieldFactory(U... args)
+          : keys_array{args...} {
+        static_assert(sizeof...(T) == sizeof...(U), "Number of keys and values do not match");
+      }
+      InfoFieldFactory(InfoFieldFactory const&) = default;
+      InfoFieldFactory& operator=(InfoFieldFactory const&) = default;
+      InfoFieldFactory(InfoFieldFactory&&) noexcept = default;
+      InfoFieldFactory& operator=(InfoFieldFactory&&) noexcept = default;
+      ~InfoFieldFactory() override = default;
+
+      template <typename... U> void init_keys(U... keys) {
+        static_assert(sizeof...(U) == sizeof...(T), "Number of keys and values do not match");
+        keys_array = {keys...};
+      }
+
+      void update(std::shared_ptr<DataImpl> const& data) override {
+        data_tuple = [&]<std::size_t... I>(std::index_sequence<I...>) {
+          return std::tuple(
+              get_info_field<T>(keys_array[I], data->header.get(), data->record.get())...);
+        }
+        (std::make_index_sequence<sizeof...(T)>{});
       }
     };
 
