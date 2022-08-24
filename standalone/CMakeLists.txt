@@ -27,7 +27,7 @@ CPMAddPackage(
 CPMAddPackage(NAME binary SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
 
 function(add_standalone targetName source)
-  message("Adding standalone ${targetName}")
+  message(STATUS "Adding standalone ${targetName}")
   file(GLOB ${targetName}_source CONFIGURE_DEPENDS
        ${CMAKE_CURRENT_LIST_DIR}/${targetName}/source/*.cpp
   )
