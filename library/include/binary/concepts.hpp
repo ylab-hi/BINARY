@@ -11,6 +11,9 @@ namespace binary::concepts {
   template <typename T, typename... U>
   concept IsAnyOf = (std::same_as<T, U> || ...);
 
+  template <typename T, typename... U>
+  concept IsAllOf = (std::same_as<T, U> && ...);
+
   template <typename T, typename... Args>
   concept ArgsConstructible
       = std::constructible_from<T, Args...> &&(!IsAnyOf<T, std::remove_cvref_t<Args>...>);

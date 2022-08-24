@@ -85,4 +85,8 @@ TEST_SUITE("test vcf") {
       spdlog::debug("chrom: {}", record);
     }
   }
+
+  TEST_CASE("test info factory") {
+    details::InfoFieldFactory<char, pos_t> info_field1("SVTYPE", "SVEND");
+  }
 }
