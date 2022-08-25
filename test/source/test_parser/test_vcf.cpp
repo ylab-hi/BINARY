@@ -18,15 +18,21 @@ DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 void test_vcf_query(std::string_view file_path) {
   using namespace binary::parser::vcf;
 
-  auto vcf_reader = VcfRanges<VcfRecord>{std::string(file_path)};
-  spdlog::info("[test vcf query] {}", vcf_reader.file_path());
-  CHECK_EQ(vcf_reader.has_read_index(), false);
-  for (auto i = vcf_reader.query("chr17", 7707250, 7798250); i != vcf_reader.end();
-       i = vcf_reader.iter_query_record()) {
+  auto vcf_ranges = VcfRanges<VcfRecord>{std::string(file_path)};
+
+  spdlog::debug("[test vcf query] {}", vcf_ranges.file_path());
+  CHECK_EQ(vcf_ranges.has_read_index(), false);
+  for (auto i = vcf_ranges.query("chr17", 7707250, 7798250); i != vcf_ranges.end();
+       i = vcf_ranges.iter_query_record()) {
     auto record = *i;
     spdlog::debug("[test vcf] {}", record);
   }
-  CHECK_EQ(vcf_reader.has_read_index(), true);
+
+  for (auto i = vcf_ranges.query("chr10"); i != vcf_ranges.end();
+       i = vcf_ranges.iter_query_record()) {
+    spdlog::debug("[test vcf query only chrom] {}", *i);
+  }
+  CHECK_EQ(vcf_ranges.has_read_index(), true);
 }
 
 void test_vcf_iter(std::string_view file_path) {
@@ -52,12 +58,13 @@ TEST_SUITE("test vcf") {
     CHECK_EQ(vcf_ranges_copy.file_path(), vcf_ranges_move.file_path());
   }
 
+  TEST_CASE("test vcf query") { CHECK_NOTHROW(test_vcf_query(file_path)); }
+
   TEST_CASE("testing vcf.hpp") {
     SUBCASE("test file path") {
       CHECK_EQ(vcf_ranges.file_path(), file_path);
       CHECK(vcf_ranges.has_index_file());
     }
-    SUBCASE("test smoke vcf") { CHECK_NOTHROW(test_vcf_query(std::string(file_path))); }
     SUBCASE("test iter vcf without index") {
       VcfRanges<VcfRecord> vcf_ranges3(uncompressed_file_path);
       CHECK_EQ(vcf_ranges3.has_index_file(), false);

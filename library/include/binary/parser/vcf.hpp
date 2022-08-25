@@ -197,10 +197,11 @@ namespace binary::parser::vcf {
   }  // namespace details
 
   // export template this namespace
+  using details::BaseInfoField;
   using details::InfoFieldConcept;
   using details::InfoFieldFactory;
 
-  struct [[maybe_unused]] InfoField : public details::BaseInfoField {
+  struct [[maybe_unused]] InfoField : public BaseInfoField {
     std::string svtype{};
     pos_t svend{};
 
@@ -220,6 +221,7 @@ namespace binary::parser::vcf {
       os << "svtype: " << info.svtype << " svend: " << info.svend;
       return os;
     }
+    // KEEP IN MIND to define operator==
   };
 
   template <InfoFieldConcept InfoType> class BaseVcfRecord {
@@ -269,7 +271,8 @@ namespace binary::parser::vcf {
     }
 
     friend auto operator==(BaseVcfRecord const& lhs, BaseVcfRecord const& rhs) -> bool {
-      return lhs.chrom == rhs.chrom && lhs.pos == rhs.pos && lhs.rlen == rhs.rlen;
+      return lhs.chrom == rhs.chrom && lhs.pos == rhs.pos && lhs.rlen == rhs.rlen
+             && *lhs.info == *rhs.info;
     };
 
     std::weak_ptr<details::DataImpl> data_{};
@@ -396,8 +399,11 @@ namespace binary::parser::vcf {
     [[nodiscard]] constexpr auto has_index_file() const -> bool;
 
     constexpr auto iter_query_record() const -> VcfRanges::iterator;
-    constexpr auto query(std::string const& chrom, pos_t start, pos_t end) const
+
+    constexpr auto query(std::string_view chrom, pos_t start, pos_t end) const
         -> VcfRanges::iterator;
+
+    constexpr auto query(std::string_view chrom) const -> VcfRanges::iterator;
 
     constexpr auto begin() const -> iterator;
     [[nodiscard]] constexpr auto end() const -> std::default_sentinel_t;
@@ -439,9 +445,9 @@ namespace binary::parser::vcf {
 
   template <RecordConcept RecordType>
   constexpr auto VcfRanges<RecordType>::check_query(std::string_view chrom) const -> int {
+    if (!has_index_file()) throw VcfReaderError("Cannot find index file for " + file_path_);
     if (!has_read_index()) {
-      pdata_->idx_ptr.reset(tbx_index_load(file_path_.c_str()));
-      if (!pdata_->idx_ptr) {
+      if (pdata_->idx_ptr.reset(tbx_index_load(file_path_.c_str())); !pdata_->idx_ptr) {
         throw VcfReaderError("Failed to load index for " + file_path_);
       }
     }
@@ -450,7 +456,7 @@ namespace binary::parser::vcf {
       throw VcfReaderError(std::string(chrom) + " is not in the vcf file " + file_path_);
     }
     auto tid = tbx_name2id(pdata_->idx_ptr.get(), chrom.data());
-    assert(tid > 0);
+    //    assert(tid > 0);
     return tid;
   }
 
@@ -469,6 +475,8 @@ namespace binary::parser::vcf {
     return iterator(pdata_);
   }
 
+  // FIXME: query cannot work as expected
+
   /**
    * @brief  query the vcf file if has index
    * @param chrom chromosome name
@@ -477,16 +485,29 @@ namespace binary::parser::vcf {
    * @return vcf record
    */
   template <RecordConcept RecordType>
-  constexpr auto VcfRanges<RecordType>::query(std::string const& chrom, pos_t start,
-                                              pos_t end) const -> VcfRanges::iterator {
-    seek();  // seek to the first record and initialize the iterator
+  constexpr auto VcfRanges<RecordType>::query(std::string_view chrom, pos_t start, pos_t end) const
+      -> VcfRanges::iterator {
+    seek();  // reset pdata_
 
     auto tid = check_query(chrom);  // may throw error
     pdata_->itr_ptr.reset(tbx_itr_queryi(pdata_->idx_ptr.get(), tid, start, end));
 
     if (!pdata_->itr_ptr) {
-      throw VcfReaderError("Query-> Failed to query " + chrom + ":" + std::to_string(start) + "-"
-                           + std::to_string(end));
+      throw VcfReaderError("Query-> Failed to query " + std::string(chrom) + ":"
+                           + std::to_string(start) + "-" + std::to_string(end));
+    }
+    return iter_query_record();
+  }
+
+  template <RecordConcept RecordType>
+  constexpr auto VcfRanges<RecordType>::query(std::string_view chrom) const -> VcfRanges::iterator {
+    seek();  //  reset pdata_
+
+    check_query(chrom);  // may throw error
+    pdata_->itr_ptr.reset(tbx_itr_querys(pdata_->idx_ptr.get(), chrom.data()));
+
+    if (!pdata_->itr_ptr) {
+      throw VcfReaderError("Query-> Failed to query " + std::string(chrom));
     }
     return iter_query_record();
   }
