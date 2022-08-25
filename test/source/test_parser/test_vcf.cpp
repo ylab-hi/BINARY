@@ -4,6 +4,7 @@
 //
 // Created by li002252 on 6/13/22.
 //
+#include <binary/algorithm/interval_tree.hpp>
 #include <binary/parser/vcf.hpp>
 #include <binary/utils.hpp>
 
@@ -64,9 +65,9 @@ TEST_SUITE("test vcf") {
   }
 
   TEST_CASE("test std algorithm usage") {
-    VcfRanges<VcfRecord> reader(file_path);
-    auto begin = reader.begin();
-    auto end = reader.end();
+    VcfRanges<VcfRecord> vcf_reader(file_path);
+    auto begin = vcf_reader.begin();
+    auto end = vcf_reader.end();
     auto v = std::views::common(std::ranges::subrange{begin, end});
     std::for_each(v.begin(), v.end(),
                   [](auto record) { spdlog::debug("[test std algorithm] {}", record); });
@@ -77,16 +78,43 @@ TEST_SUITE("test vcf") {
   }
 
   TEST_CASE("test c++20 vcf ") {
-    VcfRanges<VcfRecord> reader(file_path);
+    VcfRanges<VcfRecord> vcf_reader(file_path);
     static_assert(std::forward_iterator<VcfRanges<VcfRecord>::iterator>);
 
-    for (auto record :
-         reader | std::views::filter([](auto const& record) { return record.chrom == "chr10"; })) {
+    for (auto record : vcf_reader | std::views::filter([](auto const& record) {
+                         return record.chrom == "chr10";
+                       })) {
       spdlog::debug("chrom: {}", record);
     }
   }
 
   TEST_CASE("test info factory") {
     details::InfoFieldFactory<char, pos_t> info_field1("SVTYPE", "SVEND");
+  }
+
+  TEST_CASE("test construct vcf interval node from vcf record") {
+    VcfRanges<VcfRecord> vcf_reader(file_path);
+    auto begin = vcf_reader.begin();
+    auto vcf_interval_node = VcfIntervalNode{*begin};
+    CHECK_EQ(vcf_interval_node.interval.record.chrom, "chr10");
+    CHECK_EQ(vcf_interval_node.interval.record.pos, 93567288 - 1);
+    CHECK_EQ(vcf_interval_node.interval.record.info_data->svtype, "TRA");
+  }
+
+  TEST_CASE("test construct vcf interval node from low high record") {
+    VcfRanges<VcfRecord> vcf_reader(file_path);
+    auto begin = vcf_reader.begin();
+    auto start = begin->pos;
+    auto end = begin->info_data->svend;
+    auto vcf_interval_node = VcfIntervalNode{end, start, *begin};
+    CHECK_EQ(vcf_interval_node.interval.record.chrom, "chr10");
+    CHECK_EQ(vcf_interval_node.interval.record.pos, 93567288 - 1);
+    CHECK_EQ(vcf_interval_node.interval.record.info_data->svtype, "TRA");
+  }
+
+  TEST_CASE("test construct vcf interval tree from vcf record") {
+    using namespace binary::algorithm::tree;
+    binary::utils::set_debug();
+    auto interval_tree = IntervalTree<VcfIntervalNode>{};
   }
 }

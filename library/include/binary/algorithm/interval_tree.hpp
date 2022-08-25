@@ -136,32 +136,6 @@ namespace binary::algorithm::tree {
   using IntIntervalNode = IntervalNode<IntInterval>;
   using UIntIntervalNode = IntervalNode<UIntInterval>;
 
-  // TODO: move to vcf parser library
-  class VcfInterval : public UIntInterval {
-  public:
-    constexpr VcfInterval() = default;
-    VcfInterval(std::string chrom_, std::string svtype_)
-        : chrom{std::move(chrom_)}, svtype{std::move(svtype_)} {}
-
-    VcfInterval(VcfInterval const &other) = default;
-    VcfInterval &operator=(VcfInterval const &other) = default;
-    VcfInterval(VcfInterval &&other) noexcept = default;
-    VcfInterval &operator=(VcfInterval &&other) noexcept = default;
-
-    ~VcfInterval() override = default;
-
-    friend std::ostream &operator<<(std::ostream &os, VcfInterval const &vcf_interval) {
-      os << "VcfInterval: " << vcf_interval.low << "-" << vcf_interval.high << " "
-         << vcf_interval.chrom << " " << vcf_interval.svtype;
-      return os;
-    }
-
-    std::string chrom{};
-    std::string svtype{};
-  };
-
-  using VcfIntervalNode = IntervalNode<VcfInterval>;
-
   template <IntervalNodeConcept NodeType> class IntervalTree : public RbTree<NodeType> {
   public:
     using key_type = typename NodeType::key_type;
