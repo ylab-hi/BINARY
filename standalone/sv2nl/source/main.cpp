@@ -19,8 +19,8 @@
 #include <iostream>
 #include <string>
 
-#include "detect_dup.hpp"
 #include "util.hpp"
+#include "vcf_interval.hpp"
 
 auto main(int argc, char* argv[]) -> int {
   cxxopts::Options options("sv2nl", "Map structural Variation to Non-Linear Transcription");
@@ -55,8 +55,6 @@ auto main(int argc, char* argv[]) -> int {
     }
     spdlog::debug("segment file path: {}", segment_path);
     spdlog::debug("non-linear file path: {}", nonlinear_path);
-
-    detect_dup(nonlinear_path);
 
   } catch (const cxxopts::option_has_no_value_exception& err) {
     spdlog::error("error parsing options: {} ", err.what());
