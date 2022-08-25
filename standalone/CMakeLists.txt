@@ -38,7 +38,7 @@ function(add_standalone targetName source)
     ${targetName} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include
                           ${CMAKE_CURRENT_LIST_DIR}/${targetName}/include
   )
-  target_compile_options(${targetName} PRIVATE -Wall -Wextra -Wnon-virtual-dtor -pedantic)
+  target_compile_options(${targetName} PRIVATE -Wall -Wextra -Wnon-virtual-dtor -pedantic -Werror)
   set_target_properties(${targetName} PROPERTIES CXX_EXTENSIONS OFF)
 endfunction()
 # ---- Create standalone executable ----

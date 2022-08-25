@@ -9,8 +9,11 @@
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
 
+#include <binary/algorithm/interval_tree.hpp>
 #include <binary/concepts.hpp>
 #include <binary/exception.hpp>
+#include <binary/utils.hpp>
+#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <iterator>
@@ -19,10 +22,9 @@
 #include <string>
 #include <tuple>
 #include <utility>
-
 namespace binary::parser::vcf {
   using pos_t = std::uint32_t;
-  using chrom_t = std::string;
+  using chrom_t [[maybe_unused]] = std::string;
 
   namespace details {
 
@@ -155,86 +157,12 @@ namespace binary::parser::vcf {
     };
 
     template <typename T>
-    concept InfoTypeConcept = requires(T t) {
+    concept InfoFieldConcept = requires(T t) {
       requires std::semiregular<T>;
       requires std::movable<T>;
       requires std::derived_from<T, details::BaseInfoField>;
       t.update(std::shared_ptr<details::DataImpl>{});
       std::cout << t;
-    };
-
-    template <details::InfoTypeConcept InfoType> class BaseVcfRecord {
-    public:
-      using info_type = InfoType;
-
-      constexpr BaseVcfRecord() = default;
-      explicit BaseVcfRecord(std::shared_ptr<details::DataImpl> const& data)
-          : data_{data}, eof_{false} {
-        next();
-      }
-
-      BaseVcfRecord(BaseVcfRecord const& other) { clone(other); }
-      BaseVcfRecord& operator=(BaseVcfRecord const& other) {
-        clone(other);
-        return *this;
-      };
-
-      BaseVcfRecord& operator=(BaseVcfRecord&&) noexcept = default;
-      BaseVcfRecord(BaseVcfRecord&&) noexcept = default;
-
-      ~BaseVcfRecord() = default;
-
-      constexpr void set_eof() { eof_ = true; }
-
-      template <typename... T> void init_info_keys(T&&... args) {
-        info_data->init_keys(std::forward<T>(args)...);
-      }
-      void next() {
-        if (auto data = data_.lock()) {
-          if (int ret = bcf_read(data->fp.get(), data->header.get(), data->record.get());
-              ret < -1) {
-            throw VcfReaderError("Failed to read line in vcf ");
-          } else if (ret == -1) {
-            set_eof();
-          } else {
-            update(data);
-          }
-        } else {
-          throw VcfReaderError("Using dangling VcfRecord");
-        }
-      }
-
-      friend auto operator<<(std::ostream& os, BaseVcfRecord const& record) -> std::ostream& {
-        return os << "[BaseVcfRecord chrom: " << record.chrom << " pos: " << record.pos
-                  << " rlen: " << record.rlen << "info: " << *record.info_data << "]";
-      }
-
-      friend auto operator==(BaseVcfRecord const& lhs, BaseVcfRecord const& rhs) -> bool {
-        return lhs.chrom == rhs.chrom && lhs.pos == rhs.pos && lhs.rlen == rhs.rlen;
-      };
-
-      std::weak_ptr<details::DataImpl> data_{};
-      bool eof_{true};  //  default constructor is true
-
-      std::string chrom{};
-      pos_t pos{};
-      pos_t rlen{};
-      std::unique_ptr<InfoType> info_data{std::make_unique<InfoType>()};
-
-    protected:
-      void clone(BaseVcfRecord const& other) noexcept {
-        chrom = other.chrom;
-        pos = other.pos;
-        rlen = other.rlen;
-        info_data = std::make_unique<InfoType>(*other.info_data);
-      }
-
-      void update(std::shared_ptr<details::DataImpl> const& data) {
-        chrom = bcf_seqname_safe(data->header.get(), data->record.get());
-        pos = static_cast<pos_t>(data->record->pos);
-        rlen = static_cast<pos_t>(data->record->rlen);
-        info_data->update(data);
-      }
     };
 
     template <typename... T> struct InfoFieldFactory : public details::BaseInfoField {
@@ -268,7 +196,12 @@ namespace binary::parser::vcf {
 
   }  // namespace details
 
-  struct [[maybe_unused]] InfoField : public details::BaseInfoField {
+  // export template this namespace
+  using details::BaseInfoField;
+  using details::InfoFieldConcept;
+  using details::InfoFieldFactory;
+
+  struct [[maybe_unused]] InfoField : public BaseInfoField {
     std::string svtype{};
     pos_t svend{};
 
@@ -288,18 +221,106 @@ namespace binary::parser::vcf {
       os << "svtype: " << info.svtype << " svend: " << info.svend;
       return os;
     }
+    // KEEP IN MIND to define operator==
   };
 
-  // template alias
+  template <InfoFieldConcept InfoType> class BaseVcfRecord {
+  public:
+    using info_type = InfoType;
 
-  using VcfRecord = details::BaseVcfRecord<InfoField>;
+    constexpr BaseVcfRecord() = default;
+    explicit BaseVcfRecord(std::shared_ptr<details::DataImpl> const& data)
+        : data_{data}, eof_{false} {
+      next();
+    }
 
-  template <typename RecordType> class VcfRanges {
+    BaseVcfRecord(BaseVcfRecord const& other) { clone(other); }
+    BaseVcfRecord& operator=(BaseVcfRecord const& other) {
+      clone(other);
+      return *this;
+    };
+
+    BaseVcfRecord& operator=(BaseVcfRecord&&) noexcept = default;
+    BaseVcfRecord(BaseVcfRecord&&) noexcept = default;
+
+    ~BaseVcfRecord() = default;
+
+    constexpr void set_eof() { eof_ = true; }
+
+    template <typename... T> void init_info_keys(T&&... args) {
+      info->init_keys(std::forward<T>(args)...);
+    }
+
+    void next() {
+      if (auto data = data_.lock()) {
+        if (int ret = bcf_read(data->fp.get(), data->header.get(), data->record.get()); ret < -1) {
+          throw VcfReaderError("Failed to read line in vcf ");
+        } else if (ret == -1) {
+          set_eof();
+        } else {
+          update(data);
+        }
+      } else {
+        throw VcfReaderError("Using dangling VcfRecord");
+      }
+    }
+
+    friend auto operator<<(std::ostream& os, BaseVcfRecord const& record) -> std::ostream& {
+      return os << "[BaseVcfRecord chrom: " << record.chrom << " pos: " << record.pos
+                << " rlen: " << record.rlen << " info: " << *record.info << "]";
+    }
+
+    friend auto operator==(BaseVcfRecord const& lhs, BaseVcfRecord const& rhs) -> bool {
+      return lhs.chrom == rhs.chrom && lhs.pos == rhs.pos && lhs.rlen == rhs.rlen
+             && *lhs.info == *rhs.info;
+    };
+
+    std::weak_ptr<details::DataImpl> data_{};
+    bool eof_{true};  //  default constructor is true
+
+    std::string chrom{};
+    pos_t pos{};
+    pos_t rlen{};
+    std::unique_ptr<InfoType> info{std::make_unique<InfoType>()};
+
+  protected:
+    void clone(BaseVcfRecord const& other) noexcept {
+      chrom = other.chrom;
+      pos = other.pos;
+      rlen = other.rlen;
+      info = std::make_unique<InfoType>(*other.info);
+    }
+
+    void update(std::shared_ptr<details::DataImpl> const& data) {
+      chrom = bcf_seqname_safe(data->header.get(), data->record.get());
+      pos = static_cast<pos_t>(data->record->pos);
+      rlen = static_cast<pos_t>(data->record->rlen);
+      info->update(data);
+    }
+  };
+
+  template <typename T>
+  concept RecordConcept = requires(T record) {
+    requires std::semiregular<T>;
+    requires std::movable<T>;
+    record.chrom;
+    record.pos;
+    record.rlen;
+    record.info;
+    std::cout << record;
+  };
+
+  template <RecordConcept RecordType> class VcfRanges {
   public:
     explicit VcfRanges(std::string file_path);
 
-    VcfRanges(VcfRanges const&) = delete;
-    auto operator=(VcfRanges const&) -> VcfRanges& = delete;
+    VcfRanges(VcfRanges const& other) : VcfRanges(other.file_path_) {}
+    auto operator=(VcfRanges const& other) -> VcfRanges& {
+      file_path_ = other.file_path_;
+      pdata_.reset();
+      return *this;
+    }
+
     constexpr VcfRanges(VcfRanges&&) noexcept = default;
     constexpr auto operator=(VcfRanges&&) noexcept -> VcfRanges& = default;
 
@@ -366,14 +387,23 @@ namespace binary::parser::vcf {
     [[nodiscard]] constexpr auto file_path() const -> const std::string&;
 
     /**
-     * Check is vcf file has index
+     * Check if vcf file has read index
      * @return bool
      */
-    [[nodiscard]] constexpr auto has_index() const -> bool;
+    [[nodiscard]] constexpr auto has_read_index() const -> bool;
+
+    /**
+     * Check if  vcf file has index file
+     * @return
+     */
+    [[nodiscard]] constexpr auto has_index_file() const -> bool;
 
     constexpr auto iter_query_record() const -> VcfRanges::iterator;
-    constexpr auto query(std::string const& chrom, pos_t start, pos_t end) const
+
+    constexpr auto query(std::string_view chrom, pos_t start, pos_t end) const
         -> VcfRanges::iterator;
+
+    constexpr auto query(std::string_view chrom) const -> VcfRanges::iterator;
 
     constexpr auto begin() const -> iterator;
     [[nodiscard]] constexpr auto end() const -> std::default_sentinel_t;
@@ -392,14 +422,14 @@ namespace binary::parser::vcf {
     mutable std::shared_ptr<details::DataImpl> pdata_{nullptr};
   };
 
-  template <typename RecordType> VcfRanges<RecordType>::VcfRanges(std::string file_path)
+  template <RecordConcept RecordType> VcfRanges<RecordType>::VcfRanges(std::string file_path)
       : file_path_(std::move(file_path)) {}
 
   /**
    * @brief  get file path of the vcf file
    * @return  vcf file path
    */
-  template <typename RecordType> constexpr auto VcfRanges<RecordType>::file_path() const
+  template <RecordConcept RecordType> constexpr auto VcfRanges<RecordType>::file_path() const
       -> const std::string& {
     return file_path_;
   }
@@ -408,15 +438,16 @@ namespace binary::parser::vcf {
    * @brief check if the vcf file has index
    * @return bool
    */
-  template <typename RecordType> constexpr auto VcfRanges<RecordType>::has_index() const -> bool {
+  template <RecordConcept RecordType> constexpr auto VcfRanges<RecordType>::has_read_index() const
+      -> bool {
     return pdata_ == nullptr ? false : pdata_->idx_ptr != nullptr;
   }
 
-  template <typename RecordType>
+  template <RecordConcept RecordType>
   constexpr auto VcfRanges<RecordType>::check_query(std::string_view chrom) const -> int {
-    if (!has_index()) {
-      pdata_->idx_ptr.reset(tbx_index_load(file_path_.c_str()));
-      if (!pdata_->idx_ptr) {
+    if (!has_index_file()) throw VcfReaderError("Cannot find index file for " + file_path_);
+    if (!has_read_index()) {
+      if (pdata_->idx_ptr.reset(tbx_index_load(file_path_.c_str())); !pdata_->idx_ptr) {
         throw VcfReaderError("Failed to load index for " + file_path_);
       }
     }
@@ -425,12 +456,12 @@ namespace binary::parser::vcf {
       throw VcfReaderError(std::string(chrom) + " is not in the vcf file " + file_path_);
     }
     auto tid = tbx_name2id(pdata_->idx_ptr.get(), chrom.data());
-    assert(tid > 0);
+    //    assert(tid > 0);
     return tid;
   }
 
-  template <typename RecordType> constexpr auto VcfRanges<RecordType>::iter_query_record() const
-      -> VcfRanges::iterator {
+  template <RecordConcept RecordType>
+  constexpr auto VcfRanges<RecordType>::iter_query_record() const -> VcfRanges::iterator {
     if (int ret = tbx_itr_next(pdata_->fp.get(), pdata_->idx_ptr.get(), pdata_->itr_ptr.get(),
                                pdata_->ks_ptr.get());
         ret < -1) {
@@ -444,6 +475,8 @@ namespace binary::parser::vcf {
     return iterator(pdata_);
   }
 
+  // FIXME: query cannot work as expected
+
   /**
    * @brief  query the vcf file if has index
    * @param chrom chromosome name
@@ -451,34 +484,101 @@ namespace binary::parser::vcf {
    * @param end end position
    * @return vcf record
    */
-  template <typename RecordType>
-  constexpr auto VcfRanges<RecordType>::query(std::string const& chrom, pos_t start,
-                                              pos_t end) const -> VcfRanges::iterator {
-    seek();  // seek to the first record and initialize the iterator
+  template <RecordConcept RecordType>
+  constexpr auto VcfRanges<RecordType>::query(std::string_view chrom, pos_t start, pos_t end) const
+      -> VcfRanges::iterator {
+    seek();  // reset pdata_
 
     auto tid = check_query(chrom);  // may throw error
     pdata_->itr_ptr.reset(tbx_itr_queryi(pdata_->idx_ptr.get(), tid, start, end));
 
     if (!pdata_->itr_ptr) {
-      throw VcfReaderError("Query-> Failed to query " + chrom + ":" + std::to_string(start) + "-"
-                           + std::to_string(end));
+      throw VcfReaderError("Query-> Failed to query " + std::string(chrom) + ":"
+                           + std::to_string(start) + "-" + std::to_string(end));
     }
     return iter_query_record();
   }
 
-  template <typename RecordType> constexpr auto VcfRanges<RecordType>::begin() const
+  template <RecordConcept RecordType>
+  constexpr auto VcfRanges<RecordType>::query(std::string_view chrom) const -> VcfRanges::iterator {
+    seek();  //  reset pdata_
+
+    check_query(chrom);  // may throw error
+    pdata_->itr_ptr.reset(tbx_itr_querys(pdata_->idx_ptr.get(), chrom.data()));
+
+    if (!pdata_->itr_ptr) {
+      throw VcfReaderError("Query-> Failed to query " + std::string(chrom));
+    }
+    return iter_query_record();
+  }
+
+  template <RecordConcept RecordType> constexpr auto VcfRanges<RecordType>::begin() const
       -> VcfRanges::iterator {
     seek();
     return iterator{pdata_};
   }
 
-  template <typename RecordType> constexpr auto VcfRanges<RecordType>::end() const
+  template <RecordConcept RecordType> constexpr auto VcfRanges<RecordType>::end() const
       -> std::default_sentinel_t {
     return std::default_sentinel;
   }
-  template <typename RecordType> constexpr void VcfRanges<RecordType>::seek() const {
+  template <RecordConcept RecordType> constexpr void VcfRanges<RecordType>::seek() const {
     pdata_ = std::make_shared<details::DataImpl>(file_path_);
   }
+
+  template <RecordConcept RecordType> constexpr auto VcfRanges<RecordType>::has_index_file() const
+      -> bool {
+    return binary::utils::check_file_path(file_path_ + ".tbi");
+  }
+
+  /*
+   * Data structure for Interval tree
+   * A minimal example of how to use the Interval tree
+   */
+
+  using namespace binary::algorithm;
+  // add vcfInterval
+  template <RecordConcept RecordType> class BaseVcfInterval : public tree::UIntInterval {
+  public:
+    constexpr BaseVcfInterval() = default;
+    explicit BaseVcfInterval(RecordType&& vcf_record) : record(std::move(vcf_record)) {
+      low = record.pos;
+      high = record.info->svend;
+    }
+
+    BaseVcfInterval(tree::UIntInterval::key_type low_, tree::UIntInterval::key_type high_,
+                    RecordType&& vcf_record)
+        : tree::UIntInterval(low_, high_), record(std::move(vcf_record)) {}
+
+    using tree::UIntInterval::UIntInterval;
+
+    BaseVcfInterval(BaseVcfInterval const& other) = default;
+    BaseVcfInterval& operator=(BaseVcfInterval const& other) = default;
+    BaseVcfInterval(BaseVcfInterval&& other) noexcept = default;
+    BaseVcfInterval& operator=(BaseVcfInterval&& other) noexcept = default;
+    ~BaseVcfInterval() override = default;
+
+    friend std::ostream& operator<<(std::ostream& os, BaseVcfInterval const& vcf_interval) {
+      os << "[VcfInterval: " << vcf_interval.low << "-" << vcf_interval.high << " "
+         << vcf_interval.record << "]";
+      return os;
+    }
+
+    RecordType record{};
+  };
+
+  /*
+   * Template alias
+   */
+  using VcfRecord = BaseVcfRecord<InfoField>;
+  using VcfInterval = BaseVcfInterval<VcfRecord>;
+  using VcfIntervalNode = tree::IntervalNode<VcfInterval>;
+
+  template <InfoFieldConcept InfoFieldType> using BaseVcfIntervalNode
+      = tree::IntervalNode<BaseVcfInterval<BaseVcfRecord<InfoFieldType>>>;
+
+  static_assert(std::same_as<BaseVcfIntervalNode<InfoField>, VcfIntervalNode>,
+                "BaseVcfInterval<VcfRecord> should be equal to VcfInterval");
 
 }  // namespace binary::parser::vcf
 #endif  // BUILDALL_LIBRARY_INCLUDE_BINARY_PARSER_VCF_HPP_

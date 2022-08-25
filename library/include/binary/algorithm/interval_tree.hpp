@@ -136,32 +136,6 @@ namespace binary::algorithm::tree {
   using IntIntervalNode = IntervalNode<IntInterval>;
   using UIntIntervalNode = IntervalNode<UIntInterval>;
 
-  // TODO: move to vcf parser library
-  class VcfInterval : public UIntInterval {
-  public:
-    constexpr VcfInterval() = default;
-    VcfInterval(std::string chrom_, std::string svtype_)
-        : chrom{std::move(chrom_)}, svtype{std::move(svtype_)} {}
-
-    VcfInterval(VcfInterval const &other) = default;
-    VcfInterval &operator=(VcfInterval const &other) = default;
-    VcfInterval(VcfInterval &&other) noexcept = default;
-    VcfInterval &operator=(VcfInterval &&other) noexcept = default;
-
-    ~VcfInterval() override = default;
-
-    friend std::ostream &operator<<(std::ostream &os, VcfInterval const &vcf_interval) {
-      os << "VcfInterval: " << vcf_interval.low << "-" << vcf_interval.high << " "
-         << vcf_interval.chrom << " " << vcf_interval.svtype;
-      return os;
-    }
-
-    std::string chrom{};
-    std::string svtype{};
-  };
-
-  using VcfIntervalNode = IntervalNode<VcfInterval>;
-
   template <IntervalNodeConcept NodeType> class IntervalTree : public RbTree<NodeType> {
   public:
     using key_type = typename NodeType::key_type;
@@ -174,19 +148,20 @@ namespace binary::algorithm::tree {
 
     void inorder_walk(raw_pointer node, int indent) const override;
 
-    auto find_overlap(interval_type const &interval) const -> std::optional<interval_type>;
+    [[nodiscard]] auto find_overlap(interval_type const &interval) const
+        -> std::optional<interval_type>;
 
     template <typename... Args>
     requires binary::concepts::ArgsConstructible<interval_type, Args...>
-    auto find_overlap(Args &&...args) const -> std::optional<interval_type> {
+    [[nodiscard]] auto find_overlap(Args &&...args) const -> std::optional<interval_type> {
       return find_overlap(interval_type{std::forward<Args>(args)...});
     }
 
-    auto find_overlaps(interval_type &&interval) const -> std::vector<interval_type>;
+    [[nodiscard]] auto find_overlaps(interval_type &&interval) const -> std::vector<interval_type>;
 
     template <typename... Args>
     requires binary::concepts::ArgsConstructible<interval_type, Args...>
-    auto find_overlaps(Args &&...args) const -> std::vector<interval_type> {
+    [[nodiscard]] auto find_overlaps(Args &&...args) const -> std::vector<interval_type> {
       return find_overlaps(interval_type{std::forward<Args>(args)...});
     }
 
