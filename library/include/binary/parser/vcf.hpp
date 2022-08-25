@@ -12,6 +12,8 @@
 #include <binary/algorithm/interval_tree.hpp>
 #include <binary/concepts.hpp>
 #include <binary/exception.hpp>
+#include <binary/utils.hpp>
+#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <iterator>
@@ -382,10 +384,16 @@ namespace binary::parser::vcf {
     [[nodiscard]] constexpr auto file_path() const -> const std::string&;
 
     /**
-     * Check is vcf file has index
+     * Check if vcf file has read index
      * @return bool
      */
-    [[nodiscard]] constexpr auto has_index() const -> bool;
+    [[nodiscard]] constexpr auto has_read_index() const -> bool;
+
+    /**
+     * Check if  vcf file has index file
+     * @return
+     */
+    [[nodiscard]] constexpr auto has_index_file() const -> bool;
 
     constexpr auto iter_query_record() const -> VcfRanges::iterator;
     constexpr auto query(std::string const& chrom, pos_t start, pos_t end) const
@@ -424,14 +432,14 @@ namespace binary::parser::vcf {
    * @brief check if the vcf file has index
    * @return bool
    */
-  template <RecordConcept RecordType> constexpr auto VcfRanges<RecordType>::has_index() const
+  template <RecordConcept RecordType> constexpr auto VcfRanges<RecordType>::has_read_index() const
       -> bool {
     return pdata_ == nullptr ? false : pdata_->idx_ptr != nullptr;
   }
 
   template <RecordConcept RecordType>
   constexpr auto VcfRanges<RecordType>::check_query(std::string_view chrom) const -> int {
-    if (!has_index()) {
+    if (!has_read_index()) {
       pdata_->idx_ptr.reset(tbx_index_load(file_path_.c_str()));
       if (!pdata_->idx_ptr) {
         throw VcfReaderError("Failed to load index for " + file_path_);
@@ -495,6 +503,11 @@ namespace binary::parser::vcf {
   }
   template <RecordConcept RecordType> constexpr void VcfRanges<RecordType>::seek() const {
     pdata_ = std::make_shared<details::DataImpl>(file_path_);
+  }
+
+  template <RecordConcept RecordType> constexpr auto VcfRanges<RecordType>::has_index_file() const
+      -> bool {
+    return binary::utils::check_file_path(file_path_ + ".tbi");
   }
 
   /*
