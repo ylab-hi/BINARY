@@ -33,6 +33,9 @@ constexpr std::array<std::string_view, 24> CHROMOSOME_NAMES
  */
 void map_duplicate(std::string_view non_linear_file, std::string_view sv_file);
 
+[[maybe_unused]] auto find_overlaps(Sv2nlVcfIntervalTree const& interval_tree,
+                                    Sv2nlVcfRanges& vcf_ranges, std::string_view chrom);
+
 void map_inversion(std::string_view non_linear_file, std::string_view sv_file);
 
 #endif  // BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_

@@ -10,7 +10,7 @@
 using namespace binary::algorithm;
 using namespace binary::parser;
 
-struct Sv2nlInfoField : public vcf::details::BaseInfoField {
+struct Sv2nlInfoField : public vcf::BaseInfoField {
   std::string svtype{};
   vcf::pos_t svend{};
 
@@ -27,11 +27,24 @@ struct Sv2nlInfoField : public vcf::details::BaseInfoField {
     os << "svtype: " << info.svtype << " svend: " << info.svend;
     return os;
   }
+
+  friend auto operator==(Sv2nlInfoField const& lhs, Sv2nlInfoField const& rhs) -> bool {
+    return lhs.svtype == rhs.svtype && lhs.svend == rhs.svend;
+  }
 };
 
 using Sv2nlVcfRecord = vcf::BaseVcfRecord<Sv2nlInfoField>;
-using Sv2nlVcfRanges [[maybe_unused]] = vcf::VcfRanges<Sv2nlVcfRecord>;
-using Sv2nlVcfIntervalNode = vcf::BaseVcfIntervalNode<Sv2nlInfoField>;
+using Sv2nlVcfRanges = vcf::VcfRanges<Sv2nlVcfRecord>;
+using Sv2nlVcfInterval = vcf::BaseVcfInterval<Sv2nlVcfRecord>;
+using Sv2nlVcfIntervalNode = tree::IntervalNode<Sv2nlVcfInterval>;
 using Sv2nlVcfIntervalTree = tree::IntervalTree<Sv2nlVcfIntervalNode>;
 
+namespace std {
+  template <> struct hash<Sv2nlVcfRecord> {
+    size_t operator()(Sv2nlVcfRecord const& record) const {
+      return hash<string>{}(record.info->svtype) ^ (hash<vcf::pos_t>{}(record.info->svend) << 1)
+             ^ (hash<vcf::pos_t>{}(record.pos) << 2);
+    }
+  };
+}  // namespace std
 #endif  // BUILDALL_STANDALONE_SV2NL_INFO_FILED_HPP_
