@@ -194,7 +194,9 @@ namespace binary::parser::vcf {
 
   }  // namespace details
 
+  // export template this namespace
   using details::InfoFieldConcept;
+  using details::InfoFieldFactory;
 
   struct [[maybe_unused]] InfoField : public details::BaseInfoField {
     std::string svtype{};
@@ -242,8 +244,9 @@ namespace binary::parser::vcf {
     constexpr void set_eof() { eof_ = true; }
 
     template <typename... T> void init_info_keys(T&&... args) {
-      info_data->init_keys(std::forward<T>(args)...);
+      info->init_keys(std::forward<T>(args)...);
     }
+
     void next() {
       if (auto data = data_.lock()) {
         if (int ret = bcf_read(data->fp.get(), data->header.get(), data->record.get()); ret < -1) {
@@ -260,7 +263,7 @@ namespace binary::parser::vcf {
 
     friend auto operator<<(std::ostream& os, BaseVcfRecord const& record) -> std::ostream& {
       return os << "[BaseVcfRecord chrom: " << record.chrom << " pos: " << record.pos
-                << " rlen: " << record.rlen << "info: " << *record.info_data << "]";
+                << " rlen: " << record.rlen << " info: " << *record.info << "]";
     }
 
     friend auto operator==(BaseVcfRecord const& lhs, BaseVcfRecord const& rhs) -> bool {
@@ -273,33 +276,33 @@ namespace binary::parser::vcf {
     std::string chrom{};
     pos_t pos{};
     pos_t rlen{};
-    std::unique_ptr<InfoType> info_data{std::make_unique<InfoType>()};
+    std::unique_ptr<InfoType> info{std::make_unique<InfoType>()};
 
   protected:
     void clone(BaseVcfRecord const& other) noexcept {
       chrom = other.chrom;
       pos = other.pos;
       rlen = other.rlen;
-      info_data = std::make_unique<InfoType>(*other.info_data);
+      info = std::make_unique<InfoType>(*other.info);
     }
 
     void update(std::shared_ptr<details::DataImpl> const& data) {
       chrom = bcf_seqname_safe(data->header.get(), data->record.get());
       pos = static_cast<pos_t>(data->record->pos);
       rlen = static_cast<pos_t>(data->record->rlen);
-      info_data->update(data);
+      info->update(data);
     }
   };
 
   template <typename T>
-  concept RecordConcept = requires(T t) {
+  concept RecordConcept = requires(T record) {
     requires std::semiregular<T>;
     requires std::movable<T>;
-    t.chrom;
-    t.pos;
-    t.rlen;
-    t.info_data;
-    std::cout << t;
+    record.chrom;
+    record.pos;
+    record.rlen;
+    record.info;
+    std::cout << record;
   };
 
   template <RecordConcept RecordType> class VcfRanges {
@@ -501,7 +504,7 @@ namespace binary::parser::vcf {
     constexpr BaseVcfInterval() = default;
     explicit BaseVcfInterval(RecordType&& vcf_record) : record(std::move(vcf_record)) {
       low = record.pos;
-      high = record.info_data->svend;
+      high = record.info->svend;
     }
 
     BaseVcfInterval(tree::UIntInterval::key_type low_, tree::UIntInterval::key_type high_,
