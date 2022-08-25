@@ -12,7 +12,7 @@
 
 // Hardcode chromosome name for now.
 // TODO: Change to dynamic chromosome name.
-constexpr std::array<std::string_view, 24> CHROMOSOME_NAMES
+constexpr std::array<std::string_view, 22> CHROMOSOME_NAMES
     = {"chr1",  "chr2",  "chr3",  "chr4",  "chr5",  "chr6",  "chr7",  "chr8",
        "chr9",  "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16",
        "chr17", "chr18", "chr19", "chr20", "chr21", "chr22"};
@@ -31,11 +31,17 @@ constexpr std::array<std::string_view, 24> CHROMOSOME_NAMES
  * 5. Write to output file (Consider parallelization and synchronization cost)
  *    Or write multiple files then merge into one
  */
-void map_duplicate(std::string_view non_linear_file, std::string_view sv_file);
+auto build_tree_use_index(Sv2nlVcfRanges const&, std::string_view) -> Sv2nlVcfIntervalTree;
+auto build_tree_no_index(Sv2nlVcfRanges const& sv_vcf_ranges, std::string_view chrom)
+    -> Sv2nlVcfIntervalTree;
 
-[[maybe_unused]] auto find_overlaps(Sv2nlVcfIntervalTree const& interval_tree,
-                                    Sv2nlVcfRanges& vcf_ranges, std::string_view chrom);
+auto build_tree(Sv2nlVcfRanges const& sv_vcf_ranges, std::string_view chrom)
+    -> Sv2nlVcfIntervalTree;
 
-void map_inversion(std::string_view non_linear_file, std::string_view sv_file);
+auto find_overlaps(std::string_view chrom, Sv2nlVcfRanges const& nl_vcf_ranges,
+                   Sv2nlVcfRanges const& sv_vcf_ranges)
+    -> std::unordered_map<Sv2nlVcfRecord, std::vector<Sv2nlVcfRecord>>;
 
+void writer(std::unordered_map<Sv2nlVcfRecord, std::vector<Sv2nlVcfRecord>>&& overlaps);
+void map_duplicate(std::string_view nl_file, std::string_view sv_file);
 #endif  // BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
