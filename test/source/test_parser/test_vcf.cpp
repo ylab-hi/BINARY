@@ -15,11 +15,11 @@ DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <ranges>
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
-void test_vcf(std::string_view file_path) {
+void test_vcf_query(std::string_view file_path) {
   using namespace binary::parser::vcf;
 
   auto vcf_reader = VcfRanges<VcfRecord>{std::string(file_path)};
-  spdlog::debug("[test vcf] {}", vcf_reader.file_path());
+  spdlog::debug("[test vcf query] {}", vcf_reader.file_path());
   CHECK_EQ(vcf_reader.has_index(), false);
   for (auto i = vcf_reader.query("chr17", 7707250, 7798250); i != vcf_reader.end();
        i = vcf_reader.iter_query_record()) {
@@ -29,16 +29,38 @@ void test_vcf(std::string_view file_path) {
   CHECK_EQ(vcf_reader.has_index(), true);
 }
 
+void test_vcf_iter(std::string_view file_path) {
+  using namespace binary::parser::vcf;
+  auto vcf_reader = VcfRanges<VcfRecord>{std::string(file_path)};
+  spdlog::debug("[test vcf iter] {}", vcf_reader.file_path());
+  for (auto record : vcf_reader) {
+    spdlog::debug("[test vcf iter] {}", record);
+  }
+}
+
 TEST_SUITE("test vcf") {
   using namespace binary::parser::vcf;
   constexpr const char* file_path = "../../test/data/debug.vcf.gz";
+  constexpr const char* uncompressed_file_path = "../../test/data/debug_uncom.vcf";
 
   VcfRanges<VcfRecord> vcf_ranges(file_path);
 
+  TEST_CASE("test copy and move constructors") {
+    VcfRanges<VcfRecord> vcf_ranges2(file_path);
+    VcfRanges<VcfRecord> vcf_ranges_copy(vcf_ranges2);
+    VcfRanges<VcfRecord> vcf_ranges_move(std::move(vcf_ranges2));
+    CHECK_EQ(vcf_ranges_copy.file_path(), vcf_ranges_move.file_path());
+  }
+
   TEST_CASE("testing vcf.hpp") {
     SUBCASE("test file path") { CHECK_EQ(vcf_ranges.file_path(), file_path); }
-
-    SUBCASE("test smoke vcf") { CHECK_NOTHROW(test_vcf(std::string(file_path))); }
+    SUBCASE("test smoke vcf") { CHECK_NOTHROW(test_vcf_query(std::string(file_path))); }
+    SUBCASE("test iter vcf without index") {
+      CHECK_NOTHROW(test_vcf_iter(std::string(uncompressed_file_path)));
+    }
+    SUBCASE("test query vcf without index") {
+      CHECK_THROWS(test_vcf_query(std::string(uncompressed_file_path)));
+    }
   }
 
   TEST_CASE("testing read record") {

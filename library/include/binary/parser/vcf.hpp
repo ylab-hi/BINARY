@@ -22,7 +22,7 @@
 #include <utility>
 namespace binary::parser::vcf {
   using pos_t = std::uint32_t;
-  using chrom_t = std::string;
+  using chrom_t [[maybe_unused]] = std::string;
 
   namespace details {
 
@@ -309,8 +309,13 @@ namespace binary::parser::vcf {
   public:
     explicit VcfRanges(std::string file_path);
 
-    VcfRanges(VcfRanges const&) = delete;
-    auto operator=(VcfRanges const&) -> VcfRanges& = delete;
+    VcfRanges(VcfRanges const& other) : VcfRanges(other.file_path_) {}
+    auto operator=(VcfRanges const& other) -> VcfRanges& {
+      file_path_ = other.file_path_;
+      pdata_.reset();
+      return *this;
+    }
+
     constexpr VcfRanges(VcfRanges&&) noexcept = default;
     constexpr auto operator=(VcfRanges&&) noexcept -> VcfRanges& = default;
 

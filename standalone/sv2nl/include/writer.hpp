@@ -1,0 +1,10 @@
+//
+// Created by li002252 on 8/24/22.
+//
+
+#ifndef BUILDALL_STANDALONE_SV2NL_WRITER_HPP_
+#define BUILDALL_STANDALONE_SV2NL_WRITER_HPP_
+
+class Writer {};
+
+#endif  // BUILDALL_STANDALONE_SV2NL_WRITER_HPP_

@@ -148,19 +148,20 @@ namespace binary::algorithm::tree {
 
     void inorder_walk(raw_pointer node, int indent) const override;
 
-    auto find_overlap(interval_type const &interval) const -> std::optional<interval_type>;
+    [[nodiscard]] auto find_overlap(interval_type const &interval) const
+        -> std::optional<interval_type>;
 
     template <typename... Args>
     requires binary::concepts::ArgsConstructible<interval_type, Args...>
-    auto find_overlap(Args &&...args) const -> std::optional<interval_type> {
+    [[nodiscard]] auto find_overlap(Args &&...args) const -> std::optional<interval_type> {
       return find_overlap(interval_type{std::forward<Args>(args)...});
     }
 
-    auto find_overlaps(interval_type &&interval) const -> std::vector<interval_type>;
+    [[nodiscard]] auto find_overlaps(interval_type &&interval) const -> std::vector<interval_type>;
 
     template <typename... Args>
     requires binary::concepts::ArgsConstructible<interval_type, Args...>
-    auto find_overlaps(Args &&...args) const -> std::vector<interval_type> {
+    [[nodiscard]] auto find_overlaps(Args &&...args) const -> std::vector<interval_type> {
       return find_overlaps(interval_type{std::forward<Args>(args)...});
     }
 
