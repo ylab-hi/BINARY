@@ -4,8 +4,10 @@
 
 #ifndef BUILDALL_STANDALONE_SV2NL_INFO_FILED_HPP_
 #define BUILDALL_STANDALONE_SV2NL_INFO_FILED_HPP_
+#include <binary/algorithm/interval_tree.hpp>
 #include <binary/parser/vcf.hpp>
 
+using namespace binary::algorithm;
 using namespace binary::parser;
 
 struct Sv2nlInfoField : public vcf::details::BaseInfoField {
@@ -28,6 +30,8 @@ struct Sv2nlInfoField : public vcf::details::BaseInfoField {
 };
 
 using Sv2nlVcfRecord = vcf::BaseVcfRecord<Sv2nlInfoField>;
-using Sv2nlVcfRanges = vcf::VcfRanges<Sv2nlVcfRecord>;
+using Sv2nlVcfRanges [[maybe_unused]] = vcf::VcfRanges<Sv2nlVcfRecord>;
+using Sv2nlVcfIntervalNode = vcf::BaseVcfIntervalNode<Sv2nlInfoField>;
+using Sv2nlVcfIntervalTree = tree::IntervalTree<Sv2nlVcfIntervalNode>;
 
 #endif  // BUILDALL_STANDALONE_SV2NL_INFO_FILED_HPP_

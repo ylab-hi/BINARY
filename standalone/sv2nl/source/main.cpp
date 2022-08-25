@@ -20,7 +20,6 @@
 #include <string>
 
 #include "util.hpp"
-#include "vcf_interval.hpp"
 
 auto main(int argc, char* argv[]) -> int {
   cxxopts::Options options("sv2nl", "Map structural Variation to Non-Linear Transcription");
