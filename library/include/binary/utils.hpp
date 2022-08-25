@@ -4,8 +4,6 @@
 #ifndef BINARY_LIBRARY_INCLUDE_BINARY_UTLS_HPP_
 #define BINARY_LIBRARY_INCLUDE_BINARY_UTLS_HPP_
 
-#include <htslib/tbx.h>
-#include <htslib/vcf.h>
 #include <spdlog/spdlog.h>
 
 #include <filesystem>
