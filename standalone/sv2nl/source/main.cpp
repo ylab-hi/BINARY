@@ -55,12 +55,10 @@ int main(int argc, char* argv[]) {
       std::exit(1);
     }
 
-    spdlog::set_level(spdlog::level::debug);
+    spdlog::info("non-linear file path: {}", nonlinear_path);
+    spdlog::info("struct variation file path: {}", segment_path);
 
-    spdlog::debug("non-linear file path: {}", nonlinear_path);
-    spdlog::debug("struct variation file path: {}", segment_path);
-
-    sv2nl::map_duplicate(nonlinear_path, segment_path, output_path);
+    sv2nl::map_duplicate_sync(nonlinear_path, segment_path, output_path);
 
   } catch (const cxxopts::option_has_no_value_exception& err) {
     spdlog::error("error parsing options: {} ", err.what());

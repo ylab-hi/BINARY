@@ -29,7 +29,10 @@ namespace sv2nl {
       auto key_line = get_keys(records[0]);
       for (auto&& record :
            std::ranges::subrange(std::ranges::begin(records) + 1, std::ranges::end(records))) {
-        ofs_ << key_line << '\t' << get_keys(record) << '\n';
+        ofs_ << key_line << '\t'
+             << fmt::format("{}\t{}\t{}\t{}", record.chrom, record.pos + 1, record.info->svend,
+                            record.info->svtype)
+             << '\n';
       }
     }
 
@@ -41,7 +44,7 @@ namespace sv2nl {
 
     std::string filename_{};
     std::ofstream ofs_{};
-    std::string header_{"chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype"};
+    std::string header_{};
   };
 
 }  // namespace sv2nl

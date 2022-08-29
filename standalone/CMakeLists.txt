@@ -16,7 +16,6 @@ include(../cmake/tools.cmake)
 
 include(../cmake/CPM.cmake)
 include(../cmake/functions.cmake)
-# CPMAddPackage("gh:p-ranav/argparse@2.4") the install option has to be explicitly set to allow
 # installation
 CPMAddPackage(
   GITHUB_REPOSITORY jarro2783/cxxopts

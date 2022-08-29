@@ -42,8 +42,21 @@ namespace sv2nl {
   auto find_overlaps(std::string_view chrom, const Sv2nlVcfRanges& nl_vcf_ranges,
                      const Sv2nlVcfRanges& sv_vcf_ranges) -> decltype(auto);
 
-  void writer(std::unordered_map<Sv2nlVcfRecord, std::vector<Sv2nlVcfRecord>>&& overlaps);
-  void map_duplicate(std::string_view nl_file, std::string_view sv_file,
-                     std::string_view output_file);
+  [[maybe_unused]] void writer(
+      std::unordered_map<Sv2nlVcfRecord, std::vector<Sv2nlVcfRecord>>&& overlaps);
+
+  [[maybe_unused]] void map_duplicate_sync(std::string_view nl_file, std::string_view sv_file,
+                                           std::string_view output_file);
+
+  [[maybe_unused]] void map_duplicate_async(std::string_view nl_file, std::string_view sv_file,
+                                            std::string_view output_file);
+
+  [[maybe_unused]] auto map_duplicate_async_impl(std::string_view nl_file, std::string_view sv_file,
+                                                 std::string_view output_file,
+                                                 std::string_view chrom);
+
+  void map_duplicate_thread_pool(std::string_view nl_file, std::string_view sv_file,
+                                 std::string_view output_file);
+
 }  // namespace sv2nl
 #endif  // BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_

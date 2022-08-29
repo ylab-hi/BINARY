@@ -7,9 +7,12 @@
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
 
+#include <binary/utils.hpp>
+#include <future>
 #include <ranges>
 #include <unordered_map>
 
+#include "thread_pool.hpp"
 #include "writer.hpp"
 
 namespace sv2nl {
@@ -26,7 +29,8 @@ namespace sv2nl {
 
     for (auto sv_vcf_record :
          sv_vcf_ranges | std::views::filter([&chrom](auto const& sv_vcf_record) {
-           return sv_vcf_record.chrom == chrom;
+           return sv_vcf_record.chrom == chrom
+                  && (sv_vcf_record.info->svtype == "INV" || sv_vcf_record.info->svtype == "DUP");
          })) {
       interval_tree.insert_node(std::move(sv_vcf_record));
     }
@@ -68,7 +72,7 @@ namespace sv2nl {
     return overlaps;
   }
 
-  void writer(std::vector<std::vector<Sv2nlVcfRecord>>&& overlaps) {
+  [[maybe_unused]] void writer(std::vector<std::vector<Sv2nlVcfRecord>>&& overlaps) {
     for (auto const& record_vector : overlaps) {
       for (auto const& record : record_vector) {
         spdlog::debug("writer {}", record);
@@ -76,12 +80,12 @@ namespace sv2nl {
     }
   }
 
-  void map_duplicate(std::string_view nl_file, std::string_view sv_file,
-                     std::string_view output_file) {
+  [[maybe_unused]] void map_duplicate_sync(std::string_view nl_file, std::string_view sv_file,
+                                           std::string_view output_file) {
     auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_file));
     auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_file));
 
-    auto result_writer = Writer(output_file);
+    auto result_writer = Writer(output_file, "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
 
     for (auto chrom : CHROMOSOME_NAMES) {
       spdlog::debug("process chrom {}", chrom);
@@ -90,4 +94,55 @@ namespace sv2nl {
       }
     }
   }
+
+  auto map_duplicate_async_impl(std::string_view nl_file, std::string_view sv_file,
+                                std::string_view output_file, std::string_view chrom) {
+    auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_file));
+    auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_file));
+    auto result_name = std::string(output_file) + "." + chrom.data();
+    auto result_writer = Writer(result_name);
+
+    for (auto const& record_vector : find_overlaps(chrom, nl_vcf_ranges, sv_vcf_ranges)) {
+      result_writer.write(record_vector);
+    }
+    return result_name;
+  }
+
+  [[maybe_unused]] void map_duplicate_async(std::string_view nl_file, std::string_view sv_file,
+                                            std::string_view output_file) {
+    std::vector<std::future<std::string>> results;
+    std::vector<std::string> result_names;
+
+    for (auto chrom : CHROMOSOME_NAMES) {
+      results.push_back(std::async(map_duplicate_async_impl, nl_file, sv_file, output_file, chrom));
+    }
+
+    for (auto& result : results) {
+      result_names.push_back(result.get());
+    }
+
+    binary::utils::merge_files(result_names, output_file,
+                               "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
+  }
+
+  void map_duplicate_thread_pool(std::string_view nl_file, std::string_view sv_file,
+                                 std::string_view output_file) {
+    ThreadPool thread_pool(8);
+
+    std::vector<std::string> result_names;
+    std::vector<std::future<std::string>> results;
+
+    for (auto chrom : CHROMOSOME_NAMES) {
+      results.push_back(
+          thread_pool.enqueue(map_duplicate_async_impl, nl_file, sv_file, output_file, chrom));
+    }
+
+    for (auto& result : results) {
+      result_names.push_back(result.get());
+    }
+
+    binary::utils::merge_files(result_names, output_file,
+                               "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
+  }
+
 }  // namespace sv2nl
