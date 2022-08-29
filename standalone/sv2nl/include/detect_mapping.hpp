@@ -43,6 +43,7 @@ namespace sv2nl {
                      const Sv2nlVcfRanges& sv_vcf_ranges) -> decltype(auto);
 
   void writer(std::unordered_map<Sv2nlVcfRecord, std::vector<Sv2nlVcfRecord>>&& overlaps);
-  void map_duplicate(std::string_view nl_file, std::string_view sv_file);
+  void map_duplicate(std::string_view nl_file, std::string_view sv_file,
+                     std::string_view output_file);
 }  // namespace sv2nl
 #endif  // BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_

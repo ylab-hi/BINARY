@@ -29,6 +29,7 @@ int main(int argc, char* argv[]) {
   options.add_options()
   ("sv", "The file path of segment information from rck", cxxopts::value<std::string>())
   ("non-linear", "The file path of non-linear information from scannls", cxxopts::value<std::string>())
+  ("o,output", "The file path of output", cxxopts::value<std::string>()->default_value("output.tsv"))
   ("d,debug", "Print debug info", cxxopts::value<bool>()->default_value("false"))
   ("h,help", "Print help");
   // clang-format on
@@ -49,6 +50,7 @@ int main(int argc, char* argv[]) {
   try {
     auto segment_path = result["sv"].as<std::string>();
     auto nonlinear_path = result["non-linear"].as<std::string>();
+    auto output_path = result["output"].as<std::string>();
     if (!binary::utils::check_file_path({segment_path, nonlinear_path})) {
       std::exit(1);
     }
@@ -58,7 +60,7 @@ int main(int argc, char* argv[]) {
     spdlog::debug("non-linear file path: {}", nonlinear_path);
     spdlog::debug("struct variation file path: {}", segment_path);
 
-    sv2nl::map_duplicate(nonlinear_path, segment_path);
+    sv2nl::map_duplicate(nonlinear_path, segment_path, output_path);
 
   } catch (const cxxopts::option_has_no_value_exception& err) {
     spdlog::error("error parsing options: {} ", err.what());

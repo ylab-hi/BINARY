@@ -10,12 +10,16 @@
 #include <ranges>
 #include <unordered_map>
 
+#include "writer.hpp"
+
 namespace sv2nl {
+
   auto build_tree_use_index(const Sv2nlVcfRanges&, std::string_view) -> Sv2nlVcfIntervalTree {
     auto interval_tree = Sv2nlVcfIntervalTree{};
     assert(false);
     return interval_tree;
   }
+
   auto build_tree_no_index(const Sv2nlVcfRanges& sv_vcf_ranges, std::string_view chrom)
       -> Sv2nlVcfIntervalTree {
     auto interval_tree = Sv2nlVcfIntervalTree{};
@@ -72,15 +76,18 @@ namespace sv2nl {
     }
   }
 
-  void map_duplicate(std::string_view nl_file, std::string_view sv_file) {
+  void map_duplicate(std::string_view nl_file, std::string_view sv_file,
+                     std::string_view output_file) {
     auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_file));
     auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_file));
 
-    std::vector<Sv2nlVcfRecord> chrom_result(CHROMOSOME_NAMES.size());
+    auto result_writer = Writer(output_file);
 
     for (auto chrom : CHROMOSOME_NAMES) {
       spdlog::debug("process chrom {}", chrom);
-      writer(find_overlaps(chrom, nl_vcf_ranges, sv_vcf_ranges));
+      for (auto const& record_vector : find_overlaps(chrom, nl_vcf_ranges, sv_vcf_ranges)) {
+        result_writer.write(record_vector);
+      }
     }
   }
 }  // namespace sv2nl
