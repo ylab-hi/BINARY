@@ -12,7 +12,7 @@
 
 namespace binary::utils {
 
-  template <typename Container, typename Value>
+  template <std::ranges::input_range Container, typename Value>
   requires std::same_as<std::ranges::range_value_t<Container>, Value>
   auto index(Container const& container, Value&& value) {
     auto it = std::ranges::find(container, std::forward<Value>(value));
@@ -22,8 +22,8 @@ namespace binary::utils {
     return std::ranges::distance(std::ranges::begin(container), it);
   }
 
-  auto check_file_path(std::initializer_list<std::string> const& file_paths) -> bool;
-  [[maybe_unused]] auto check_file_path(std::string const& file_path) -> bool;
+  auto check_file_path(std::initializer_list<std::string_view> file_paths) -> bool;
+  [[maybe_unused]] auto check_file_path(std::string_view file_path) -> bool;
 
   /**
    * @brief print the values of a tuple

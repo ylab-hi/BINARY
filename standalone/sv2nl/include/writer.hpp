@@ -4,7 +4,6 @@
 
 #ifndef BUILDALL_STANDALONE_SV2NL_WRITER_HPP_
 #define BUILDALL_STANDALONE_SV2NL_WRITER_HPP_
-
-class Writer {};
+namespace sv2nl {}
 
 #endif  // BUILDALL_STANDALONE_SV2NL_WRITER_HPP_

@@ -21,7 +21,7 @@
 
 #include "detect_mapping.hpp"
 
-auto main(int argc, char* argv[]) -> int {
+int main(int argc, char* argv[]) {
   cxxopts::Options options("sv2nl", "Map structural Variation to Non-Linear Transcription");
   options.show_positional_help();
   options.set_width(120);
@@ -31,7 +31,7 @@ auto main(int argc, char* argv[]) -> int {
   ("non-linear", "The file path of non-linear information from scannls", cxxopts::value<std::string>())
   ("d,debug", "Print debug info", cxxopts::value<bool>()->default_value("false"))
   ("h,help", "Print help");
-  // clang-format o
+  // clang-format on
 
   options.positional_help("[sv non-linear]");
   options.parse_positional({"sv", "non-linear"});
@@ -52,11 +52,13 @@ auto main(int argc, char* argv[]) -> int {
     if (!binary::utils::check_file_path({segment_path, nonlinear_path})) {
       std::exit(1);
     }
+
+    spdlog::set_level(spdlog::level::debug);
+
     spdlog::debug("non-linear file path: {}", nonlinear_path);
     spdlog::debug("struct variation file path: {}", segment_path);
 
-
-map_duplicate(nonlinear_path, segment_path);
+    sv2nl::map_duplicate(nonlinear_path, segment_path);
 
   } catch (const cxxopts::option_has_no_value_exception& err) {
     spdlog::error("error parsing options: {} ", err.what());

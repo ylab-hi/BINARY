@@ -44,7 +44,7 @@ void test_vcf_iter(std::string_view file_path) {
   }
 }
 
-TEST_SUITE("test vcf") {
+TEST_SUITE("parser-vcf") {
   using namespace binary::parser::vcf;
   constexpr const char* file_path = "../../test/data/debug.vcf.gz";
   constexpr const char* uncompressed_file_path = "../../test/data/debug_uncom.vcf";
@@ -108,9 +108,9 @@ TEST_SUITE("test vcf") {
   TEST_CASE("test c++20 vcf ") {
     static_assert(std::forward_iterator<VcfRanges<VcfRecord>::iterator>);
 
-    for (auto record : vcf_ranges | std::views::filter([](auto const& record) {
-                         return record.info->svtype == "TDUP";
-                       })) {
+    for (auto const& record : vcf_ranges | std::views::filter([](auto const& record) {
+                                return record.info->svtype == "TDUP";
+                              })) {
       spdlog::debug("[test c++ 20 views] chrom: {}", record);
     }
   }
