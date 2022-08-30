@@ -76,7 +76,7 @@ TEST_SUITE("test binary utils") {
   }
 
   TEST_CASE("test print tuple") {
-    std::tuple t1{1, 2, 3, 4};
+    std::tuple t1{1, "test", 3.0};
     CHECK_NOTHROW(binary::utils::print_tuple(t1));
   }
 }
