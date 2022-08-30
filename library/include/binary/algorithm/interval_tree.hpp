@@ -115,7 +115,7 @@ namespace binary::algorithm::tree {
       assert(low <= high);
     }
 
-    [[nodiscard]] auto is_overlap(BaseInterval const &other) const -> bool {
+    [[nodiscard]] virtual auto is_overlap(BaseInterval const &other) const -> bool {
       return low <= other.high && other.low <= high;
     }
 

@@ -40,5 +40,14 @@ namespace sv2nl {
   using Sv2nlVcfIntervalNode = tree::IntervalNode<Sv2nlVcfInterval>;
   using Sv2nlVcfIntervalTree = tree::IntervalTree<Sv2nlVcfIntervalNode>;
 
+  struct Sv2nlVcfInterval2 : public vcf::BaseVcfInterval<Sv2nlVcfRecord> {
+    using BaseVcfInterval::BaseVcfInterval;
+
+    // change overlap condition
+    [[nodiscard]] auto is_overlap(BaseInterval const& other) const -> bool override {
+      return low <= other.high && other.low <= high
+    }
+  };
+
 }  // namespace sv2nl
 #endif  // BUILDALL_STANDALONE_SV2NL_INFO_FILED_HPP_

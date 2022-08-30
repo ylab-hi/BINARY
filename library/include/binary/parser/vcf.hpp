@@ -541,7 +541,8 @@ namespace binary::parser::vcf {
   template <RecordConcept RecordType> class BaseVcfInterval : public tree::UIntInterval {
   public:
     constexpr BaseVcfInterval() = default;
-    explicit BaseVcfInterval(RecordType&& vcf_record) : record(std::move(vcf_record)) {
+    explicit BaseVcfInterval(RecordType&& vcf_record)
+        : record(std::forward<RecordType>(vcf_record)) {
       low = record.pos;
       high = record.info->svend;
     }
