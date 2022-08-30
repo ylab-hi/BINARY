@@ -55,6 +55,28 @@ $ sv2nl -h
 <details>
  <summary><h2>How to Build</h2></summary>
 
+### Build everything at once
+
+The project also includes an `all` directory that allows building all targets at the same time.
+This is useful during development, as it exposes all subprojects to your IDE and avoids redundant builds of the library.
+
+```bash
+cmake -S . -B build
+cmake --build build
+
+# run tests
+./build/test/BinaryTests
+
+# format code
+cmake --build build --target fix-format
+
+# run standalone
+./build/standalone/sv2nl --help
+
+# build docs
+cmake --build build --target BinaryDocs
+```
+
 ### Build and run test suite
 
 Use the following commands from the project's root directory to run the test suite.
@@ -102,25 +124,6 @@ open build/doc/doxygen/html/index.html
 ```
 
 To build the documentation locally, you will need Doxygen, jinja2 and Pygments on installed your system.
-
-### Build everything at once
-
-The project also includes an `all` directory that allows building all targets at the same time.
-This is useful during development, as it exposes all subprojects to your IDE and avoids redundant builds of the library.
-
-```bash
-cmake -S . -B build
-cmake --build build
-
-# run tests
-./build/test/BinaryTests
-# format code
-cmake --build build --target fix-format
-# run standalone
-./build/standalone/sv2nl --help
-# build docs
-cmake --build build --target BinaryDocs
-```
 
 ### Additional tools
 
