@@ -13,7 +13,6 @@
 #include <unordered_map>
 
 #include "thread_pool.hpp"
-#include "writer.hpp"
 
 namespace sv2nl {
 
@@ -85,7 +84,8 @@ namespace sv2nl {
     auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_file));
     auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_file));
 
-    auto result_writer = Writer(output_file, "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
+    auto result_writer
+        = v1::Writer(output_file, "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
 
     for (auto chrom : CHROMOSOME_NAMES) {
       spdlog::debug("process chrom {}", chrom);
@@ -96,54 +96,47 @@ namespace sv2nl {
   }
 
   auto map_duplicate_async_impl(std::string_view nl_file, std::string_view sv_file,
-                                std::string_view output_file, std::string_view chrom) {
+                                std::string_view chrom, Writer& writer) {
     auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_file));
     auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_file));
-    auto result_name = std::string(output_file) + "." + chrom.data();
-    auto result_writer = Writer(result_name);
 
     for (auto const& record_vector : find_overlaps(chrom, nl_vcf_ranges, sv_vcf_ranges)) {
-      result_writer.write(record_vector);
+      writer.write(record_vector);
     }
-    return result_name;
   }
 
   [[maybe_unused]] void map_duplicate_async(std::string_view nl_file, std::string_view sv_file,
                                             std::string_view output_file) {
-    std::vector<std::future<std::string>> results;
-    std::vector<std::string> result_names;
+    std::vector<std::future<void>> results;
+
+    auto result_writer = Writer(output_file, "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
 
     for (auto chrom : CHROMOSOME_NAMES) {
-      results.push_back(std::async(map_duplicate_async_impl, nl_file, sv_file, output_file, chrom));
+      results.push_back(
+          std::async(map_duplicate_async_impl, nl_file, sv_file, chrom, std::ref(result_writer)));
     }
 
     for (auto& result : results) {
-      result_names.push_back(result.get());
+      result.wait();
     }
-
-    binary::utils::merge_files(result_names, output_file, true,
-                               "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
   }
 
   [[maybe_unused]] void map_duplicate_thread_pool(std::string_view nl_file,
                                                   std::string_view sv_file,
                                                   std::string_view output_file) {
-    ThreadPool thread_pool(4);
+    ThreadPool thread_pool(8);
+    std::vector<std::future<void>> results;
 
-    std::vector<std::string> result_names;
-    std::vector<std::future<std::string>> results;
+    auto result_writer = Writer(output_file, "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
 
     for (auto chrom : CHROMOSOME_NAMES) {
-      results.push_back(
-          thread_pool.enqueue(map_duplicate_async_impl, nl_file, sv_file, output_file, chrom));
+      results.push_back(thread_pool.enqueue(map_duplicate_async_impl, nl_file, sv_file, chrom,
+                                            std::ref(result_writer)));
     }
 
     for (auto& result : results) {
-      result_names.push_back(result.get());
+      result.wait();
     }
-
-    binary::utils::merge_files(result_names, output_file, true,
-                               "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
   }
 
 }  // namespace sv2nl

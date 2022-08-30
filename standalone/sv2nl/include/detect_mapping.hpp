@@ -9,6 +9,7 @@
 #include <string>
 
 #include "vcf_info.hpp"
+#include "writer.hpp"
 
 namespace sv2nl {
   // Hardcode chromosome name for now.
@@ -51,8 +52,7 @@ namespace sv2nl {
                                             std::string_view output_file);
 
   [[maybe_unused]] auto map_duplicate_async_impl(std::string_view nl_file, std::string_view sv_file,
-                                                 std::string_view output_file,
-                                                 std::string_view chrom);
+                                                 std::string_view chrom, Writer& writer);
 
   [[maybe_unused]] void map_duplicate_thread_pool(std::string_view nl_file,
                                                   std::string_view sv_file,

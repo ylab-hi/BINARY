@@ -8,15 +8,35 @@
 
 namespace sv2nl {
 
-  void Writer::write_header() {
-    if (header_.empty()) return;
-    ofs_ << header_ << '\n';
-  }
+  namespace v1 {
+    void Writer::write_header() {
+      if (header_.empty()) return;
+      ofs_ << header_ << '\n';
+    }
 
-  void Writer::write(const std::string& line) { ofs_ << line << '\n'; }
+    void Writer::write(const std::string& line) { ofs_ << line << '\n'; }
 
-  std::string Writer::get_keys(const Sv2nlVcfRecord& record) {
-    return fmt::format("{}\t{}\t{}\t{}", record.chrom, record.pos, record.info->svend,
-                       record.info->svtype);
-  }
+    std::string Writer::get_keys(const Sv2nlVcfRecord& record) {
+      return fmt::format("{}\t{}\t{}\t{}", record.chrom, record.pos, record.info->svend,
+                         record.info->svtype);
+    }
+
+  }  // namespace v1
+
+  namespace v2 {
+    void Writer::write_header() {
+      if (header_.empty()) return;
+      std::lock_guard lock{mutex_};
+      ofs_ << header_ << '\n';
+    }
+    void Writer::write(const std::string& line) {
+      std::lock_guard lock{mutex_};
+      ofs_ << line << '\n';
+    }
+
+    std::string Writer::get_keys(const Sv2nlVcfRecord& record) {
+      return fmt::format("{}\t{}\t{}\t{}", record.chrom, record.pos, record.info->svend,
+                         record.info->svtype);
+    }
+  }  // namespace v2
 }  // namespace sv2nl

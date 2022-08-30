@@ -548,7 +548,7 @@ namespace binary::parser::vcf {
 
     BaseVcfInterval(tree::UIntInterval::key_type low_, tree::UIntInterval::key_type high_,
                     RecordType&& vcf_record)
-        : tree::UIntInterval(low_, high_), record(std::move(vcf_record)) {}
+        : tree::UIntInterval(low_, high_), record(std::forward<RecordType>(vcf_record)) {}
 
     using tree::UIntInterval::UIntInterval;
 

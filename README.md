@@ -17,6 +17,7 @@
 ## News
 
 - New version of the library: 0.1.0
+- Add tool [sv2nl](#tools)
 
 ## Features
 
