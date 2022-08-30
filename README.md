@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/github/license/ylab-hi/BINARY)](https://github.com/ylab-hi/BINARY/blob/main/LICENSE)
 ![compiler](https://img.shields.io/badge/Compiler-GCC10%20%7C%20GCC11%20%7C%20GCC12-green)
 
-# <center> **BI**oi**N**formatics **A**lgorithms lib**R**ar**Y** aka **BINARY**
+# **BI**oi**N**formatics **A**lgorithms lib**R**ar**Y** aka **BINARY**
 
 ## Index
 
@@ -60,7 +60,11 @@ $ sv2nl -h
 The project also includes an `all` directory that allows building all targets at the same time.
 This is useful during development, as it exposes all subprojects to your IDE and avoids redundant builds of the library.
 
-```bash
+__NOTE:__ If you are using compiler in conda environment you need to define `-DCMAKE_PREFIX_PATH` environment variable
+to your conda environment with related compiler. For
+example: `cmake -S . -B build -DCMAKE_PREFIX_PATH=/home/user/miniconda3/lib`.
+
+```console
 cmake -S . -B build
 cmake --build build
 
@@ -81,7 +85,7 @@ cmake --build build --target BinaryDocs
 
 Use the following commands from the project's root directory to run the test suite.
 
-```bash
+```console
 cmake -S test -B build/test
 cmake --build build/test
 CTEST_OUTPUT_ON_FAILURE=1 cmake --build build/test --target test
@@ -97,7 +101,7 @@ To collect code coverage information, run CMake with the `-DENABLE_TEST_COVERAGE
 Use the following commands from the project's root directory to check and fix C++ and CMake source style.
 This requires _clang-format_, _cmake-format_ and _pyyaml_ to be installed on the current system.
 
-```bash
+```console
 cmake -S test -B build/test
 
 # view changes
@@ -116,7 +120,7 @@ a [GitHub Release](https://help.github.com/en/github/administering-a-repository/
 created.
 To manually build documentation, call the following command.
 
-```bash
+```console
 cmake -S documentation -B build/doc
 cmake --build build/doc --target BinaryDocs
 # view the docs
