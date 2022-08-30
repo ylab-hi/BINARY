@@ -42,8 +42,7 @@ namespace sv2nl {
   auto find_overlaps(std::string_view chrom, const Sv2nlVcfRanges& nl_vcf_ranges,
                      const Sv2nlVcfRanges& sv_vcf_ranges) -> decltype(auto);
 
-  [[maybe_unused]] void writer(
-      std::unordered_map<Sv2nlVcfRecord, std::vector<Sv2nlVcfRecord>>&& overlaps);
+  [[maybe_unused]] void writer(std::vector<std::vector<Sv2nlVcfRecord>>&& overlaps);
 
   [[maybe_unused]] void map_duplicate_sync(std::string_view nl_file, std::string_view sv_file,
                                            std::string_view output_file);

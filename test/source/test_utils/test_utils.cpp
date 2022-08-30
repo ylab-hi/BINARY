@@ -10,6 +10,7 @@ DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <tuple>
 #include <vector>
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
@@ -56,13 +57,23 @@ TEST_SUITE("test binary utils") {
     std::vector v1{1, 2, 3, 4};
     std::array a1{1, 2, 3, 4};
     std::vector sv1{"I", "am", "an", "test"};
+    std::vector vf1{1.0, 2.0, 3.0, 4.0};
 
     CHECK_EQ(binary::utils::index(v1, 1), 0);
     CHECK_EQ(binary::utils::index(v1, 2), 1);
+
     CHECK_EQ(binary::utils::index(a1, 3), 2);
     CHECK_EQ(binary::utils::index(a1, 4), 3);
 
     CHECK_EQ(binary::utils::index(sv1, "test"), 3);
     CHECK_EQ(binary::utils::index(sv1, "am"), 1);
+
+    CHECK_EQ(binary::utils::index(vf1, 3.0), 2);
+    CHECK_EQ(binary::utils::index(vf1, 4.0), 3);
+  }
+
+  TEST_CASE("test print tuple") {
+    std::tuple t1{1, 2, 3, 4};
+    CHECK_NOTHROW(binary::utils::print_tuple(t1));
   }
 }

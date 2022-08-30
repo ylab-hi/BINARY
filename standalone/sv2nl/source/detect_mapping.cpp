@@ -72,7 +72,7 @@ namespace sv2nl {
     return overlaps;
   }
 
-  [[maybe_unused]] void writer(std::vector<std::vector<Sv2nlVcfRecord>>&& overlaps) {
+  void writer(std::vector<std::vector<Sv2nlVcfRecord>>&& overlaps) {
     for (auto const& record_vector : overlaps) {
       for (auto const& record : record_vector) {
         spdlog::debug("writer {}", record);
