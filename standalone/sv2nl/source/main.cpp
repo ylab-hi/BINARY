@@ -19,22 +19,23 @@
 #include <iostream>
 #include <string>
 
-#include "util.hpp"
+#include "detect_mapping.hpp"
 
-auto main(int argc, char* argv[]) -> int {
+int main(int argc, char* argv[]) {
   cxxopts::Options options("sv2nl", "Map structural Variation to Non-Linear Transcription");
   options.show_positional_help();
   options.set_width(120);
   // clang-format off
   options.add_options()
-  ("segment", "The file path of segment information from rck", cxxopts::value<std::string>())
+  ("sv", "The file path of segment information from rck", cxxopts::value<std::string>())
   ("non-linear", "The file path of non-linear information from scannls", cxxopts::value<std::string>())
+  ("o,output", "The file path of output", cxxopts::value<std::string>()->default_value("output.tsv"))
   ("d,debug", "Print debug info", cxxopts::value<bool>()->default_value("false"))
   ("h,help", "Print help");
-  // clang-format o
+  // clang-format on
 
-  options.positional_help("[segment non-linear]");
-  options.parse_positional({"segment", "non-linear"});
+  options.positional_help("[sv non-linear]");
+  options.parse_positional({"sv", "non-linear"});
   auto result = options.parse(argc, argv);
 
   if (result.count("help")) {
@@ -47,13 +48,17 @@ auto main(int argc, char* argv[]) -> int {
   }
 
   try {
-    auto segment_path = result["segment"].as<std::string>();
+    auto segment_path = result["sv"].as<std::string>();
     auto nonlinear_path = result["non-linear"].as<std::string>();
+    auto output_path = result["output"].as<std::string>();
     if (!binary::utils::check_file_path({segment_path, nonlinear_path})) {
       std::exit(1);
     }
-    spdlog::debug("segment file path: {}", segment_path);
-    spdlog::debug("non-linear file path: {}", nonlinear_path);
+
+    spdlog::info("non-linear file path: {}", nonlinear_path);
+    spdlog::info("struct variation file path: {}", segment_path);
+
+    sv2nl::map_duplicate_sync(nonlinear_path, segment_path, output_path);
 
   } catch (const cxxopts::option_has_no_value_exception& err) {
     spdlog::error("error parsing options: {} ", err.what());

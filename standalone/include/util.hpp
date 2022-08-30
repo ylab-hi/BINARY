@@ -4,6 +4,7 @@
 
 #ifndef BINARY_STANDALONE_UTILS_HPP_
 #define BINARY_STANDALONE_UTILS_HPP_
+
 #include <string>
 
 auto add_chr(std::string const& chrom) -> std::string;

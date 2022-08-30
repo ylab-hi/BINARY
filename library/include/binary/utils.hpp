@@ -6,12 +6,25 @@
 
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
 #include <filesystem>
+#include <fstream>
+#include <ranges>
 
 namespace binary::utils {
 
-  auto check_file_path(std::initializer_list<std::string> const& file_paths) -> bool;
-  [[maybe_unused]] auto check_file_path(std::string const& file_path) -> bool;
+  template <std::ranges::input_range Container, typename Value>
+  requires std::equality_comparable_with<std::ranges::range_value_t<Container>, Value>
+  auto index(Container const& container, Value&& value) -> std::size_t {
+    auto it = std::ranges::find(container, std::forward<Value>(value));
+    if (it == std::ranges::end(container)) {
+      return -1;
+    }
+    return std::ranges::distance(std::ranges::begin(container), it);
+  }
+
+  auto check_file_path(std::initializer_list<std::string_view> file_paths) -> bool;
+  [[maybe_unused]] auto check_file_path(std::string_view file_path) -> bool;
 
   /**
    * @brief print the values of a tuple
@@ -22,6 +35,29 @@ namespace binary::utils {
   [[maybe_unused]] constexpr void print_tuple(const std::tuple<T...>& tup) {
     (void)std::initializer_list<int>{
         (spdlog::trace("std::tuple values {} ", std::get<T>(tup)), 0)...};
+  }
+
+  template <std::ranges::input_range StringRange>
+  requires std::convertible_to<std::ranges::range_value_t<StringRange>, std::string>
+  void merge_files(StringRange&& files, std::string_view output_file, bool is_deleted = true,
+                   std::string_view header = "") {
+    auto output = std::ofstream(output_file.data());
+
+    if (!header.empty()) {
+      output << header << '\n';
+    }
+
+    for (auto const& file : files) {
+      auto input = std::ifstream(file);
+      output << input.rdbuf();
+    }
+
+    if (is_deleted) {
+      for (auto const& file : files) {
+        std::filesystem::remove(file);
+      }
+    }
+    output.close();
   }
 
   [[maybe_unused]] inline void set_debug() { spdlog::set_level(spdlog::level::debug); }

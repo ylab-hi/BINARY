@@ -42,9 +42,6 @@ CPMAddPackage(
 )
 
 # ---- Add source files ----
-# file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
-# file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
-# add_library(${PROJECT_NAME} ${headers} ${sources})
 
 add_library(
   ${PROJECT_NAME}
