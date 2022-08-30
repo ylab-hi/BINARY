@@ -121,13 +121,14 @@ namespace sv2nl {
       result_names.push_back(result.get());
     }
 
-    binary::utils::merge_files(result_names, output_file,
+    binary::utils::merge_files(result_names, output_file, true,
                                "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
   }
 
-  void map_duplicate_thread_pool(std::string_view nl_file, std::string_view sv_file,
-                                 std::string_view output_file) {
-    ThreadPool thread_pool(8);
+  [[maybe_unused]] void map_duplicate_thread_pool(std::string_view nl_file,
+                                                  std::string_view sv_file,
+                                                  std::string_view output_file) {
+    ThreadPool thread_pool(4);
 
     std::vector<std::string> result_names;
     std::vector<std::future<std::string>> results;
@@ -141,7 +142,7 @@ namespace sv2nl {
       result_names.push_back(result.get());
     }
 
-    binary::utils::merge_files(result_names, output_file,
+    binary::utils::merge_files(result_names, output_file, true,
                                "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype");
   }
 

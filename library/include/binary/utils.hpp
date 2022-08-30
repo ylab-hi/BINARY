@@ -13,6 +13,7 @@
 
 namespace binary::utils {
 
+  // TODO: use binary search if range is sorted
   template <std::ranges::input_range Container, typename Value>
   requires std::equality_comparable_with<std::ranges::range_value_t<Container>, Value>
   auto index(Container const& container, Value&& value) -> std::size_t {

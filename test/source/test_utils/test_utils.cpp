@@ -70,6 +70,9 @@ TEST_SUITE("test binary utils") {
 
     CHECK_EQ(binary::utils::index(vf1, 3.0), 2);
     CHECK_EQ(binary::utils::index(vf1, 4.0), 3);
+
+    // not found
+    CHECK_EQ(binary::utils::index(vf1, 5.0), -1);
   }
 
   TEST_CASE("test print tuple") {

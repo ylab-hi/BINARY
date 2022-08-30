@@ -54,8 +54,9 @@ namespace sv2nl {
                                                  std::string_view output_file,
                                                  std::string_view chrom);
 
-  void map_duplicate_thread_pool(std::string_view nl_file, std::string_view sv_file,
-                                 std::string_view output_file);
+  [[maybe_unused]] void map_duplicate_thread_pool(std::string_view nl_file,
+                                                  std::string_view sv_file,
+                                                  std::string_view output_file);
 
 }  // namespace sv2nl
 #endif  // BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
