@@ -59,7 +59,8 @@ int main(int argc, char* argv[]) {
     spdlog::info("non-linear file path: {}", nonlinear_path);
     spdlog::info("struct variation file path: {}", segment_path);
     Timer timer{};
-    sv2nl::map_duplicate_async(nonlinear_path, segment_path, output_path);
+    auto mapper = sv2nl::Mapper(nonlinear_path, segment_path, output_path);
+    mapper.map();
     spdlog::info("elapsed time: {:.2f}s", timer.elapsed());
     spdlog::info("result file path: {}", output_path);
 

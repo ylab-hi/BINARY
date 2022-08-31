@@ -18,10 +18,12 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
+
 namespace binary::parser::vcf {
   using pos_t = std::uint32_t;
   using chrom_t [[maybe_unused]] = std::string;
@@ -198,6 +200,7 @@ namespace binary::parser::vcf {
 
   // export template this namespace
   using details::BaseInfoField;
+  using details::get_info_field;
   using details::InfoFieldConcept;
   using details::InfoFieldFactory;
 

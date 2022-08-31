@@ -6,12 +6,19 @@
 #define BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
 
 #include <array>
+#include <filesystem>
+#include <initializer_list>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "vcf_info.hpp"
 #include "writer.hpp"
 
 namespace sv2nl {
+
+  namespace fs = std::filesystem;
+
   // Hardcode chromosome name for now.
   // TODO: Change to dynamic chromosome name.
   constexpr std::array<std::string_view, 22> CHROMOSOME_NAMES
@@ -29,34 +36,58 @@ namespace sv2nl {
    * 1. Check overlap between NL and SV for TDUP and INV
    * 2. Must have information: chrom, pos
    * 3. Needed INFO fields: SVTYPE, SVEND
-   * 4. Handle for every chromosome (Consider parallelization)
-   * 5. Write to output file (Consider parallelization and synchronization cost)
-   *    Or write multiple files then merge into one
+   * 4. Handle for every chromosome
+   * 5. Write to one output file
    */
-  auto build_tree_use_index(Sv2nlVcfRanges const&, std::string_view) -> Sv2nlVcfIntervalTree;
-  auto build_tree_no_index(Sv2nlVcfRanges const& sv_vcf_ranges, std::string_view chrom)
-      -> Sv2nlVcfIntervalTree;
 
-  auto build_tree(Sv2nlVcfRanges const& sv_vcf_ranges, std::string_view chrom)
-      -> Sv2nlVcfIntervalTree;
+  class Mapper {
+  public:
+    Mapper(std::string_view non_linear_file, std::string_view sv_file, std::string_view output_file)
+        : nl_vcf_file_(non_linear_file),
+          sv_vcf_file_(sv_file),
+          writer_(output_file, "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype") {}
 
-  auto find_overlaps(std::string_view chrom, const Sv2nlVcfRanges& nl_vcf_ranges,
-                     const Sv2nlVcfRanges& sv_vcf_ranges) -> decltype(auto);
+    void map() const;
 
-  [[maybe_unused]] void writer(std::vector<std::vector<Sv2nlVcfRecord>>&& overlaps);
+    [[maybe_unused]] void map_duplicate_async() const;
 
-  [[maybe_unused]] void map_duplicate_sync(std::string_view nl_file, std::string_view sv_file,
-                                           std::string_view output_file);
+    [[maybe_unused]] void map_duplicate_thread_pool() const;
 
-  [[maybe_unused]] void map_duplicate_async(std::string_view nl_file, std::string_view sv_file,
-                                            std::string_view output_file);
+  private:
+    auto map_overlaps_impl(std::string_view chrom) const;
+    auto map_trans() const;
 
-  [[maybe_unused]] auto map_duplicate_async_impl(std::string_view nl_file, std::string_view sv_file,
-                                                 std::string_view chrom, Writer& writer);
+    auto map_trans_impl(std::string_view chrom,
+                        Sv2nlVcfIntervalTree const& vcf_interval_tree) const;
 
-  [[maybe_unused]] void map_duplicate_thread_pool(std::string_view nl_file,
-                                                  std::string_view sv_file,
-                                                  std::string_view output_file);
+    auto build_tree(std::string_view chrom, const Sv2nlVcfRanges& vcf_ranges) const
+        -> Sv2nlVcfIntervalTree const;
+
+    auto build_tree(std::initializer_list<std::string_view> chroms,
+                    const Sv2nlVcfRanges& vcf_ranges) const -> Sv2nlVcfIntervalTree const;
+    std::pair<std::string, std::string> get_2chroms(Sv2nlVcfRecord const& record) const;
+
+    std::string get_chr2(Sv2nlVcfRecord const& record) const;
+
+    [[nodiscard]] bool is_same_chroms(std::pair<std::string, std::string> const& lhs,
+                                      std::pair<std::string, std::string> const& rhs) const;
+
+    auto build_tree_use_index(std::string_view) const -> Sv2nlVcfIntervalTree const;
+
+    [[maybe_unused]] auto build_tree_use_index(std::initializer_list<std::string_view>) const
+        -> Sv2nlVcfIntervalTree const;
+
+    auto build_tree_no_index(std::string_view chrom, const Sv2nlVcfRanges& vcf_ranges) const
+        -> Sv2nlVcfIntervalTree const;
+
+    auto build_tree_no_index(std::initializer_list<std::string_view> chroms,
+                             const Sv2nlVcfRanges& vcf_ranges,
+                             std::string_view svtype = "BND") const -> Sv2nlVcfIntervalTree const;
+
+    fs::path nl_vcf_file_;
+    fs::path sv_vcf_file_;
+    mutable Writer writer_;
+  };
 
 }  // namespace sv2nl
 #endif  // BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_

@@ -34,9 +34,13 @@ namespace sv2nl {
       ofs_ << line << '\n';
     }
 
-    std::string Writer::get_keys(const Sv2nlVcfRecord& record) {
-      return fmt::format("{}\t{}\t{}\t{}", record.chrom, record.pos, record.info->svend,
-                         record.info->svtype);
+    std::string Writer::format_keys(const Sv2nlVcfRecord& record) {
+      if (record.info->chr2.empty()) {
+        return fmt::format("{}\t{}\t{}\t{}", record.chrom, record.pos, record.info->svend,
+                           record.info->svtype);
+      }
+      return fmt::format("{},{}\t{}\t{}\t{}\t", record.chrom, record.info->chr2, record.pos,
+                         record.info->svend, record.info->svtype);
     }
   }  // namespace v2
 }  // namespace sv2nl
