@@ -9,6 +9,7 @@
 #include <cassert>
 #include <concepts>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <ranges>
@@ -136,6 +137,8 @@ namespace binary::algorithm::tree {
 
     virtual void inorder_walk(raw_pointer node, int indent) const;
 
+    void to_dot(std::string_view filename) const;
+
     // Ownership transfer
     [[maybe_unused]] void insert_node(pointer node);
 
@@ -149,6 +152,7 @@ namespace binary::algorithm::tree {
     void delete_node(raw_pointer node);
 
   protected:
+    virtual void to_dot_impl(std::ofstream &output, raw_pointer node) const;
     virtual void left_rotate(raw_pointer node);
     virtual void right_rotate(raw_pointer node);
     virtual void insert_node_impl(raw_pointer node);
@@ -185,10 +189,7 @@ namespace binary::algorithm::tree {
 
   template <NodeConcept NodeType> auto RbTree<NodeType>::check_is_red(raw_pointer node) const
       -> bool {
-    if (node != nullptr && node->is_red()) {
-      return true;
-    }
-    return false;
+    return node != nullptr && node->is_red();
   }
 
   template <NodeConcept NodeType> auto RbTree<NodeType>::check_is_black(raw_pointer node) const
@@ -380,6 +381,33 @@ namespace binary::algorithm::tree {
       fmt::print("{:{}} is_black {} \n", node->key, indent + 4, node->is_black());
       inorder_walk(node->rightr(), indent);
     }
+  }
+
+  template <NodeConcept NodeType>
+  void RbTree<NodeType>::to_dot_impl(std::ofstream &output, raw_pointer node) const {
+    if (node != nullptr) {
+      output << fmt::format("{} [label=\"{}\", color={}, style=bold];\n", node->key, node->key,
+                            node->is_black() ? "black" : "red");
+      to_dot_impl(output, node->leftr());
+      to_dot_impl(output, node->rightr());
+      if (node->left != nullptr) {
+        output << fmt::format("{} -- {} [style=bold];\n", node->key, node->leftr()->key);
+      }
+      if (node->right != nullptr) {
+        output << fmt::format("{} -- {} [style=bold];\n", node->key, node->rightr()->key);
+      }
+    }
+  }
+
+  template <NodeConcept NodeType> void RbTree<NodeType>::to_dot(std::string_view filename) const {
+    std::ofstream output(filename.data());
+    output << "graph G {\n";
+    output << "fontname=\"Helvetica,Arial,sans-serif\"\n"
+           << "node [fontname=\"Helvetica,Arial,sans-serif\"]\n"
+           << "edge [fontname=\"Helvetica,Arial,sans-serif\"]\n";
+    to_dot_impl(output, root_.get());
+    output << "}\n";
+    output.close();
   }
 
   template <NodeConcept NodeType>

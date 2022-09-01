@@ -19,8 +19,15 @@
 #include <iostream>
 #include <string>
 
-#include "detect_mapping.hpp"
+#include "mapper.hpp"
 #include "util.hpp"
+
+void run(std::string_view nl_, std::string_view sv_, std::string_view output_) {
+  auto dup_mapper = sv2nl::DupMapper(nl_, sv_, output_, "TDUP", "DUP");
+  auto inv_mapper = sv2nl::InvMapper(nl_, sv_, output_, "INV", "INV");
+  auto tra_mapper = sv2nl::TraMapper(nl_, sv_, output_, "TRA", "BND");
+  dup_mapper.map();
+}
 
 int main(int argc, char* argv[]) {
   cxxopts::Options options("sv2nl", "Map structural Variation to Non-Linear Transcription");
@@ -59,8 +66,7 @@ int main(int argc, char* argv[]) {
     spdlog::info("non-linear file path: {}", nonlinear_path);
     spdlog::info("struct variation file path: {}", segment_path);
     Timer timer{};
-    auto mapper = sv2nl::Mapper(nonlinear_path, segment_path, output_path);
-    mapper.map();
+    run(nonlinear_path, segment_path, output_path);
     spdlog::info("elapsed time: {:.2f}s", timer.elapsed());
     spdlog::info("result file path: {}", output_path);
 

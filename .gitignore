@@ -351,3 +351,4 @@ cython_debug/
 cmake-build-debug-docker/
 cmake-build-release-docker/
 .idea/
+test/data/test_sv2nl/*

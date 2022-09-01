@@ -170,6 +170,7 @@ namespace binary::algorithm::tree {
     auto find_overlaps_impl(interval_type const &interval, raw_pointer node) const
         -> std::vector<interval_type>;
 
+    void to_dot_impl(std::ofstream &output, raw_pointer node) const override;
     void left_rotate(raw_pointer node) override;
     void right_rotate(raw_pointer node) override;
     void insert_node_impl(raw_pointer node) override;
@@ -183,6 +184,23 @@ namespace binary::algorithm::tree {
     using RbTree<NodeType>::root_;
     using RbTree<NodeType>::nil_;
   };
+
+  template <IntervalNodeConcept NodeType>
+  void IntervalTree<NodeType>::to_dot_impl(std::ofstream &output, raw_pointer node) const {
+    if (node != nullptr) {
+      output << fmt::format("{} [label=\"{}-{}-{}\", color={}, style=bold];\n", node->key,
+                            node->key, node->interval.high, node->max,
+                            node->is_black() ? "black" : "red");
+      to_dot_impl(output, node->leftr());
+      to_dot_impl(output, node->rightr());
+      if (node->left != nullptr) {
+        output << fmt::format("{} -- {} [style=bold];\n", node->key, node->leftr()->key);
+      }
+      if (node->right != nullptr) {
+        output << fmt::format("{} -- {} [style=bold];\n", node->key, node->rightr()->key);
+      }
+    }
+  }
 
   template <IntervalNodeConcept NodeType>
   void IntervalTree<NodeType>::left_rotate(raw_pointer node) {
@@ -293,13 +311,19 @@ namespace binary::algorithm::tree {
       return ret;
     }
 
+    spdlog::debug("find_overlaps_impl {} {}", get_max(node), interval);
+
     if (interval.is_overlap(node->interval)) {
+      spdlog::debug("push {}", node->interval);
       ret.push_back(node->interval);
     }
 
     if (interval.low <= get_max(node->leftr())) {
+      spdlog::debug("find_overlaps_impl left child {} {}", get_max(node->leftr()), interval.low);
+
       std::ranges::move(find_overlaps_impl(interval, node->leftr()), std::back_inserter(ret));
     } else {
+      spdlog::debug("find_overlaps_impl right child {} {}", get_max(node->rightr()), interval.low);
       std::ranges::move(find_overlaps_impl(interval, node->rightr()), std::back_inserter(ret));
     }
 
