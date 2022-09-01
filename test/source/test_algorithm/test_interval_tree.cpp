@@ -128,7 +128,7 @@ TEST_SUITE("algorithm-interval-tree") {
     }
 
     SUBCASE("test find multiple overlaps case 1") {
-      auto intervals1 = interval_tree.find_overlaps({7u, 25u});
+      auto intervals1 = interval_tree.find_overlaps(UIntInterval{7u, 25u});
       CHECK_EQ(intervals1.size(), 4);
 
       auto intervals2 = interval_tree.find_overlaps(15u, 25u);

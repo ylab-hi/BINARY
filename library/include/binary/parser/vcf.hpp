@@ -24,6 +24,7 @@
 #include <tuple>
 #include <utility>
 
+// TODO: Implement thread safe version
 namespace binary::parser::vcf {
   using pos_t = std::uint32_t;
   using chrom_t [[maybe_unused]] = std::string;
@@ -544,15 +545,28 @@ namespace binary::parser::vcf {
   template <RecordConcept RecordType> class BaseVcfInterval : public tree::UIntInterval {
   public:
     constexpr BaseVcfInterval() = default;
-    explicit BaseVcfInterval(RecordType&& vcf_record)
-        : record(std::forward<RecordType>(vcf_record)) {
+
+    /**
+     * @brief  construct a vcf interval from lvalue record
+     * @param vcf_record
+     */
+    explicit BaseVcfInterval(RecordType&& vcf_record) : record(std::move(vcf_record)) {
+      low = record.pos;
+      high = record.info->svend;
+    }
+
+    /**
+     * @brief  construct a vcf interval from rvalue record
+     * @param vcf_record
+     */
+    explicit BaseVcfInterval(RecordType const& vcf_record) : record(vcf_record) {
       low = record.pos;
       high = record.info->svend;
     }
 
     BaseVcfInterval(tree::UIntInterval::key_type low_, tree::UIntInterval::key_type high_,
                     RecordType&& vcf_record)
-        : tree::UIntInterval(low_, high_), record(std::forward<RecordType>(vcf_record)) {}
+        : tree::UIntInterval(low_, high_), record(std::move(vcf_record)) {}
 
     using tree::UIntInterval::UIntInterval;
 
@@ -572,7 +586,7 @@ namespace binary::parser::vcf {
   };
 
   /*
-   * Template alias
+   * Template alias for vcf interval and node
    */
   using VcfRecord = BaseVcfRecord<InfoField>;
   using VcfInterval = BaseVcfInterval<VcfRecord>;

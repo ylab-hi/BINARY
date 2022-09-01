@@ -16,6 +16,8 @@ namespace sv2nl {
     vcf::pos_t svend{};
 
     std::string chr2{};
+    bool strand1{true};
+    bool strand2{true};
 
     constexpr Sv2nlInfoField() = default;
     Sv2nlInfoField(Sv2nlInfoField const&) = default;

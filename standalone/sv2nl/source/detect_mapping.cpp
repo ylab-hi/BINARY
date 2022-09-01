@@ -34,13 +34,13 @@ namespace sv2nl {
       -> Sv2nlVcfIntervalTree const {
     auto interval_tree = Sv2nlVcfIntervalTree{};
 
-    for (auto sv_vcf_record :
-         vcf_ranges | std::views::filter([&chrom](auto const& sv_vcf_record) {
-           return sv_vcf_record.chrom == chrom
-                  && (sv_vcf_record.info->svtype == "INV" || sv_vcf_record.info->svtype == "DUP");
-         })) {
-      interval_tree.insert_node(std::move(sv_vcf_record));
-    }
+    auto chrom_view
+        = vcf_ranges | std::views::filter([&chrom](auto const& sv_vcf_record) {
+            return sv_vcf_record.chrom == chrom
+                   && (sv_vcf_record.info->svtype == "INV" || sv_vcf_record.info->svtype == "DUP");
+          });
+
+    interval_tree.insert_node(std::move(chrom_view));
 
     // no copy need to  move
     return interval_tree;
@@ -77,7 +77,7 @@ namespace sv2nl {
   }
 
   auto Mapper::map_overlaps_impl(std::string_view chrom) const {
-    // avoid data trace cause now vcfranges is not thread safe
+    // avoid data trace cause now vcf ranges is not thread safe
     auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_vcf_file_.string()));
     auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_vcf_file_.string()));
 
@@ -90,14 +90,18 @@ namespace sv2nl {
           });
 
     for (auto nl_vcf_record : chrom_view) {
-      spdlog::debug("handle {}", nl_vcf_record);
-      std::vector<Sv2nlVcfRecord> overlaps_vector{nl_vcf_record};
+      spdlog::debug("process {}", nl_vcf_record);
 
-      if (auto ret = interval_tree.find_overlaps(std::move(nl_vcf_record)); !ret.empty()) {
+      auto validated_nl_vcf_record = validate_record(nl_vcf_record);
+      std::vector<Sv2nlVcfRecord> overlaps_vector{std::move(nl_vcf_record)};
+
+      if (auto ret = interval_tree.find_overlaps(validated_nl_vcf_record); !ret.empty()) {
         overlaps_vector.reserve(ret.size() + 1);
         for (auto const& overlap : ret) {
-          spdlog::debug("find overlap {}", overlap);
-          overlaps_vector.push_back(std::move(overlap.record));
+          if (check_condition(validated_nl_vcf_record, overlap.record)) {
+            spdlog::debug("find overlap {}", overlap);
+            overlaps_vector.push_back(std::move(overlap.record));
+          }
         }
       }
       writer_.write(std::move(overlaps_vector));
@@ -117,11 +121,13 @@ namespace sv2nl {
 
     for (auto nl_vcf_record : nl_chrom_view) {
       spdlog::debug("process nl vcf {}", nl_vcf_record);
-      std::vector<Sv2nlVcfRecord> overlaps_vector{nl_vcf_record};
-
       auto nl_2chroms = get_2chroms(nl_vcf_record);
+      auto validated_nl_vcf_record = validate_record(nl_vcf_record);
 
-      if (auto ret = vcf_interval_tree.find_overlaps(std::move(nl_vcf_record)); !ret.empty()) {
+      std::vector<Sv2nlVcfRecord> overlaps_vector{std::move(nl_vcf_record)};
+
+      if (auto ret = vcf_interval_tree.find_overlaps(std::move(validated_nl_vcf_record));
+          !ret.empty()) {
         overlaps_vector.reserve(ret.size() + 1);
         for (auto const& overlap : ret) {
           if (nl_2chroms == get_2chroms(overlap.record)) {
@@ -135,7 +141,7 @@ namespace sv2nl {
     }
   }
 
-  [[maybe_unused]] void Mapper::map_duplicate_async() const {
+  [[maybe_unused]] void Mapper::map_duplicate() const {
     std::vector<std::future<void>> results;
     for (auto chrom : CHROMOSOME_NAMES) {
       results.push_back(
@@ -160,7 +166,11 @@ namespace sv2nl {
     std::vector<std::future<void>> results;
 
     for (auto chrom : CHROMOSOME_NAMES) {
-      results.push_back(std::async([&] { map_trans_impl(chrom, sv_interval_tree); }));
+      results.push_back(std::async(
+          [&](std::string_view chrom_, Sv2nlVcfIntervalTree const& sv_interval_tree_) {
+            map_trans_impl(chrom_, sv_interval_tree_);
+          },
+          chrom, std::ref(sv_interval_tree)));
     }
 
     for (auto& res : results) res.wait();
@@ -191,8 +201,55 @@ namespace sv2nl {
   }
 
   void Mapper::map() const {
-    map_duplicate_async();
-    map_trans();
+    map_duplicate();
+    //    map_trans();
+  }
+
+  /**
+   * Check if target  contains source
+   * @return bool
+   */
+  bool is_contained(const Sv2nlVcfRecord& target, const Sv2nlVcfRecord& source) {
+    assert(target.pos <= target.info->svend && source.pos <= source.info->svend);
+    return target.pos <= source.pos && target.info->svend >= source.info->svend;
+  }
+
+  /**
+   * Make sure vcf record's pos >= svend in order to find overlaps in interval tree
+   * @param record
+   */
+  Sv2nlVcfRecord validate_record(const Sv2nlVcfRecord& record) noexcept {
+    auto res = record;
+    if (res.pos > res.info->svend) std::swap(res.pos, res.info->svend);
+    return res;
+  }
+
+  bool check_inversion(const Sv2nlVcfRecord& nl_vcf_record, const Sv2nlVcfRecord& sv_vcf_record) {
+    // overlap left side of sv_vcf record
+    if (nl_vcf_record.pos <= sv_vcf_record.pos) {
+      // check if nl vcf record is +-
+      return nl_vcf_record.info->strand1 && !nl_vcf_record.info->strand2;
+    }
+
+    // overlap right side of sv_vcf record
+    // check if nl vcf record is -+
+    return !nl_vcf_record.info->strand1 && nl_vcf_record.info->strand2;
+  }
+
+  bool check_condition(const Sv2nlVcfRecord& nl_vcf_record, const Sv2nlVcfRecord& sv_vcf_record) {
+    spdlog::debug("check condition {} {}", nl_vcf_record, sv_vcf_record);
+    if (nl_vcf_record.info->svtype == "INV" && sv_vcf_record.info->svtype == "INV") {
+      spdlog::debug("check condition inv {} {}", nl_vcf_record, sv_vcf_record);
+      return !is_contained(sv_vcf_record, nl_vcf_record)
+             && check_inversion(nl_vcf_record, sv_vcf_record);
+    } else if (nl_vcf_record.info->svtype == "TDUP"
+               //               && sv_vcf_record.info->svtype == "DUP"
+    ) {
+      spdlog::debug("check condition dup {} {}", nl_vcf_record, sv_vcf_record);
+      return is_contained(sv_vcf_record, nl_vcf_record);
+    }
+
+    return false;
   }
 
 }  // namespace sv2nl

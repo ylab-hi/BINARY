@@ -26,6 +26,8 @@ namespace sv2nl {
          "chr9",  "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16",
          "chr17", "chr18", "chr19", "chr20", "chr21", "chr22"};
 
+  constexpr char HEADER[] = "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype";
+
   /**
    * @brief Detect mapping relationship for non-linear variation (NL) and SV (SV)
    * @param non_linear_file
@@ -43,13 +45,11 @@ namespace sv2nl {
   class Mapper {
   public:
     Mapper(std::string_view non_linear_file, std::string_view sv_file, std::string_view output_file)
-        : nl_vcf_file_(non_linear_file),
-          sv_vcf_file_(sv_file),
-          writer_(output_file, "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype") {}
+        : nl_vcf_file_(non_linear_file), sv_vcf_file_(sv_file), writer_(output_file, HEADER) {}
 
     void map() const;
 
-    [[maybe_unused]] void map_duplicate_async() const;
+    [[maybe_unused]] void map_duplicate() const;
 
     [[maybe_unused]] void map_duplicate_thread_pool() const;
 
@@ -65,12 +65,10 @@ namespace sv2nl {
 
     auto build_tree(std::initializer_list<std::string_view> chroms,
                     const Sv2nlVcfRanges& vcf_ranges) const -> Sv2nlVcfIntervalTree const;
+
     std::pair<std::string, std::string> get_2chroms(Sv2nlVcfRecord const& record) const;
 
     std::string get_chr2(Sv2nlVcfRecord const& record) const;
-
-    [[nodiscard]] bool is_same_chroms(std::pair<std::string, std::string> const& lhs,
-                                      std::pair<std::string, std::string> const& rhs) const;
 
     auto build_tree_use_index(std::string_view) const -> Sv2nlVcfIntervalTree const;
 
@@ -88,6 +86,15 @@ namespace sv2nl {
     fs::path sv_vcf_file_;
     mutable Writer writer_;
   };
+
+  [[nodiscard]] bool is_contained(const Sv2nlVcfRecord& target, const Sv2nlVcfRecord& source);
+  [[nodiscard]] bool check_condition(const Sv2nlVcfRecord& nl_vcf_record,
+                                     const Sv2nlVcfRecord& sv_vcf_record);
+
+  [[nodiscard]] bool check_inversion(const Sv2nlVcfRecord& nl_vcf_record,
+                                     const Sv2nlVcfRecord& sv_vcf_record);
+
+  Sv2nlVcfRecord validate_record(const Sv2nlVcfRecord& record) noexcept;
 
 }  // namespace sv2nl
 #endif  // BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
