@@ -38,6 +38,7 @@ TEST_SUITE("test binary utils") {
       for (auto const& file : files) {
         CHECK_FALSE(fs::exists(file));
       }
+      CHECK_NOTHROW(fs::remove(output_file));
     }
 
     SUBCASE("test not delete original files") {
@@ -50,6 +51,7 @@ TEST_SUITE("test binary utils") {
       for (auto const& file : files) {
         fs::remove(file);
       }
+      CHECK_NOTHROW(fs::remove(output_file));
     }
   }
 

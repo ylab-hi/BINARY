@@ -10,6 +10,7 @@
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <algorithm>
 #include <array>
+#include <filesystem>
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
 TEST_SUITE("algorithm-interval-tree") {
@@ -133,6 +134,12 @@ TEST_SUITE("algorithm-interval-tree") {
 
       auto intervals2 = interval_tree.find_overlaps(15u, 25u);
       CHECK_EQ(intervals2.size(), 5);
+    }
+
+    SUBCASE("test to dot") {
+      CHECK_NOTHROW(interval_tree.to_dot("interval_tree.dot"));
+      CHECK(std::filesystem::exists("interval_tree.dot"));
+      CHECK_NOTHROW(std::filesystem::remove("interval_tree.dot"));
     }
   }
 

@@ -7,6 +7,7 @@
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_BEGIN
 #include <algorithm>
 #include <array>
+#include <filesystem>
 #include <random>
 DOCTEST_MAKE_STD_HEADERS_CLEAN_FROM_WARNINGS_ON_WALL_END
 
@@ -308,5 +309,17 @@ TEST_SUITE("algorithm-red-black-tree") {
     CHECK_NOTHROW(black_height2(tree.root()));
     auto const* ptr1 = tree.search(54942);
     CHECK_EQ(ptr1->key, 54942);
+  }
+
+  TEST_CASE("test to dot") {
+    using namespace binary::algorithm::tree;
+    std::array<IntNode::key_type, 20> k1{54942, 75803, 49212, 64167, 14933, 44543, 10072,
+                                         90303, 45511, 70641, 59710, 3100,  98544, 55068,
+                                         45575, 4994,  66267, 24721, 17128, 72975};
+    RbTree<IntNode> tree{};
+    tree.insert_node(k1);
+    CHECK_EQ(tree.size(), 20);
+    CHECK_NOTHROW(tree.to_dot("rb_tree.dot"));
+    CHECK_NOTHROW(std::filesystem::remove("rb_tree.dot"));
   }
 }
