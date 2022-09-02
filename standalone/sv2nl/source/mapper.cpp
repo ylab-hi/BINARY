@@ -65,9 +65,7 @@ namespace sv2nl {
     auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_vcf_file_.string()));
     auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_vcf_file_.string()));
 
-    spdlog::set_level(spdlog::level::trace);
     auto interval_tree = build_tree(chrom, sv_vcf_ranges, sv_type_);
-    interval_tree.to_dot("dup.dot");
 
     auto chrom_view
         = nl_vcf_ranges | std::views::filter([&](auto const& nl_vcf_record) {
@@ -75,19 +73,16 @@ namespace sv2nl {
           });
 
     for (auto nl_vcf_record : chrom_view) {
-      //      spdlog::debug("process nl record {} tree size {}", nl_vcf_record,
-      //      interval_tree.size());
+      spdlog::debug("process nl record {} ", nl_vcf_record);
       auto validated_nl_vcf_record = validate_record(nl_vcf_record);
       std::vector<Sv2nlVcfRecord> overlaps_vector{std::move(nl_vcf_record)};
 
-      if (validated_nl_vcf_record.pos == 29927247) {
-        if (auto ret = interval_tree.find_overlaps(validated_nl_vcf_record); !ret.empty()) {
-          overlaps_vector.reserve(ret.size() + 1);
-          for (auto const& overlap : ret) {
-            if (check_condition(validated_nl_vcf_record, overlap.record)) {
-              spdlog::debug("find overlap {}", overlap);
-              overlaps_vector.push_back(std::move(overlap.record));
-            }
+      if (auto ret = interval_tree.find_overlaps(validated_nl_vcf_record); !ret.empty()) {
+        overlaps_vector.reserve(ret.size() + 1);
+        for (auto const& overlap : ret) {
+          if (check_condition(validated_nl_vcf_record, overlap.record)) {
+            spdlog::debug("find overlap {}", overlap);
+            overlaps_vector.push_back(std::move(overlap.record));
           }
         }
       }
@@ -97,16 +92,12 @@ namespace sv2nl {
 
   void DupMapper::map() {
     std::vector<std::future<void>> results;
-    for (auto chrom : {"chr14"}) {
-      //      results.push_back(std::async([&](std::string_view chrom_) { map_impl(chrom_); },
-      //      chrom));
-      map_impl(chrom);
+    for (auto chrom : CHROMOSOME_NAMES) {
+      results.push_back(std::async([&](std::string_view chrom_) { map_impl(chrom_); }, chrom));
     }
-    //
-    //    for (auto& result : results) {
-    //      result.wait();
-    //    }
-    //
+    for (auto& result : results) {
+      result.wait();
+    }
   }
 
   void InvMapper::map_impl(std::string_view chrom) const {
@@ -185,11 +176,11 @@ namespace sv2nl {
 
       std::vector<Sv2nlVcfRecord> overlaps_vector{std::move(nl_vcf_record)};
 
-      if (auto ret = vcf_interval_tree.find_overlaps(std::move(validated_nl_vcf_record));
-          !ret.empty()) {
+      if (auto ret = vcf_interval_tree.find_overlaps(validated_nl_vcf_record); !ret.empty()) {
         overlaps_vector.reserve(ret.size() + 1);
         for (auto const& overlap : ret) {
-          if (nl_2chroms == get_2chroms(overlap.record)) {
+          if (nl_2chroms == get_2chroms(overlap.record)
+              && check_condition(validated_nl_vcf_record, overlap.record)) {
             spdlog::debug("find overlap {}", overlap);
             overlaps_vector.push_back(std::move(overlap.record));
           }
@@ -208,9 +199,6 @@ namespace sv2nl {
 
     auto sv_interval_tree = Sv2nlVcfIntervalTree{};
     sv_interval_tree.insert_node(sv_trans_view);
-
-    spdlog::debug("SV Tree size : {}", sv_interval_tree.size());
-
     std::vector<std::future<void>> results;
 
     for (auto chrom : CHROMOSOME_NAMES) {
@@ -221,6 +209,18 @@ namespace sv2nl {
           chrom, std::ref(sv_interval_tree)));
     }
     for (auto& res : results) res.wait();
+  }
+
+  bool TraMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
+                                  const Sv2nlVcfRecord& sv_vcf_record) const {
+    auto diff1 = nl_vcf_record.pos >= sv_vcf_record.pos ? nl_vcf_record.pos - sv_vcf_record.pos
+                                                        : sv_vcf_record.pos - nl_vcf_record.pos;
+
+    auto diff2 = nl_vcf_record.info->svend >= sv_vcf_record.info->svend
+                     ? nl_vcf_record.info->svend - sv_vcf_record.info->svend
+                     : sv_vcf_record.info->svend - nl_vcf_record.info->svend;
+
+    return diff1 <= diff_ && diff2 <= diff_;
   }
 
 }  // namespace sv2nl

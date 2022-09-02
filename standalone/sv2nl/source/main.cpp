@@ -6,7 +6,7 @@
  *
  * algorithm:
  *
- * 1. detect duplications
+ * 1. detect duplication
  * 2. detect inversions
  * 3. detect translocations
  *
@@ -22,11 +22,17 @@
 #include "mapper.hpp"
 #include "util.hpp"
 
-void run(std::string_view nl_, std::string_view sv_, std::string_view output_) {
-  auto dup_mapper = sv2nl::DupMapper(nl_, sv_, output_, "TDUP", "DUP");
-  auto inv_mapper = sv2nl::InvMapper(nl_, sv_, output_, "INV", "INV");
-  auto tra_mapper = sv2nl::TraMapper(nl_, sv_, output_, "TRA", "BND");
+void run(std::string_view nl_, std::string_view sv_, std::string_view output_, uint32_t diff_) {
+  auto files = {std::string(output_) + ".dup", std::string(output_) + ".inv",
+                std::string(output_) + ".tra"};
+
+  auto dup_mapper = sv2nl::DupMapper(nl_, sv_, *files.begin(), "TDUP", "DUP");
+  auto inv_mapper = sv2nl::InvMapper(nl_, sv_, *(files.begin() + 1), "INV", "INV");
+  auto tra_mapper = sv2nl::TraMapper(nl_, sv_, *(files.begin() + 2), "TRA", "BND");
   dup_mapper.map();
+  inv_mapper.map();
+  tra_mapper.set_diff(diff_);
+  tra_mapper.map();
 }
 
 int main(int argc, char* argv[]) {
@@ -38,6 +44,7 @@ int main(int argc, char* argv[]) {
   ("sv", "The file path of segment information from rck", cxxopts::value<std::string>())
   ("non-linear", "The file path of non-linear information from scannls", cxxopts::value<std::string>())
   ("o,output", "The file path of output", cxxopts::value<std::string>()->default_value("output.tsv"))
+  ("t,threshold", "The distance threshold for trans mapper", cxxopts::value<uint32_t>()->default_value("1000000"))
   ("d,debug", "Print debug info", cxxopts::value<bool>()->default_value("false"))
   ("h,help", "Print help");
   // clang-format on
@@ -59,6 +66,7 @@ int main(int argc, char* argv[]) {
     auto segment_path = result["sv"].as<std::string>();
     auto nonlinear_path = result["non-linear"].as<std::string>();
     auto output_path = result["output"].as<std::string>();
+    auto diff = result["threshold"].as<uint32_t>();
     if (!binary::utils::check_file_path({segment_path, nonlinear_path})) {
       std::exit(1);
     }
@@ -66,9 +74,9 @@ int main(int argc, char* argv[]) {
     spdlog::info("non-linear file path: {}", nonlinear_path);
     spdlog::info("struct variation file path: {}", segment_path);
     Timer timer{};
-    run(nonlinear_path, segment_path, output_path);
+    run(nonlinear_path, segment_path, output_path, diff);
     spdlog::info("elapsed time: {:.2f}s", timer.elapsed());
-    spdlog::info("result file path: {}", output_path);
+    spdlog::info("result file path: {}[.dup|.inv|.tra]", output_path);
 
   } catch (const cxxopts::option_has_no_value_exception& err) {
     spdlog::error("error parsing options: {} ", err.what());

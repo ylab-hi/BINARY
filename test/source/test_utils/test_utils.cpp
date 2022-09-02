@@ -41,7 +41,7 @@ TEST_SUITE("test binary utils") {
     }
 
     SUBCASE("test not delete original files") {
-      binary::utils::merge_files(files, output_file, false);
+      binary::utils::merge_files(files, output_file, "", false);
       CHECK(fs::exists(output_file));
       for (auto const& file : files) {
         CHECK(fs::exists(file));

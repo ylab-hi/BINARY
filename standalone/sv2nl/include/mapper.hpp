@@ -27,7 +27,7 @@ namespace sv2nl {
          "chr9",  "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16",
          "chr17", "chr18", "chr19", "chr20", "chr21", "chr22"};
 
-  constexpr char HEADER[] = "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype";
+  constexpr const char HEADER[] = "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype";
 
   /**
    * @brief Detect mapping relationship for non-linear variation (NL) and SV (SV)
@@ -107,9 +107,13 @@ namespace sv2nl {
     ~TraMapper() override = default;
 
     void map() override;
+    void set_diff(uint32_t diff) { diff_ = diff; }
 
   private:
+    uint32_t diff_{0};
     void map_impl(std::string_view chrom, Sv2nlVcfIntervalTree const& vcf_interval_tree) const;
+    bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
+                         Sv2nlVcfRecord const& sv_vcf_record) const;
   };
 
 }  // namespace sv2nl

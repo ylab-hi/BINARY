@@ -10,6 +10,7 @@
 
 #include <binary/algorithm/rb_tree.hpp>
 #include <binary/concepts.hpp>
+#include <future>
 #include <optional>
 #include <ranges>
 namespace binary::algorithm::tree {
@@ -311,19 +312,15 @@ namespace binary::algorithm::tree {
       return ret;
     }
 
-    spdlog::debug("find_overlaps_impl {} {}", get_max(node), interval);
-
     if (interval.is_overlap(node->interval)) {
-      spdlog::debug("push {}", node->interval);
       ret.push_back(node->interval);
     }
 
     if (interval.low <= get_max(node->leftr())) {
-      spdlog::debug("find_overlaps_impl left child {} {}", get_max(node->leftr()), interval.low);
-
       std::ranges::move(find_overlaps_impl(interval, node->leftr()), std::back_inserter(ret));
-    } else {
-      spdlog::debug("find_overlaps_impl right child {} {}", get_max(node->rightr()), interval.low);
+    }
+
+    if (interval.high >= node->key && interval.low <= get_max(node->rightr())) {
       std::ranges::move(find_overlaps_impl(interval, node->rightr()), std::back_inserter(ret));
     }
 

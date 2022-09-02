@@ -40,8 +40,8 @@ namespace binary::utils {
 
   template <std::ranges::input_range StringRange>
   requires std::convertible_to<std::ranges::range_value_t<StringRange>, std::string>
-  void merge_files(StringRange&& files, std::string_view output_file, bool is_deleted = true,
-                   std::string_view header = "") {
+  void merge_files(StringRange&& files, std::string_view output_file, std::string_view header = "",
+                   bool is_deleted = true, bool is_skipped_header = true) {
     auto output = std::ofstream(output_file.data());
 
     if (!header.empty()) {
@@ -49,16 +49,23 @@ namespace binary::utils {
     }
 
     for (auto const& file : files) {
-      auto input = std::ifstream(file);
-      output << input.rdbuf();
-    }
-
-    if (is_deleted) {
-      for (auto const& file : files) {
-        std::filesystem::remove(file);
+      // check files exist
+      if (std::filesystem::exists(file)) {
+        auto input = std::ifstream(file);
+        if (is_skipped_header) {
+          std::string line;
+          std::getline(input, line);
+        }
+        output << input.rdbuf();
+        input.close();
+        // remove original files
+        if (is_deleted) {
+          std::filesystem::remove(file);
+        }
       }
+
+      output.close();
     }
-    output.close();
   }
 
   [[maybe_unused]] inline void set_debug() { spdlog::set_level(spdlog::level::debug); }
