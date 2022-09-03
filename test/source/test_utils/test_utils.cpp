@@ -31,6 +31,11 @@ TEST_SUITE("test binary utils") {
       CHECK(fs::exists(file));
     }
 
+    SUBCASE("test check file") {
+      CHECK(binary::utils::check_file_path({files[0], files[1]}));
+      CHECK_FALSE(binary::utils::check_file_path({output_file}));
+    }
+
     SUBCASE("test delete original files") {
       binary::utils::merge_files(files, output_file);
       CHECK(fs::exists(output_file));
@@ -38,6 +43,7 @@ TEST_SUITE("test binary utils") {
       for (auto const& file : files) {
         CHECK_FALSE(fs::exists(file));
       }
+
       CHECK_NOTHROW(fs::remove(output_file));
     }
 
