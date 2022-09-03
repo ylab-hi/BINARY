@@ -32,7 +32,7 @@ namespace sv2nl {
   }
 
   auto Mapper::build_tree(std::string_view chrom, const Sv2nlVcfRanges& vcf_ranges,
-                          std::string_view svtype) -> Sv2nlVcfIntervalTree const {
+                          std::string_view svtype) -> Sv2nlVcfIntervalTree {
     auto interval_tree = Sv2nlVcfIntervalTree{};
 
     auto sorted_ = [](auto const& res) {
@@ -51,9 +51,9 @@ namespace sv2nl {
     return interval_tree;
   }
 
-  auto Mapper::build_tree(std::initializer_list<std::string_view> chroms,
-                          const Sv2nlVcfRanges& vcf_ranges, std::string_view svtype)
-      -> Sv2nlVcfIntervalTree const {
+  [[maybe_unused]] auto Mapper::build_tree(std::initializer_list<std::string_view> chroms,
+                                           const Sv2nlVcfRanges& vcf_ranges,
+                                           std::string_view svtype) -> Sv2nlVcfIntervalTree {
     auto interval_tree = Sv2nlVcfIntervalTree{};
 
     auto chrom_view
@@ -75,13 +75,7 @@ namespace sv2nl {
     store(key, value);
   }
 
-  bool DupMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
-                                  const Sv2nlVcfRecord& sv_vcf_record) const {
-    spdlog::debug("check condition with {}", sv_vcf_record);
-    return is_contained(sv_vcf_record, nl_vcf_record);
-  }
-
-  void DupMapper::map_impl(std::string_view chrom) const {
+  void Mapper::map_impl(std::string_view chrom) const {
     // avoid data trace cause now vcf ranges is not thread safe
     auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_vcf_file_.string()));
     auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_vcf_file_.string()));
@@ -121,7 +115,7 @@ namespace sv2nl {
     }
   }
 
-  void DupMapper::map() {
+  void Mapper::map() {
     std::vector<std::future<void>> results;
     for (auto chrom : CHROMOSOME_NAMES) {
       results.push_back(std::async([&](std::string_view chrom_) { map_impl(chrom_); }, chrom));
@@ -131,44 +125,10 @@ namespace sv2nl {
     }
   }
 
-  void InvMapper::map_impl(std::string_view chrom) const {
-    // avoid data trace cause now vcf ranges is not thread safe
-    auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_vcf_file_.string()));
-    auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_vcf_file_.string()));
-
-    auto interval_tree = build_tree(chrom, sv_vcf_ranges, sv_type_);
-
-    auto chrom_view
-        = nl_vcf_ranges | std::views::filter([&](auto const& nl_vcf_record) {
-            return nl_vcf_record.chrom == chrom && (nl_vcf_record.info->svtype == nl_type_);
-          });
-
-    for (auto nl_vcf_record : chrom_view) {
-      spdlog::debug("process nl record {} ", nl_vcf_record);
-      std::vector<Sv2nlVcfRecord> overlaps_vector{};
-
-      // check if the result of the record is  cached
-#ifdef SV2NL_USE_CACHE
-      if (!find(nl_vcf_record, overlaps_vector)) {
-#endif
-        overlaps_vector.push_back(nl_vcf_record);
-        auto validated_nl_vcf_record = validate_record(nl_vcf_record);
-
-        auto&& res = interval_tree.find_overlaps(validated_nl_vcf_record);
-        auto res_view
-            = res | std::views::filter([&](auto const& vcf_interval) {
-                return check_condition(validated_nl_vcf_record, vcf_interval.record);
-              })
-              | std::views::transform([](auto const& vcf_interval) { return vcf_interval.record; });
-
-        std::ranges::move(res_view, std::back_inserter(overlaps_vector));
-
-#ifdef SV2NL_USE_CACHE
-        store(nl_vcf_record, overlaps_vector);
-      }
-#endif
-      writer_.write(std::move(overlaps_vector));
-    }
+  bool DupMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
+                                  const Sv2nlVcfRecord& sv_vcf_record) const {
+    spdlog::debug("check condition with {}", sv_vcf_record);
+    return is_contained(sv_vcf_record, nl_vcf_record);
   }
 
   bool InvMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
@@ -189,16 +149,6 @@ namespace sv2nl {
     // overlap right side of sv_vcf record
     // check if nl vcf record is -+
     return !nl_vcf_record.info->strand1 && nl_vcf_record.info->strand2;
-  }
-
-  void InvMapper::map() {
-    std::vector<std::future<void>> results;
-    for (auto chrom : CHROMOSOME_NAMES) {
-      results.push_back(std::async([&](std::string_view chrom_) { map_impl(chrom_); }, chrom));
-    }
-    for (auto& result : results) {
-      result.wait();
-    }
   }
 
   void TraMapper::map_impl(std::string_view chrom,

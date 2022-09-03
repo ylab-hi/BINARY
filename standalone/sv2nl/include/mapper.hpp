@@ -56,14 +56,21 @@ namespace sv2nl {
           sv_type_(sv_type) {}
 
     virtual ~Mapper() = default;
-    virtual void map() = 0;
+    virtual void map();
+
+    virtual void map_impl(std::string_view chrom) const;
+    virtual void map_impl(std::string_view, Sv2nlVcfIntervalTree const&) const {
+      // Intentionally left blank
+    }
+    virtual bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
+                                 Sv2nlVcfRecord const& sv_vcf_record) const = 0;
 
     static auto build_tree(std::string_view chrom, const Sv2nlVcfRanges& vcf_ranges,
-                           std::string_view svtype) -> Sv2nlVcfIntervalTree const;
+                           std::string_view svtype) -> Sv2nlVcfIntervalTree;
 
-    static auto build_tree(std::initializer_list<std::string_view> chroms,
-                           const Sv2nlVcfRanges& vcf_ranges, std::string_view svtype)
-        -> Sv2nlVcfIntervalTree const;
+    [[maybe_unused]] static auto build_tree(std::initializer_list<std::string_view> chroms,
+                                            const Sv2nlVcfRanges& vcf_ranges,
+                                            std::string_view svtype) -> Sv2nlVcfIntervalTree;
 
     [[nodiscard]] bool find(std::string const&, std::vector<Sv2nlVcfRecord>&) const;
     [[nodiscard]] bool find(Sv2nlVcfRecord const&, std::vector<Sv2nlVcfRecord>&) const;
@@ -86,13 +93,9 @@ namespace sv2nl {
 
     ~DupMapper() override = default;
 
-    void map() override;
-
   private:
-    void map_impl(std::string_view chrom) const;
-
     bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
-                         Sv2nlVcfRecord const& sv_vcf_record) const;
+                         Sv2nlVcfRecord const& sv_vcf_record) const override;
   };
 
   class InvMapper : public Mapper {
@@ -101,12 +104,9 @@ namespace sv2nl {
 
     ~InvMapper() override = default;
 
-    void map() override;
-
   private:
-    void map_impl(std::string_view chrom) const;
     bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
-                         Sv2nlVcfRecord const& sv_vcf_record) const;
+                         Sv2nlVcfRecord const& sv_vcf_record) const override;
   };
 
   class TraMapper : public Mapper {
@@ -124,9 +124,10 @@ namespace sv2nl {
 
   private:
     uint32_t diff_{0};
-    void map_impl(std::string_view chrom, Sv2nlVcfIntervalTree const& vcf_interval_tree) const;
+    void map_impl(std::string_view chrom,
+                  Sv2nlVcfIntervalTree const& vcf_interval_tree) const override;
     bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
-                         Sv2nlVcfRecord const& sv_vcf_record) const;
+                         Sv2nlVcfRecord const& sv_vcf_record) const override;
   };
 
 }  // namespace sv2nl
