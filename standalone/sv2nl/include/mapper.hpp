@@ -5,8 +5,6 @@
 #ifndef BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
 #define BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
 
-#define SV2NL_USE_CACHE ON
-
 #include <array>
 #include <filesystem>
 #include <initializer_list>
@@ -15,6 +13,7 @@
 #include <vector>
 
 #include "helper.hpp"
+#include "options.hpp"
 #include "threadsafe_map.hpp"
 #include "vcf_info.hpp"
 #include "writer.hpp"
