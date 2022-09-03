@@ -5,7 +5,7 @@
 #ifndef BUILDALL_STANDALONE_SV2NL_HELPER_HPP_
 #define BUILDALL_STANDALONE_SV2NL_HELPER_HPP_
 
-#include <vcf_info.hpp>
+#include "vcf_info.hpp"
 
 namespace sv2nl {
 
@@ -15,5 +15,7 @@ namespace sv2nl {
 
   std::pair<std::string, std::string> get_2chroms(Sv2nlVcfRecord const& record);
   std::string get_chr2(Sv2nlVcfRecord const& record);
+
+  std::string get_map_key(Sv2nlVcfRecord const& record);
 }  // namespace sv2nl
 #endif  // BUILDALL_STANDALONE_SV2NL_HELPER_HPP_

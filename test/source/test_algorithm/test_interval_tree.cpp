@@ -77,7 +77,7 @@ TEST_SUITE("algorithm-interval-tree") {
       interval_tree.insert_node(16u, 21u);
       CHECK_EQ(interval_tree.size(), 1);
     }
-    SUBCASE("test insert node from args  intnode") {
+    SUBCASE("test insert node from args  int node") {
       IntervalTree<IntIntervalNode> interval_tree{};
       interval_tree.insert_node(16, 21);
       CHECK_EQ(interval_tree.size(), 1);
@@ -141,6 +141,17 @@ TEST_SUITE("algorithm-interval-tree") {
       CHECK(std::filesystem::exists("interval_tree.dot"));
       CHECK_NOTHROW(std::filesystem::remove("interval_tree.dot"));
     }
+  }
+
+  TEST_CASE("test same interval value") {
+    IntervalTree<UIntIntervalNode> interval_tree{};
+    interval_tree.insert_node(1u, 4u);
+    interval_tree.insert_node(1u, 4u);
+    interval_tree.insert_node(1u, 4u);
+    interval_tree.insert_node(1u, 4u);
+    CHECK_EQ(interval_tree.size(), 4);
+    auto res = interval_tree.find_overlaps(2u, 5u);
+    CHECK_EQ(res.size(), 4);
   }
 
   TEST_CASE("test delete") {}

@@ -28,10 +28,9 @@ void run(std::string_view nl_, std::string_view sv_, std::string_view output_, u
 
   auto dup_mapper = sv2nl::DupMapper(nl_, sv_, *files.begin(), "TDUP", "DUP");
   auto inv_mapper = sv2nl::InvMapper(nl_, sv_, *(files.begin() + 1), "INV", "INV");
-  auto tra_mapper = sv2nl::TraMapper(nl_, sv_, *(files.begin() + 2), "TRA", "BND");
+  auto tra_mapper = sv2nl::TraMapper(nl_, sv_, *(files.begin() + 2), "TRA", "BND", diff_);
   dup_mapper.map();
   inv_mapper.map();
-  tra_mapper.set_diff(diff_);
   tra_mapper.map();
 }
 

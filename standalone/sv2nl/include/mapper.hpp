@@ -5,6 +5,8 @@
 #ifndef BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
 #define BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
 
+#define SV2NL_USE_CACHE ON
+
 #include <array>
 #include <filesystem>
 #include <initializer_list>
@@ -13,6 +15,7 @@
 #include <vector>
 
 #include "helper.hpp"
+#include "threadsafe_map.hpp"
 #include "vcf_info.hpp"
 #include "writer.hpp"
 
@@ -63,12 +66,19 @@ namespace sv2nl {
                            const Sv2nlVcfRanges& vcf_ranges, std::string_view svtype)
         -> Sv2nlVcfIntervalTree const;
 
+    [[nodiscard]] bool find(std::string const&, std::vector<Sv2nlVcfRecord>&) const;
+    [[nodiscard]] bool find(Sv2nlVcfRecord const&, std::vector<Sv2nlVcfRecord>&) const;
+
+    void store(std::string const&, std::vector<Sv2nlVcfRecord>&) const;
+    void store(Sv2nlVcfRecord const&, std::vector<Sv2nlVcfRecord>&) const;
+
   protected:
     fs::path nl_vcf_file_;
     fs::path sv_vcf_file_;
     mutable Writer writer_;
     std::string nl_type_;
     std::string sv_type_;
+    mutable ThreadSafeMap<std::string, std::vector<Sv2nlVcfRecord>> cache_{};
   };
 
   class DupMapper : public Mapper {
@@ -103,11 +113,15 @@ namespace sv2nl {
   class TraMapper : public Mapper {
   public:
     using Mapper::Mapper;
+    TraMapper(std::string_view non_linear_file, std::string_view sv_file,
+              std::string_view output_file, std::string_view nl_type, std::string_view sv_type,
+              uint32_t diff)
+        : Mapper(non_linear_file, sv_file, output_file, nl_type, sv_type), diff_(diff) {}
 
     ~TraMapper() override = default;
 
     void map() override;
-    void set_diff(uint32_t diff) { diff_ = diff; }
+    [[maybe_unused]] void set_diff(uint32_t diff) { diff_ = diff; }
 
   private:
     uint32_t diff_{0};
