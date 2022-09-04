@@ -44,7 +44,7 @@ namespace sv2nl {
                                : std::make_pair(record.chrom, chr2);
   }
 
-  std::string get_map_key(const Sv2nlVcfRecord& record) {
+  std::string format_map_key(const Sv2nlVcfRecord& record) {
     if (record.info->svtype == "TRA" || record.info->svtype == "BND") {
       auto [chr1, chr2] = get_2chroms(record);
       return fmt::format("{}-{}-{}-{}", chr1, chr2, record.pos, record.info->svend);
