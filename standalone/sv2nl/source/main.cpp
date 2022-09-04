@@ -25,10 +25,27 @@
 void run(std::string_view nl_, std::string_view sv_, std::string_view output_, uint32_t diff_) {
   auto files = {std::string(output_) + ".dup", std::string(output_) + ".inv",
                 std::string(output_) + ".tra"};
+  auto dup_mapper = sv2nl::DupMapper(sv2nl::mapper_options()
+                                         .nl_file(nl_)
+                                         .sv_file(sv_)
+                                         .output_file(*files.begin())
+                                         .nl_type("TDUP")
+                                         .sv_type("DUP"));
+  auto inv_mapper = sv2nl::InvMapper(sv2nl::mapper_options()
+                                         .nl_file(nl_)
+                                         .sv_file(sv_)
+                                         .output_file(*(files.begin() + 1))
+                                         .nl_type("INV")
+                                         .sv_type("INV"));
 
-  auto dup_mapper = sv2nl::DupMapper(nl_, sv_, *files.begin(), "TDUP", "DUP");
-  auto inv_mapper = sv2nl::InvMapper(nl_, sv_, *(files.begin() + 1), "INV", "INV");
-  auto tra_mapper = sv2nl::TraMapper(nl_, sv_, *(files.begin() + 2), "TRA", "BND", diff_);
+  auto tra_mapper = sv2nl::TraMapper(sv2nl::mapper_options()
+                                         .nl_file(nl_)
+                                         .sv_file(sv_)
+                                         .output_file(*(files.begin() + 2))
+                                         .nl_type("TRA")
+                                         .sv_type("BND"),
+                                     diff_);
+
   dup_mapper.map();
   inv_mapper.map();
   tra_mapper.map();

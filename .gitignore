@@ -122,7 +122,7 @@ fabric.properties
 
 # Linker output
 *.ilk
-*.map_delegate
+*.map
 *.exp
 
 # Precompiled Headers

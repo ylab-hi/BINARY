@@ -17,7 +17,26 @@
 #include "thread_pool.hpp"
 
 namespace sv2nl {
-
+  mapper_options& mapper_options::nl_file(std::string_view file) {
+    nl_file_ = file;
+    return *this;
+  }
+  mapper_options& mapper_options::sv_file(std::string_view file) {
+    sv_file_ = file;
+    return *this;
+  }
+  mapper_options& mapper_options::output_file(std::string_view file) {
+    output_file_ = file;
+    return *this;
+  }
+  mapper_options& mapper_options::nl_type(std::string_view type) {
+    nl_type_ = type;
+    return *this;
+  }
+  mapper_options& mapper_options::sv_type(std::string_view type) {
+    sv_type_ = type;
+    return *this;
+  }
   bool DupMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
                                   const Sv2nlVcfRecord& sv_vcf_record) const {
     spdlog::debug("check condition with {}", sv_vcf_record);
