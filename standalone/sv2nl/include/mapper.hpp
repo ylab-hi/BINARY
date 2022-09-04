@@ -45,9 +45,35 @@ namespace sv2nl {
    * 5. Write to one output file
    */
 
+  struct mapper_options {
+    std::string_view nl_file_;
+    std::string_view sv_file_;
+    std::string_view output_file_;
+    std::string_view nl_type_;
+    std::string_view sv_type_;
+
+    mapper_options& nl_file(std::string_view file);
+
+    mapper_options& sv_file(std::string_view file);
+
+    mapper_options& output_file(std::string_view file);
+
+    mapper_options& nl_type(std::string_view type);
+
+    mapper_options& sv_type(std::string_view type);
+  };
+
   template <typename Derived> class Mapper {
   public:
     friend Derived;
+
+    explicit Mapper(mapper_options const& opts)
+        : nl_vcf_file_(opts.nl_file_),
+          sv_vcf_file_(opts.sv_file_),
+          writer_(opts.output_file_, HEADER),
+          nl_type_(opts.nl_type_),
+          sv_type_(opts.sv_type_) {}
+
     Mapper(std::string_view non_linear_file, std::string_view sv_file, std::string_view output_file,
            std::string_view nl_type, std::string_view sv_type)
         : nl_vcf_file_(non_linear_file),
@@ -237,6 +263,9 @@ namespace sv2nl {
   public:
     friend class Mapper<TraMapper>;
     using Mapper::Mapper;
+
+    TraMapper(mapper_options const& opts, uint32_t diff) : Mapper(opts), diff_(diff) {}
+
     TraMapper(std::string_view non_linear_file, std::string_view sv_file,
               std::string_view output_file, std::string_view nl_type, std::string_view sv_type,
               uint32_t diff)
