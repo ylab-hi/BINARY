@@ -67,11 +67,11 @@ namespace sv2nl {
   }
 
   bool Mapper::find(const Sv2nlVcfRecord& vcf_record, std::vector<Sv2nlVcfRecord>& value) const {
-    auto key = get_map_key(vcf_record);
+    auto key = format_map_key(vcf_record);
     return find(key, value);
   }
   void Mapper::store(const Sv2nlVcfRecord& vcf_record, std::vector<Sv2nlVcfRecord>& value) const {
-    auto key = get_map_key(vcf_record);
+    auto key = format_map_key(vcf_record);
     store(key, value);
   }
 
