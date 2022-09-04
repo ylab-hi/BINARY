@@ -45,8 +45,9 @@ namespace sv2nl {
    * 5. Write to one output file
    */
 
-  class Mapper {
+  template <typename Derived> class Mapper {
   public:
+    friend Derived;
     Mapper(std::string_view non_linear_file, std::string_view sv_file, std::string_view output_file,
            std::string_view nl_type, std::string_view sv_type)
         : nl_vcf_file_(non_linear_file),
@@ -56,14 +57,12 @@ namespace sv2nl {
           sv_type_(sv_type) {}
 
     virtual ~Mapper() = default;
-    virtual void map();
+    Derived* derived() { return static_cast<Derived*>(this); }
+    Derived const* derived() const { return static_cast<Derived const*>(this); }
 
-    virtual void map_impl(std::string_view chrom) const;
-    virtual void map_impl(std::string_view, Sv2nlVcfIntervalTree const&) const {
-      // Intentionally left blank
-    }
-    virtual bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
-                                 Sv2nlVcfRecord const& sv_vcf_record) const = 0;
+    void map() const { derived()->map_delegate(); }
+
+    void map_delegate() const;
 
     static auto build_tree(std::string_view chrom, const Sv2nlVcfRanges& vcf_ranges,
                            std::string_view svtype) -> Sv2nlVcfIntervalTree;
@@ -79,6 +78,12 @@ namespace sv2nl {
     void store(Sv2nlVcfRecord const&, std::vector<Sv2nlVcfRecord>&) const;
 
   protected:
+    void map_impl(std::string_view chrom) const;
+
+    // Define pure virtual function
+    // bool check_condition;
+    // void map_impl(std::string_view, Sv2nlVcfIntervalTree const&) const;
+
     fs::path nl_vcf_file_;
     fs::path sv_vcf_file_;
     mutable Writer writer_;
@@ -87,30 +92,150 @@ namespace sv2nl {
     mutable ThreadSafeMap<std::string, std::vector<Sv2nlVcfRecord>> cache_{};
   };
 
-  class DupMapper : public Mapper {
+  template <typename Derived>
+  bool Mapper<Derived>::find(std::string const& key, std::vector<Sv2nlVcfRecord>& value) const {
+    if (cache_.find(key, value)) {
+      spdlog::debug("[find] cache hit {}", key);
+      return true;
+    }
+
+    return false;
+  }
+
+  template <typename Derived>
+  void Mapper<Derived>::store(std::string const& key, std::vector<Sv2nlVcfRecord>& value) const {
+    cache_.insert(key, value);
+  }
+
+  template <typename Derived>
+  auto Mapper<Derived>::build_tree(std::string_view chrom, const Sv2nlVcfRanges& vcf_ranges,
+                                   std::string_view svtype) -> Sv2nlVcfIntervalTree {
+    auto interval_tree = Sv2nlVcfIntervalTree{};
+
+    auto sorted_ = [](auto const& res) {
+      spdlog::debug("[build tree] {}", res);
+      return validate_record(res);
+    };
+
+    auto chrom_view = vcf_ranges | std::views::filter([&chrom, &svtype](auto const& sv_vcf_record) {
+                        return sv_vcf_record.chrom == chrom && sv_vcf_record.info->svtype == svtype;
+                      })
+                      | std::views::transform(sorted_);
+
+    interval_tree.insert_node(chrom_view);
+
+    // no copy need to  move
+    return interval_tree;
+  }
+
+  template <typename Derived>
+  [[maybe_unused]] auto Mapper<Derived>::build_tree(std::initializer_list<std::string_view> chroms,
+                                                    const Sv2nlVcfRanges& vcf_ranges,
+                                                    std::string_view svtype)
+      -> Sv2nlVcfIntervalTree {
+    auto interval_tree = Sv2nlVcfIntervalTree{};
+
+    auto chrom_view
+        = vcf_ranges | std::views::filter([&](auto const& sv_vcf_record) {
+            return std::ranges::any_of(chroms, [&](auto it) { return sv_vcf_record.chrom == it; })
+                   && (sv_vcf_record.info->svtype == svtype);
+          });
+    interval_tree.insert_node(chrom_view);
+
+    return interval_tree;
+  }
+
+  template <typename Derived> bool Mapper<Derived>::find(const Sv2nlVcfRecord& vcf_record,
+                                                         std::vector<Sv2nlVcfRecord>& value) const {
+    auto key = format_map_key(vcf_record);
+    return find(key, value);
+  }
+
+  template <typename Derived>
+  void Mapper<Derived>::store(const Sv2nlVcfRecord& vcf_record,
+                              std::vector<Sv2nlVcfRecord>& value) const {
+    auto key = format_map_key(vcf_record);
+    store(key, value);
+  }
+
+  template <typename Derived> void Mapper<Derived>::map_impl(std::string_view chrom) const {
+    // avoid data trace cause now vcf ranges is not thread safe
+    auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_vcf_file_.string()));
+    auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_vcf_file_.string()));
+
+    auto interval_tree = build_tree(chrom, sv_vcf_ranges, sv_type_);
+
+    auto chrom_view
+        = nl_vcf_ranges | std::views::filter([&](auto const& nl_vcf_record) {
+            return nl_vcf_record.chrom == chrom && (nl_vcf_record.info->svtype == nl_type_);
+          });
+
+    for (auto nl_vcf_record : chrom_view) {
+      spdlog::debug("process nl record {} ", nl_vcf_record);
+      std::vector<Sv2nlVcfRecord> overlaps_vector{};
+
+      // check if the result of the record is  cached
+#ifdef SV2NL_USE_CACHE
+      if (!find(nl_vcf_record, overlaps_vector)) {
+#endif
+        overlaps_vector.push_back(nl_vcf_record);
+        auto validated_nl_vcf_record = validate_record(nl_vcf_record);
+
+        auto&& res = interval_tree.find_overlaps(validated_nl_vcf_record);
+        auto res_view
+            = res | std::views::filter([&](auto const& vcf_interval) {
+                return derived()->check_condition(validated_nl_vcf_record, vcf_interval.record);
+              })
+              | std::views::transform([](auto const& vcf_interval) { return vcf_interval.record; });
+
+        std::ranges::move(res_view, std::back_inserter(overlaps_vector));
+
+#ifdef SV2NL_USE_CACHE
+        store(nl_vcf_record, overlaps_vector);
+      }
+#endif
+      writer_.write(std::move(overlaps_vector));
+    }
+  }
+
+  template <typename Derived> void Mapper<Derived>::map_delegate() const {
+    std::vector<std::future<void>> results;
+    for (auto chrom : CHROMOSOME_NAMES) {
+      results.push_back(
+          std::async([&](std::string_view chrom_) { derived()->map_impl(chrom_); }, chrom));
+    }
+    for (auto& result : results) {
+      result.wait();
+    }
+  }
+
+  class DupMapper : public Mapper<DupMapper> {
   public:
+    friend class Mapper<DupMapper>;
     using Mapper::Mapper;
 
     ~DupMapper() override = default;
 
   private:
     bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
-                         Sv2nlVcfRecord const& sv_vcf_record) const override;
+                         Sv2nlVcfRecord const& sv_vcf_record) const;
   };
 
-  class InvMapper : public Mapper {
+  class InvMapper : public Mapper<InvMapper> {
   public:
+    friend class Mapper<InvMapper>;
     using Mapper::Mapper;
 
     ~InvMapper() override = default;
 
   private:
     bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
-                         Sv2nlVcfRecord const& sv_vcf_record) const override;
+                         Sv2nlVcfRecord const& sv_vcf_record) const;
   };
 
-  class TraMapper : public Mapper {
+  class TraMapper : public Mapper<TraMapper> {
   public:
+    friend class Mapper<TraMapper>;
     using Mapper::Mapper;
     TraMapper(std::string_view non_linear_file, std::string_view sv_file,
               std::string_view output_file, std::string_view nl_type, std::string_view sv_type,
@@ -119,15 +244,14 @@ namespace sv2nl {
 
     ~TraMapper() override = default;
 
-    void map() override;
+    void map_delegate() const;
     [[maybe_unused]] void set_diff(uint32_t diff) { diff_ = diff; }
 
   private:
     uint32_t diff_{0};
-    void map_impl(std::string_view chrom,
-                  Sv2nlVcfIntervalTree const& vcf_interval_tree) const override;
+    void map_impl(std::string_view chrom, Sv2nlVcfIntervalTree const& vcf_interval_tree) const;
     bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
-                         Sv2nlVcfRecord const& sv_vcf_record) const override;
+                         Sv2nlVcfRecord const& sv_vcf_record) const;
   };
 
 }  // namespace sv2nl
