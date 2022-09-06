@@ -51,6 +51,16 @@ TEST_SUITE("parser-vcf") {
 
   VcfRanges<VcfRecord> vcf_ranges(file_path);
 
+  TEST_CASE("test get chroms") {
+    auto chroms = vcf_ranges.chroms();
+
+    for (auto const& chrom : chroms | std::views::filter([](auto const& chrom) {
+                               return std::ranges::find(chrom, '_') == chrom.end();
+                             })) {
+      spdlog::debug("[test get chroms] {}", chrom);
+    }
+  }
+
   TEST_CASE("test copy and move constructors") {
     VcfRanges<VcfRecord> vcf_ranges2(file_path);
     VcfRanges<VcfRecord> vcf_ranges_copy(vcf_ranges2);

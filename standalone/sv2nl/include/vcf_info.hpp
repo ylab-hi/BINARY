@@ -16,7 +16,7 @@ namespace sv2nl {
     vcf::pos_t svend{};
 
     std::string chr2{};
-    bool strand1{true};
+    bool strand1{true};  // true means positive
     bool strand2{true};
 
     constexpr Sv2nlInfoField() = default;

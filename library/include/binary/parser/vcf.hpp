@@ -20,6 +20,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <span>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -385,6 +386,13 @@ namespace binary::parser::vcf {
     };
 
     /**
+     * Get contigs info from header
+     * @brief begin
+     * @return iterator
+     */
+    [[nodiscard]] auto chroms() const -> std::vector<std::string>;
+
+    /**
      * Get file path
      * @return vcf file path
      */
@@ -533,6 +541,20 @@ namespace binary::parser::vcf {
   template <RecordConcept RecordType> constexpr auto VcfRanges<RecordType>::has_index_file() const
       -> bool {
     return binary::utils::check_file_path(file_path_ + ".tbi");
+  }
+
+  template <RecordConcept RecordType> auto VcfRanges<RecordType>::chroms() const
+      -> std::vector<std::string> {
+    if (pdata_ == nullptr) {
+      seek();
+    }
+    std::vector<std::string> res{};
+
+    auto chroms_ranges
+        = std::span(pdata_->header->id[BCF_DT_CTG], pdata_->header->n[BCF_DT_CTG])
+          | std::ranges::views::transform([](auto const& chrom) { return std::string{chrom.key}; });
+    std::ranges::move(chroms_ranges, std::back_inserter(res));
+    return res;
   }
 
   /*
