@@ -67,7 +67,7 @@ namespace sv2nl {
                            Sv2nlVcfIntervalTree const& vcf_interval_tree) const {
     // avoid data trace cause now vcf ranges is not thread safe
 
-    auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_vcf_file_.string()));
+    auto nl_vcf_ranges = Sv2nlVcfRanges(nl_vcf_file_.string());
 
     auto nl_chrom_view
         = nl_vcf_ranges | std::views::filter([&](auto const& nl_vcf_record) {
@@ -98,14 +98,15 @@ namespace sv2nl {
 
 #ifdef SV2NL_USE_CACHE
         store(nl_vcf_record, overlaps_vector);
+        // Do not output same nl key record
+        writer_.write_trans(std::move(overlaps_vector));
       }
 #endif
-      writer_.write_trans(std::move(overlaps_vector));
     }
   }
 
   void TraMapper::map_delegate() const {
-    auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_vcf_file_.string()));
+    auto sv_vcf_ranges = Sv2nlVcfRanges(sv_vcf_file_.string());
     auto sv_trans_view = sv_vcf_ranges | std::views::filter([&](auto const sv_vcf_record) {
                            return sv_vcf_record.info->svtype == sv_type_;
                          });
@@ -114,7 +115,11 @@ namespace sv2nl {
     sv_interval_tree.insert_node(sv_trans_view);
     std::vector<std::future<void>> results;
 
-    for (auto chrom : CHROMOSOME_NAMES) {
+    auto&& nl_chroms = Sv2nlVcfRanges(nl_vcf_file_.string()).chroms();
+
+    for (auto chrom : nl_chroms | std::views::filter([](auto it) {
+                        return std::ranges::find(it, '_') == it.end();
+                      })) {
       results.push_back(std::async(
           [&](std::string_view chrom_, Sv2nlVcfIntervalTree const& sv_interval_tree_) {
             map_impl(chrom_, sv_interval_tree_);

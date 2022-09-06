@@ -8,15 +8,15 @@
 #include <binary/parser/vcf.hpp>
 
 namespace sv2nl {
-  using namespace binary::algorithm;
-  using namespace binary::parser;
+  namespace tree = binary::algorithm::tree;
+  namespace vcf = binary::parser::vcf;
 
   struct Sv2nlInfoField : public vcf::BaseInfoField {
     std::string svtype{};
     vcf::pos_t svend{};
 
     std::string chr2{};
-    bool strand1{true};
+    bool strand1{true};  // true means positive
     bool strand2{true};
 
     constexpr Sv2nlInfoField() = default;

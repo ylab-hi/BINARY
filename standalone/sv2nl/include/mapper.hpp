@@ -22,13 +22,6 @@ namespace sv2nl {
 
   namespace fs = std::filesystem;
 
-  // Hardcode chromosome name for now.
-  // TODO: Change to dynamic chromosome name.
-  constexpr std::array<std::string_view, 22> CHROMOSOME_NAMES
-      = {"chr1",  "chr2",  "chr3",  "chr4",  "chr5",  "chr6",  "chr7",  "chr8",
-         "chr9",  "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16",
-         "chr17", "chr18", "chr19", "chr20", "chr21", "chr22"};
-
   constexpr const char HEADER[] = "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype";
 
   /**
@@ -186,8 +179,8 @@ namespace sv2nl {
 
   template <typename Derived> void Mapper<Derived>::map_impl(std::string_view chrom) const {
     // avoid data trace cause now vcf ranges is not thread safe
-    auto nl_vcf_ranges = Sv2nlVcfRanges(std::string(nl_vcf_file_.string()));
-    auto sv_vcf_ranges = Sv2nlVcfRanges(std::string(sv_vcf_file_.string()));
+    auto&& nl_vcf_ranges = Sv2nlVcfRanges(nl_vcf_file_.string());
+    auto sv_vcf_ranges = Sv2nlVcfRanges(sv_vcf_file_.string());
 
     auto interval_tree = build_tree(chrom, sv_vcf_ranges, sv_type_);
 
@@ -218,15 +211,20 @@ namespace sv2nl {
 
 #ifdef SV2NL_USE_CACHE
         store(nl_vcf_record, overlaps_vector);
+        // Do not output same nl key record
+        writer_.write(std::move(overlaps_vector));
       }
 #endif
-      writer_.write(std::move(overlaps_vector));
     }
   }
 
   template <typename Derived> void Mapper<Derived>::map_delegate() const {
+    auto&& nl_chroms = Sv2nlVcfRanges(nl_vcf_file_.string()).chroms();
+
     std::vector<std::future<void>> results;
-    for (auto chrom : CHROMOSOME_NAMES) {
+    for (auto chrom : nl_chroms | std::views::filter([](auto it) {
+                        return std::ranges::find(it, '_') == it.end();
+                      })) {
       results.push_back(
           std::async([&](std::string_view chrom_) { derived()->map_impl(chrom_); }, chrom));
     }

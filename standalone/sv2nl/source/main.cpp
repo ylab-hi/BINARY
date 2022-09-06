@@ -1,10 +1,11 @@
 /**
+ * @file main.cpp
  * Mapping structure variations to non-linear splicing
- * author: li002252
- * date:   8/2/22
- * license: MIT
+ * @author: li002252
+ * @date:   8/2/22
+ * @license: MIT
  *
- * algorithm:
+ * @algorithm:
  *
  * 1. detect duplication
  * 2. detect inversions
