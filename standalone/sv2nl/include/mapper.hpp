@@ -218,9 +218,10 @@ namespace sv2nl {
 
 #ifdef SV2NL_USE_CACHE
         store(nl_vcf_record, overlaps_vector);
+        // Do not output same nl key record
+        writer_.write(std::move(overlaps_vector));
       }
 #endif
-      writer_.write(std::move(overlaps_vector));
     }
   }
 

@@ -8,8 +8,8 @@
 #include <binary/parser/vcf.hpp>
 
 namespace sv2nl {
-  using namespace binary::algorithm;
-  using namespace binary::parser;
+  namespace tree = binary::algorithm::tree;
+  namespace vcf = binary::parser::vcf;
 
   struct Sv2nlInfoField : public vcf::BaseInfoField {
     std::string svtype{};
