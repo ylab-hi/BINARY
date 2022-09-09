@@ -14,8 +14,6 @@
 #include <ranges>
 #include <unordered_map>
 
-#include "thread_pool.hpp"
-
 namespace sv2nl {
   mapper_options& mapper_options::nl_file(std::string_view file) {
     nl_file_ = file;
@@ -37,15 +35,22 @@ namespace sv2nl {
     sv_type_ = type;
     return *this;
   }
+  mapper_options& mapper_options::diff(uint32_t num) {
+    diff_ = num;
+    return *this;
+  }
+
   bool DupMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
                                   const Sv2nlVcfRecord& sv_vcf_record) const {
     spdlog::debug("check condition with {}", sv_vcf_record);
-    return is_contained(sv_vcf_record, nl_vcf_record);
+    return is_contained(sv_vcf_record, nl_vcf_record)
+           && distance_less(nl_vcf_record, sv_vcf_record, diff_);
   }
 
   bool InvMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
                                   const Sv2nlVcfRecord& sv_vcf_record) const {
-    if (is_contained(sv_vcf_record, nl_vcf_record) || is_contained(nl_vcf_record, sv_vcf_record))
+    if (is_contained(sv_vcf_record, nl_vcf_record) || is_contained(nl_vcf_record, sv_vcf_record)
+        || distance_larger(nl_vcf_record, sv_vcf_record, diff_))
       return false;
 
     // overlap left side of sv_vcf record
@@ -126,19 +131,12 @@ namespace sv2nl {
           },
           chrom, std::ref(sv_interval_tree)));
     }
-    for (auto& res : results) res.wait();
+    for (auto const& res : results) res.wait();
   }
 
   bool TraMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
                                   const Sv2nlVcfRecord& sv_vcf_record) const {
-    auto diff1 = nl_vcf_record.pos >= sv_vcf_record.pos ? nl_vcf_record.pos - sv_vcf_record.pos
-                                                        : sv_vcf_record.pos - nl_vcf_record.pos;
-
-    auto diff2 = nl_vcf_record.info->svend >= sv_vcf_record.info->svend
-                     ? nl_vcf_record.info->svend - sv_vcf_record.info->svend
-                     : sv_vcf_record.info->svend - nl_vcf_record.info->svend;
-
-    return diff1 <= diff_ && diff2 <= diff_;
+    return distance_less(nl_vcf_record, sv_vcf_record, diff_);
   }
 
 }  // namespace sv2nl
