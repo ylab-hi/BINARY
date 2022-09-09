@@ -31,21 +31,23 @@ void run(std::string_view nl_, std::string_view sv_, std::string_view output_, u
                                          .sv_file(sv_)
                                          .output_file(*files.begin())
                                          .nl_type("TDUP")
-                                         .sv_type("DUP"));
+                                         .sv_type("DUP")
+                                         .diff(diff_));
   auto inv_mapper = sv2nl::InvMapper(sv2nl::mapper_options()
                                          .nl_file(nl_)
                                          .sv_file(sv_)
                                          .output_file(*(files.begin() + 1))
                                          .nl_type("INV")
-                                         .sv_type("INV"));
+                                         .sv_type("INV")
+                                         .diff(diff_));
 
   auto tra_mapper = sv2nl::TraMapper(sv2nl::mapper_options()
                                          .nl_file(nl_)
                                          .sv_file(sv_)
                                          .output_file(*(files.begin() + 2))
                                          .nl_type("TRA")
-                                         .sv_type("BND"),
-                                     diff_);
+                                         .sv_type("BND")
+                                         .diff(diff_));
 
   dup_mapper.map();
   inv_mapper.map();
@@ -90,6 +92,7 @@ int main(int argc, char* argv[]) {
 
     spdlog::info("non-linear file path: {}", nonlinear_path);
     spdlog::info("struct variation file path: {}", segment_path);
+    spdlog::info("distance threshold: {}mb", diff);
     Timer timer{};
     run(nonlinear_path, segment_path, output_path, diff);
     spdlog::info("elapsed time: {:.2f}s", timer.elapsed());

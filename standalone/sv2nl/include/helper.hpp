@@ -24,6 +24,28 @@ namespace sv2nl {
   }
 
   /**
+   * Check if the distance of the start and end points between two records
+   * diff = |target.pos - source.pos| + |target.info->svend - source.info->svend|
+   * @return bool
+   */
+  inline bool distance_less(const Sv2nlVcfRecord& lhs, const Sv2nlVcfRecord& rhs,
+                            uint32_t threshold) {
+    // do not use abs() here, because the result of abs() is unsigned escape overflow
+    auto diff1 = lhs.pos >= rhs.pos ? lhs.pos - rhs.pos : rhs.pos - lhs.pos;
+
+    auto diff2 = lhs.info->svend >= rhs.info->svend ? lhs.info->svend - rhs.info->svend
+                                                    : rhs.info->svend - lhs.info->svend;
+
+    return diff1 <= threshold && diff2 <= threshold;
+  }
+
+  inline bool distance_larger(const Sv2nlVcfRecord& lhs, const Sv2nlVcfRecord& rhs,
+                              uint32_t threshold) {
+    // do not use abs() here, because the result of abs() is unsigned escape overflow
+    return !distance_less(lhs, rhs, threshold);
+  }
+
+  /**
    * Make sure vcf record's pos >= svend in order to find overlaps in interval tree
    * @param record
    */

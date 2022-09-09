@@ -44,6 +44,7 @@ namespace sv2nl {
     std::string_view output_file_;
     std::string_view nl_type_;
     std::string_view sv_type_;
+    uint32_t diff_;
 
     mapper_options& nl_file(std::string_view file);
 
@@ -54,6 +55,8 @@ namespace sv2nl {
     mapper_options& nl_type(std::string_view type);
 
     mapper_options& sv_type(std::string_view type);
+
+    mapper_options& diff(uint32_t num);
   };
 
   template <typename Derived> class Mapper {
@@ -65,7 +68,8 @@ namespace sv2nl {
           sv_vcf_file_(opts.sv_file_),
           writer_(opts.output_file_, HEADER),
           nl_type_(opts.nl_type_),
-          sv_type_(opts.sv_type_) {}
+          sv_type_(opts.sv_type_),
+          diff_(opts.diff_) {}
 
     Mapper(std::string_view non_linear_file, std::string_view sv_file, std::string_view output_file,
            std::string_view nl_type, std::string_view sv_type)
@@ -108,6 +112,7 @@ namespace sv2nl {
     mutable Writer writer_;
     std::string nl_type_;
     std::string sv_type_;
+    uint32_t diff_;
     mutable ThreadSafeMap<std::string, std::vector<Sv2nlVcfRecord>> cache_{};
   };
 
@@ -228,7 +233,7 @@ namespace sv2nl {
       results.push_back(
           std::async([&](std::string_view chrom_) { derived()->map_impl(chrom_); }, chrom));
     }
-    for (auto& result : results) {
+    for (auto const& result : results) {
       result.wait();
     }
   }
@@ -262,20 +267,11 @@ namespace sv2nl {
     friend class Mapper<TraMapper>;
     using Mapper::Mapper;
 
-    TraMapper(mapper_options const& opts, uint32_t diff) : Mapper(opts), diff_(diff) {}
-
-    TraMapper(std::string_view non_linear_file, std::string_view sv_file,
-              std::string_view output_file, std::string_view nl_type, std::string_view sv_type,
-              uint32_t diff)
-        : Mapper(non_linear_file, sv_file, output_file, nl_type, sv_type), diff_(diff) {}
-
     ~TraMapper() override = default;
 
     void map_delegate() const;
-    [[maybe_unused]] void set_diff(uint32_t diff) { diff_ = diff; }
 
   private:
-    uint32_t diff_{0};
     void map_impl(std::string_view chrom, Sv2nlVcfIntervalTree const& vcf_interval_tree) const;
     bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
                          Sv2nlVcfRecord const& sv_vcf_record) const;
