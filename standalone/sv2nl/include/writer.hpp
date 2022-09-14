@@ -51,6 +51,7 @@ namespace sv2nl {
     }
 
     void write(std::string const& line);
+    void close() { ofs_.close(); }
 
     static std::string format_keys(Sv2nlVcfRecord const& record);
 

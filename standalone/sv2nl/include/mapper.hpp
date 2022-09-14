@@ -22,7 +22,7 @@ namespace sv2nl {
 
   namespace fs = std::filesystem;
 
-  constexpr const char HEADER[] = "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype";
+  constexpr std::string_view HEADER = "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype";
 
   /**
    * @brief Detect mapping relationship for non-linear variation (NL) and SV (SV)
@@ -83,7 +83,10 @@ namespace sv2nl {
     Derived* derived() { return static_cast<Derived*>(this); }
     Derived const* derived() const { return static_cast<Derived const*>(this); }
 
-    void map() const { derived()->map_delegate(); }
+    void map() const {
+      derived()->map_delegate();
+      writer_.close();
+    }
 
     void map_delegate() const;
 
