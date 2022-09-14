@@ -23,7 +23,8 @@
 #include "mapper.hpp"
 #include "util.hpp"
 
-void run(std::string_view nl_, std::string_view sv_, std::string_view output_, uint32_t diff_) {
+void run(std::string_view nl_, std::string_view sv_, std::string_view output_, uint32_t diff_,
+         bool is_merge) {
   auto files = {std::string(output_) + ".dup", std::string(output_) + ".inv",
                 std::string(output_) + ".tra"};
   auto dup_mapper = sv2nl::DupMapper(sv2nl::mapper_options()
@@ -52,6 +53,10 @@ void run(std::string_view nl_, std::string_view sv_, std::string_view output_, u
   dup_mapper.map();
   inv_mapper.map();
   tra_mapper.map();
+
+  if (is_merge) {
+    binary::utils::merge_files(files, output_, sv2nl::HEADER);
+  }
 }
 
 int main(int argc, char* argv[]) {
@@ -64,6 +69,7 @@ int main(int argc, char* argv[]) {
   ("non-linear", "The file path of non-linear information from scannls", cxxopts::value<std::string>())
   ("o,output", "The file path of output", cxxopts::value<std::string>()->default_value("output.tsv"))
   ("t,threshold", "The distance threshold for trans mapper", cxxopts::value<uint32_t>()->default_value("1000000"))
+  ("m,merge", "If provided only merge outputs into one file", cxxopts::value<bool>()->default_value("false"))
   ("d,debug", "Print debug info", cxxopts::value<bool>()->default_value("false"))
   ("h,help", "Print help");
   // clang-format on
@@ -86,6 +92,7 @@ int main(int argc, char* argv[]) {
     auto nonlinear_path = result["non-linear"].as<std::string>();
     auto output_path = result["output"].as<std::string>();
     auto diff = result["threshold"].as<uint32_t>();
+    auto is_merged = result["merge"].as<bool>();
     if (!binary::utils::check_file_path({segment_path, nonlinear_path})) {
       std::exit(1);
     }
@@ -94,9 +101,12 @@ int main(int argc, char* argv[]) {
     spdlog::info("struct variation file path: {}", segment_path);
     spdlog::info("distance threshold: {}mb", diff);
     Timer timer{};
-    run(nonlinear_path, segment_path, output_path, diff);
+    run(nonlinear_path, segment_path, output_path, diff, is_merged);
     spdlog::info("elapsed time: {:.2f}s", timer.elapsed());
-    spdlog::info("result file path: {}[.dup|.inv|.tra]", output_path);
+    if (is_merged)
+      spdlog::info("result file path: {}", output_path);
+    else
+      spdlog::info("result file path: {}[.dup|.inv|.tra]", output_path);
 
   } catch (const cxxopts::option_has_no_value_exception& err) {
     spdlog::error("error parsing options: {} ", err.what());
