@@ -20,7 +20,7 @@ namespace sv2nl {
 
   std::string Writer::format_keys(const Sv2nlVcfRecord& record) {
     if (record.info->svtype == "TRA" || record.info->svtype == "BND") {
-      return fmt::format("{},{}\t{}\t{}\t{}\t", record.chrom, record.info->chr2, record.pos + 1,
+      return fmt::format("{},{}\t{}\t{}\t{}", record.chrom, record.info->chr2, record.pos + 1,
                          record.info->svend, record.info->svtype);
     }
     return fmt::format("{}\t{}\t{}\t{}", record.chrom, record.pos + 1, record.info->svend,
