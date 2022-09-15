@@ -14,7 +14,7 @@ option(BINARY_BUILD_DOCUMENTS "Build DOCUMENTS" OFF)
 if(BINARY_BUILD_STANDALONE)
   add_subdirectory(standalone ${CMAKE_BINARY_DIR}/standalone)
 else()
-  add_subdirectory(library)
+  add_subdirectory(library ${CMAKE_BINARY_DIR}/library)
 endif()
 
 if(BINARY_BUILD_TESTS)
