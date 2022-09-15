@@ -3,26 +3,26 @@
 
 cmake_minimum_required(VERSION 3.14...3.22)
 
-project(BuildAll LANGUAGES CXX)
+project(BINARY_All LANGUAGES CXX)
 message(STATUS "Building all subprojects for BINARY")
 include(cmake/tools.cmake)
 
-option(BUILD_STANDALONE "Build standalone" ON)
-option(BUILD_TESTS "Build tests" ON)
-option(BUILD_DOCUMENTS "Build DOCUMENTS" OFF)
+option(BINARY_BUILD_STANDALONE "Build standalone" ON)
+option(BINARY_BUILD_TESTS "Build tests" ON)
+option(BINARY_BUILD_DOCUMENTS "Build DOCUMENTS" OFF)
 
-if(BUILD_STANDALONE)
+if(BINARY_BUILD_STANDALONE)
   add_subdirectory(standalone ${CMAKE_BINARY_DIR}/standalone)
 else()
   add_subdirectory(library)
 endif()
 
-if(BUILD_TESTS)
+if(BINARY_BUILD_TESTS)
   # needed to generate test target
   enable_testing()
   add_subdirectory(test ${CMAKE_BINARY_DIR}/test)
 endif()
 
-if(BUILD_DOCUMENTS)
+if(BINARY_BUILD_DOCUMENTS)
   add_subdirectory(documentation ${CMAKE_BINARY_DIR}/documentation)
 endif()
