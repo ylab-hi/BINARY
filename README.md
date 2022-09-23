@@ -63,7 +63,7 @@ This is useful during development, as it exposes all subprojects to your IDE and
 
 __NOTE:__ If you are using compiler in conda environment you need to define `-DCMAKE_PREFIX_PATH` environment variable
 to your conda environment with related compiler. For
-example: `cmake -S . -B build -DCMAKE_PREFIX_PATH=/home/user/miniconda3/lib`.
+example: `cmake -S . -B build -DCMAKE_PREFIX_PATH=/home/user/miniconda3/`.
 
 ```console
 cmake -S . -B build
