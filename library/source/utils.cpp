@@ -20,4 +20,19 @@ namespace binary::utils {
     return std::filesystem::exists(file_path);
   }
 
+  std::string trim_str(std::string_view str) {
+    auto temp = str | trim;
+    return {temp.begin(), temp.end()};
+  }
+
+  auto split_str(std::string_view str, char delim) -> std::vector<std::string> {
+    auto temp_view = str | std::ranges::views::split(delim);
+    auto result = std::vector<std::string>{};
+
+    for (auto const& sub_str : temp_view) {
+      result.emplace_back(sub_str.begin(), sub_str.end());
+    }
+    return result;
+  }
+
 }  // namespace binary::utils

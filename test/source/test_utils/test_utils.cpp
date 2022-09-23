@@ -87,4 +87,28 @@ TEST_SUITE("test binary utils") {
     std::tuple t1{1, "test", 3.0};
     CHECK_NOTHROW(binary::utils::print_tuple(t1));
   }
+
+  TEST_CASE("test trim view") {
+    using namespace binary::utils;
+
+    std::string_view str = "  test  ";
+    auto temp = trim_str(str);
+    CHECK_EQ(temp, "test");
+  }
+
+  TEST_CASE("test split string") {
+    using namespace binary::utils;
+
+    std::string_view str = "test1,test2,test3";
+    auto temp = split_str(str, ',');
+    CHECK_EQ(temp.size(), 3);
+    CHECK_EQ(temp[0], "test1");
+    CHECK_EQ(temp[1], "test2");
+    CHECK_EQ(temp[2], "test3");
+
+    std::string_view str2 = " test1  ,  test2  ,  test3  ";
+    auto temp2 = split_str(str2, ',');
+    CHECK_EQ(temp2.size(), 3);
+    CHECK_EQ(temp2[0], " test1  ");
+  }
 }

@@ -16,7 +16,7 @@ namespace binary::concepts {
 
   template <typename T, typename... Args>
   concept ArgsConstructible
-      = std::constructible_from<T, Args...> &&(!IsAnyOf<T, std::remove_cvref_t<Args>...>);
+      = std::constructible_from<T, Args...> && (!IsAnyOf<T, std::remove_cvref_t<Args>...>);
 
 }  // namespace binary::concepts
 
