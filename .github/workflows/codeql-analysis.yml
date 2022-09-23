@@ -52,7 +52,7 @@ jobs:
 
 
       - name: Install compiler
-        run: sudo apt-get install --yes g++-10
+        run: sudo apt-get install --yes g++-11
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
