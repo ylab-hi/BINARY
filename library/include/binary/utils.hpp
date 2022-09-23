@@ -72,18 +72,21 @@ namespace binary::utils {
   [[maybe_unused]] inline void set_trace() { spdlog::set_level(spdlog::level::trace); }
   [[maybe_unused]] inline void set_info() { spdlog::set_level(spdlog::level::info); }
 
+#ifdef __GNUC__
+#  if __GNUC__ >= 12
   // trim from left
-  inline constexpr auto trim_front = std::ranges::views::drop_while(::isspace);
+  inline constexpr auto trim_front = std::views::drop_while(::isspace);
 
-  inline constexpr auto trim_back = std::ranges::views::reverse
-                                    | std::ranges::views::drop_while(::isspace)
-                                    | std::ranges::views::reverse;
+  inline constexpr auto trim_back
+      = std::views::reverse | std::views::drop_while(::isspace) | std::views::reverse;
 
   inline constexpr auto trim = trim_front | trim_back;
 
   auto split_str(std::string_view str, char delim) -> std::vector<std::string>;
 
   std::string trim_str(std::string_view str);
+#  endif
+#endif
 
 }  // namespace binary::utils
 

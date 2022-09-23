@@ -88,6 +88,8 @@ TEST_SUITE("test binary utils") {
     CHECK_NOTHROW(binary::utils::print_tuple(t1));
   }
 
+#ifdef __GNUC__
+#  if __GNUC__ >= 12
   TEST_CASE("test trim view") {
     using namespace binary::utils;
 
@@ -111,4 +113,6 @@ TEST_SUITE("test binary utils") {
     CHECK_EQ(temp2.size(), 3);
     CHECK_EQ(temp2[0], " test1  ");
   }
+#  endif
+#endif
 }

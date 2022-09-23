@@ -20,6 +20,8 @@ namespace binary::utils {
     return std::filesystem::exists(file_path);
   }
 
+#ifdef __GNUC__
+#  if __GNUC__ >= 12
   std::string trim_str(std::string_view str) {
     auto temp = str | trim;
     return {temp.begin(), temp.end()};
@@ -34,5 +36,7 @@ namespace binary::utils {
     }
     return result;
   }
+#  endif
+#endif
 
 }  // namespace binary::utils
