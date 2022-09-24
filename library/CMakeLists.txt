@@ -34,12 +34,16 @@ find_package(Threads REQUIRED)
 # PackageProject.cmake will be used to make our target installable
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
 
-CPMAddPackage(
-  NAME spdlog
-  GITHUB_REPOSITORY gabime/spdlog
-  VERSION 1.10.0
-  OPTIONS "SPDLOG_INSTALL YES"
-)
+find_package(spdlog)
+
+if(NOT spdlog_FOUND)
+  CPMAddPackage(
+    NAME spdlog
+    GITHUB_REPOSITORY gabime/spdlog
+    VERSION 1.10.0
+    OPTIONS "SPDLOG_INSTALL YES"
+  )
+endif()
 
 # ---- Add source files ----
 
