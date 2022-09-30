@@ -32,7 +32,7 @@ namespace binary::parser::vcf {
 
   namespace details {
 
-    template <typename T> constexpr void bcf_deleter(T* record) noexcept {
+    template <typename T> constexpr void hts_deleter(T* record) noexcept {
       if constexpr (std::same_as<T, bcf1_t>) {
         bcf_destroy(record);
       } else if constexpr (std::same_as<T, bcf_hdr_t>) {
@@ -51,12 +51,11 @@ namespace binary::parser::vcf {
       }
     }
 
-    template <typename T> auto deleter() {
-      if constexpr (std::same_as<T, kstring_t>) {
-        return std::unique_ptr<T, decltype(&bcf_deleter<T>)>{new kstring_t{}, &bcf_deleter<T>};
-      } else {
-        return std::unique_ptr<T, decltype(&bcf_deleter<T>)>{nullptr, &bcf_deleter<T>};
-      }
+    template <typename T> using hts_unique_ptr
+        = std::unique_ptr<T, decltype(&details::hts_deleter<T>)>;
+
+    template <typename T> auto make_hts_unique_ptr(T* ptr) noexcept {
+      return hts_unique_ptr<T>{ptr, &hts_deleter<T>};
     }
 
     // #define BCF_HT_FLAG 0  header type
@@ -133,21 +132,21 @@ namespace binary::parser::vcf {
     struct DataImpl {
       constexpr DataImpl() = default;
       explicit DataImpl(std::string_view file)
-          : fp{hts_open(file.data(), "r"), &bcf_deleter<htsFile>},
-            header{bcf_hdr_read(fp.get()), &bcf_deleter<bcf_hdr_t>},
-            record{bcf_init1(), &bcf_deleter<bcf1_t>} {}
+          : fp{hts_open(file.data(), "r"), &hts_deleter<htsFile>},
+            header{bcf_hdr_read(fp.get()), &hts_deleter<bcf_hdr_t>},
+            record{bcf_init1(), &hts_deleter<bcf1_t>} {}
 
       DataImpl(DataImpl const&) = delete;
       auto operator=(DataImpl const&) -> DataImpl& = delete;
       DataImpl(DataImpl&&) noexcept = default;
       auto operator=(DataImpl&&) noexcept -> DataImpl& = default;
 
-      decltype(deleter<htsFile>()) fp = deleter<htsFile>();
-      decltype(deleter<bcf_hdr_t>()) header = deleter<bcf_hdr_t>();
-      decltype(deleter<bcf1_t>()) record = deleter<bcf1_t>();
-      decltype(deleter<hts_itr_t>()) itr_ptr = deleter<hts_itr_t>();
-      decltype(deleter<tbx_t>()) idx_ptr = deleter<tbx_t>();
-      decltype(deleter<kstring_t>()) ks_ptr = deleter<kstring_t>();
+      hts_unique_ptr<htsFile> fp = make_hts_unique_ptr<htsFile>(nullptr);
+      hts_unique_ptr<bcf_hdr_t> header = make_hts_unique_ptr<bcf_hdr_t>(nullptr);
+      hts_unique_ptr<bcf1_t> record = make_hts_unique_ptr<bcf1_t>(nullptr);
+      hts_unique_ptr<hts_itr_t> itr_ptr = make_hts_unique_ptr<hts_itr_t>(nullptr);
+      hts_unique_ptr<tbx_t> idx_ptr = make_hts_unique_ptr<tbx_t>(nullptr);
+      hts_unique_ptr<kstring_t> ks_ptr = make_hts_unique_ptr<kstring_t>(new kstring_t{});
     };
 
     struct [[maybe_unused]] BaseInfoField {

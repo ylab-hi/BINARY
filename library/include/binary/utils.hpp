@@ -63,9 +63,8 @@ namespace binary::utils {
           std::filesystem::remove(file);
         }
       }
-
-      output.close();
     }
+    output.close();
   }
 
   [[maybe_unused]] inline void set_debug() { spdlog::set_level(spdlog::level::debug); }
