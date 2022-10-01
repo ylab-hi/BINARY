@@ -33,16 +33,14 @@ include(htslib)
 find_package(Threads REQUIRED)
 
 # PackageProject.cmake will be used to make our target installable
-CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
+CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
 
-if(BINARY_BUILD_DEPENDENCIES)
-  CPMAddPackage(
-    NAME spdlog
-    GITHUB_REPOSITORY gabime/spdlog
-    VERSION 1.10.0
-    OPTIONS "SPDLOG_INSTALL YES"
-  )
-endif()
+CPMAddPackage(
+  NAME spdlog
+  GITHUB_REPOSITORY gabime/spdlog
+  VERSION 1.10.0
+  OPTIONS "SPDLOG_INSTALL YES"
+)
 
 # ---- Add source files ----
 
@@ -76,6 +74,7 @@ target_link_libraries(
   PRIVATE Threads::Threads ${HTSlib_LIBRARIES}
   PUBLIC spdlog::spdlog
 )
+
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${HTSlib_INCLUDE_DIRS}>)
 
 target_include_directories(

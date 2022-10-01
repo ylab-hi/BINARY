@@ -15,6 +15,8 @@
 #include <unordered_map>
 
 namespace sv2nl {
+  using namespace std::string_literals;
+
   mapper_options& mapper_options::nl_file(std::string_view file) {
     nl_file_ = file;
     return *this;
@@ -69,8 +71,9 @@ namespace sv2nl {
   }
 
   void TraMapper::map_impl(std::string_view chrom,
-                           Sv2nlVcfIntervalTree const& vcf_interval_tree) const {
+                           const std::shared_ptr<Sv2nlVcfIntervalTree>& vcf_tree_ptr) const {
     // avoid data trace cause now vcf ranges is not thread safe
+    spdlog::debug("[tra] chrom {} interval tree size: {}", chrom, vcf_tree_ptr->size());
 
     auto nl_vcf_ranges = Sv2nlVcfRanges(nl_vcf_file_.string());
 
@@ -80,7 +83,7 @@ namespace sv2nl {
           });
 
     for (auto nl_vcf_record : nl_chrom_view) {
-      spdlog::debug("process nl vcf {}", nl_vcf_record);
+      spdlog::debug("[tra] process nl vcf {}", nl_vcf_record);
       auto nl_2chroms = get_2chroms(nl_vcf_record);
       std::vector<Sv2nlVcfRecord> overlaps_vector{};
 
@@ -91,7 +94,8 @@ namespace sv2nl {
         overlaps_vector.push_back(nl_vcf_record);
         auto validated_nl_vcf_record = validate_record(nl_vcf_record);
 
-        auto&& res = vcf_interval_tree.find_overlaps(validated_nl_vcf_record);
+        auto&& res = vcf_tree_ptr->find_overlaps(validated_nl_vcf_record);
+
         auto res_view
             = res | std::views::filter([&](auto const& vcf_interval) {
                 return (nl_2chroms == get_2chroms(vcf_interval.record))
@@ -101,42 +105,55 @@ namespace sv2nl {
 
         std::ranges::move(res_view, std::back_inserter(overlaps_vector));
 
+        spdlog::trace("[tra] overlaps size: {}", overlaps_vector.size());
+
 #ifdef SV2NL_USE_CACHE
-        store(nl_vcf_record, overlaps_vector);
-        // Do not output same nl key record
-        writer_.write_trans(std::move(overlaps_vector));
+        if (overlaps_vector.size() > 1) {
+          store(nl_vcf_record, overlaps_vector);
+          // Do not output same nl key record
+          writer_.write_trans(std::move(overlaps_vector));
+        }
       }
 #endif
     }
   }
 
-  void TraMapper::map_delegate() const {
-    auto sv_vcf_ranges = Sv2nlVcfRanges(sv_vcf_file_.string());
-    auto sv_trans_view = sv_vcf_ranges | std::views::filter([&](auto const sv_vcf_record) {
-                           return sv_vcf_record.info->svtype == sv_type_;
-                         });
-
-    auto sv_interval_tree = Sv2nlVcfIntervalTree{};
-    sv_interval_tree.insert_node(sv_trans_view);
-    std::vector<std::future<void>> results;
-
+  auto TraMapper::map_delegate(ThreadPool& pool) const -> void {
     auto&& nl_chroms = Sv2nlVcfRanges(nl_vcf_file_.string()).chroms();
+
+    auto sv_tree_pointer = build_sv_tree();
 
     for (auto chrom : nl_chroms | std::views::filter([](auto it) {
                         return std::ranges::find(it, '_') == it.end();
                       })) {
-      results.push_back(std::async(
-          [&](std::string_view chrom_, Sv2nlVcfIntervalTree const& sv_interval_tree_) {
-            map_impl(chrom_, sv_interval_tree_);
+      spdlog::debug("[tra] chrom {} is processing ", chrom);
+      pool.enqueue_detach(
+          [&](std::string_view chrom_, std::shared_ptr<Sv2nlVcfIntervalTree> tree) {
+            map_impl(chrom_, tree);
           },
-          chrom, std::ref(sv_interval_tree)));
+          chrom, sv_tree_pointer);
     }
-    for (auto const& res : results) res.wait();
   }
 
   bool TraMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
                                   const Sv2nlVcfRecord& sv_vcf_record) const {
+    spdlog::debug("[tra] check condition with {}", sv_vcf_record);
+
     return distance_less(nl_vcf_record, sv_vcf_record, diff_);
+  }
+
+  std::shared_ptr<Sv2nlVcfIntervalTree> TraMapper::build_sv_tree() const {
+    auto sv_vcf_ranges = Sv2nlVcfRanges(sv_vcf_file_.string());
+
+    auto sv_trans_view = sv_vcf_ranges | std::views::filter([&](auto const sv_vcf_record) {
+                           return sv_vcf_record.info->svtype == sv_type_;
+                         });
+
+    auto sv_interval_tree = std::make_shared<Sv2nlVcfIntervalTree>();
+
+    sv_interval_tree->insert_node(sv_trans_view);
+
+    return sv_interval_tree;
   }
 
 }  // namespace sv2nl

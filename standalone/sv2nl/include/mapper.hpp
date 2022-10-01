@@ -5,6 +5,8 @@
 #ifndef BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
 #define BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
 
+#include <thread_pool/thread_pool.h>
+
 #include <array>
 #include <filesystem>
 #include <initializer_list>
@@ -21,6 +23,8 @@
 namespace sv2nl {
 
   namespace fs = std::filesystem;
+
+  using ThreadPool = dp::thread_pool<dp::details::default_function_type>;
 
   constexpr std::string_view HEADER = "chrom\tpos\tend\tsvtype\tchrom\tpos\tend\tsvtype";
 
@@ -83,12 +87,11 @@ namespace sv2nl {
     Derived* derived() { return static_cast<Derived*>(this); }
     Derived const* derived() const { return static_cast<Derived const*>(this); }
 
-    void map() const {
-      derived()->map_delegate();
-      writer_.close();
-    }
+    void close_writer() const noexcept { writer_.close(); }
 
-    void map_delegate() const;
+    auto map(ThreadPool& pool) const -> void { return derived()->map_delegate(pool); }
+
+    auto map_delegate(ThreadPool& pool) const -> void;
 
     static auto build_tree(std::string_view chrom, const Sv2nlVcfRanges& vcf_ranges,
                            std::string_view svtype) -> Sv2nlVcfIntervalTree;
@@ -139,10 +142,7 @@ namespace sv2nl {
                                    std::string_view svtype) -> Sv2nlVcfIntervalTree {
     auto interval_tree = Sv2nlVcfIntervalTree{};
 
-    auto sorted_ = [](auto const& res) {
-      spdlog::debug("[build tree] {}", res);
-      return validate_record(res);
-    };
+    auto sorted_ = [](auto const& res) { return validate_record(res); };
 
     auto chrom_view = vcf_ranges | std::views::filter([&chrom, &svtype](auto const& sv_vcf_record) {
                         return sv_vcf_record.chrom == chrom && sv_vcf_record.info->svtype == svtype;
@@ -218,26 +218,23 @@ namespace sv2nl {
         std::ranges::move(res_view, std::back_inserter(overlaps_vector));
 
 #ifdef SV2NL_USE_CACHE
-        store(nl_vcf_record, overlaps_vector);
-        // Do not output same nl key record
-        writer_.write(std::move(overlaps_vector));
+        if (overlaps_vector.size() > 1) {
+          store(nl_vcf_record, overlaps_vector);
+          // Do not output same nl key record
+          writer_.write(std::move(overlaps_vector));
+        }
       }
 #endif
     }
   }
 
-  template <typename Derived> void Mapper<Derived>::map_delegate() const {
+  template <typename Derived> auto Mapper<Derived>::map_delegate(ThreadPool& pool) const -> void {
     auto&& nl_chroms = Sv2nlVcfRanges(nl_vcf_file_.string()).chroms();
 
-    std::vector<std::future<void>> results;
     for (auto chrom : nl_chroms | std::views::filter([](auto it) {
                         return std::ranges::find(it, '_') == it.end();
                       })) {
-      results.push_back(
-          std::async([&](std::string_view chrom_) { derived()->map_impl(chrom_); }, chrom));
-    }
-    for (auto const& result : results) {
-      result.wait();
+      pool.enqueue_detach([&](std::string_view chrom_) { derived()->map_impl(chrom_); }, chrom);
     }
   }
 
@@ -249,8 +246,8 @@ namespace sv2nl {
     ~DupMapper() override = default;
 
   private:
-    bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
-                         Sv2nlVcfRecord const& sv_vcf_record) const;
+    [[nodiscard]] bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
+                                       Sv2nlVcfRecord const& sv_vcf_record) const;
   };
 
   class InvMapper : public Mapper<InvMapper> {
@@ -272,10 +269,13 @@ namespace sv2nl {
 
     ~TraMapper() override = default;
 
-    void map_delegate() const;
+    void map_delegate(ThreadPool& pool) const;
 
   private:
-    void map_impl(std::string_view chrom, Sv2nlVcfIntervalTree const& vcf_interval_tree) const;
+    std::shared_ptr<Sv2nlVcfIntervalTree> build_sv_tree() const;
+
+    void map_impl(std::string_view chrom,
+                  const std::shared_ptr<Sv2nlVcfIntervalTree>& vcf_tree_ptr) const;
     bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
                          Sv2nlVcfRecord const& sv_vcf_record) const;
   };

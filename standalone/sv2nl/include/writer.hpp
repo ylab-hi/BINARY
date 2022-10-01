@@ -33,6 +33,7 @@ namespace sv2nl {
       std::lock_guard lock{mutex_};
       for (auto&& record :
            std::ranges::subrange(std::ranges::begin(records) + 1, std::ranges::end(records))) {
+        spdlog::debug("write record {}", record);
         ofs_ << key_line << '\t' << format_keys(record) << '\n';
       }
     }
@@ -46,12 +47,16 @@ namespace sv2nl {
       std::lock_guard lock{mutex_};
       for (auto&& record :
            std::ranges::subrange(std::ranges::begin(records) + 1, std::ranges::end(records))) {
+        spdlog::debug("write record {}", record);
         ofs_ << key_line << '\t' << format_keys(record) << '\n';
       }
     }
 
     void write(std::string const& line);
-    void close() { ofs_.close(); }
+    void close() {
+      std::lock_guard lock{mutex_};
+      ofs_.close();
+    }
 
     static std::string format_keys(Sv2nlVcfRecord const& record);
 

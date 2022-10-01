@@ -13,8 +13,10 @@
  *
  */
 
+#include <binary/version.h>
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
 #include <binary/utils.hpp>
 #include <cxxopts.hpp>
 #include <iostream>
@@ -23,10 +25,25 @@
 #include "mapper.hpp"
 #include "util.hpp"
 
+constexpr int NUM_THREADS = 4;
+
+inline std::vector<std::string> creat_files_name(std::string_view output) {
+  return {std::string(output) + ".dup", std::string(output) + ".inv", std::string(output) + ".tra"};
+}
+
+void submit_task(sv2nl::DupMapper const& dup, sv2nl::InvMapper const& inv,
+                 sv2nl::TraMapper const& tra, int num_threads) {
+  auto thread_pool = dp::thread_pool(num_threads);
+
+  dup.map(thread_pool);
+  inv.map(thread_pool);
+  tra.map(thread_pool);
+}
+
 void run(std::string_view nl_, std::string_view sv_, std::string_view output_, uint32_t diff_,
-         bool is_merge) {
-  auto files = {std::string(output_) + ".dup", std::string(output_) + ".inv",
-                std::string(output_) + ".tra"};
+         int num_threads) {
+  auto files = creat_files_name(output_);
+
   auto dup_mapper = sv2nl::DupMapper(sv2nl::mapper_options()
                                          .nl_file(nl_)
                                          .sv_file(sv_)
@@ -50,28 +67,27 @@ void run(std::string_view nl_, std::string_view sv_, std::string_view output_, u
                                          .sv_type("BND")
                                          .diff(diff_));
 
-  dup_mapper.map();
-  inv_mapper.map();
-  tra_mapper.map();
-
-  if (is_merge) {
-    binary::utils::merge_files(files, output_, sv2nl::HEADER);
-  }
+  submit_task(dup_mapper, inv_mapper, tra_mapper, num_threads);
+  tra_mapper.close_writer();
+  inv_mapper.close_writer();
+  dup_mapper.close_writer();
 }
 
 int main(int argc, char* argv[]) {
   cxxopts::Options options("sv2nl", "Map structural Variation to Non-Linear Transcription");
   options.show_positional_help();
-  options.set_width(120);
+  options.set_width(120).set_tab_expansion();
   // clang-format off
   options.add_options()
-  ("sv", "The file path of segment information from rck", cxxopts::value<std::string>())
+  ("sv", "The file path of segment information from delly", cxxopts::value<std::string>())
   ("non-linear", "The file path of non-linear information from scannls", cxxopts::value<std::string>())
+  ("dis", "The distance threshold for trans mapper", cxxopts::value<uint32_t>()->default_value("1000000"))
   ("o,output", "The file path of output", cxxopts::value<std::string>()->default_value("output.tsv"))
-  ("t,threshold", "The distance threshold for trans mapper", cxxopts::value<uint32_t>()->default_value("1000000"))
+  ("t,thread", "The number of thread program use", cxxopts::value<int32_t>()->default_value(std::to_string(NUM_THREADS)))
   ("m,merge", "If provided only merge outputs into one file", cxxopts::value<bool>()->default_value("false"))
   ("d,debug", "Print debug info", cxxopts::value<bool>()->default_value("false"))
-  ("h,help", "Print help");
+  ("h,help", "Print help")
+  ("v,version", "Print the current version number");
   // clang-format on
 
   options.positional_help("[sv non-linear]");
@@ -87,21 +103,42 @@ int main(int argc, char* argv[]) {
     spdlog::set_level(spdlog::level::debug);
   }
 
+  if (result["version"].as<bool>()) {
+    spdlog::info("version {}", BINARY_VERSION);
+    return 0;
+  }
+
   try {
     auto segment_path = result["sv"].as<std::string>();
     auto nonlinear_path = result["non-linear"].as<std::string>();
+    auto diff = result["dis"].as<uint32_t>();
     auto output_path = result["output"].as<std::string>();
-    auto diff = result["threshold"].as<uint32_t>();
     auto is_merged = result["merge"].as<bool>();
+    auto num_threads = result["thread"].as<int32_t>();
+
     if (!binary::utils::check_file_path({segment_path, nonlinear_path})) {
       std::exit(1);
     }
 
+    if (num_threads < 0
+        || num_threads > static_cast<int32_t>(std::thread::hardware_concurrency())) {
+      spdlog::warn("The number of threads {} is invalid, default value {} will be used",
+                   num_threads, NUM_THREADS);
+      num_threads = NUM_THREADS;
+    }
+
     spdlog::info("non-linear file path: {}", nonlinear_path);
     spdlog::info("struct variation file path: {}", segment_path);
-    spdlog::info("distance threshold: {}mb", diff);
+    spdlog::info("distance threshold: {} bp", diff);
+    spdlog::info("the number of threads: {}", num_threads);
+
     Timer timer{};
-    run(nonlinear_path, segment_path, output_path, diff, is_merged);
+    run(nonlinear_path, segment_path, output_path, diff, num_threads);
+
+    if (is_merged) {
+      binary::utils::merge_files(creat_files_name(output_path), output_path, sv2nl::HEADER);
+    }
+
     spdlog::info("elapsed time: {:.2f}s", timer.elapsed());
     if (is_merged)
       spdlog::info("result file path: {}", output_path);

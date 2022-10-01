@@ -18,9 +18,7 @@ include(../cmake/tools.cmake)
 
 include(../cmake/CPM.cmake)
 
-if(BINARY_BUILD_DEPENDENCIES)
-  CPMAddPackage("gh:onqtam/doctest@2.4.8")
-endif()
+CPMAddPackage("gh:onqtam/doctest@2.4.9")
 
 CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
 
