@@ -18,6 +18,7 @@ endif()
 message(STATUS "Started CMake for  ${PROJECT_NAME} v${PROJECT_VERSION}...")
 message(STATUS "Compiler name: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "Cmake Binary path: ${CMAKE_BINARY_DIR}")
+message(STATUS "Build Dependencies: ${BINARY_BUILD_DEPENDENCIES}")
 
 # ---- Set up Options ----
 option(HTSlib_USE_STATIC_LIBS "Use static libs for htslib" OFF)
@@ -34,9 +35,7 @@ find_package(Threads REQUIRED)
 # PackageProject.cmake will be used to make our target installable
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
 
-find_package(spdlog)
-
-if(NOT spdlog_FOUND)
+if(BINARY_BUILD_DEPENDENCIES)
   CPMAddPackage(
     NAME spdlog
     GITHUB_REPOSITORY gabime/spdlog
@@ -67,6 +66,7 @@ add_library(
 if(NOT HTSlib_FOUND)
   add_dependencies(${PROJECT_NAME} htslib)
 endif()
+
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 # being a cross-platform target, we enforce standards conformance on MSVC
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")

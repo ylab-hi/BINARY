@@ -29,22 +29,21 @@ namespace binary::algorithm::tree {
   /** Interval Node and Interval Tree */
 
   template <typename Interval>
-  concept IntervalConcept
-      = requires(Interval const &interval) {
-          requires std::semiregular<Interval>;
-          requires std::movable<Interval>;
-          requires std::same_as<decltype(interval.low), decltype(interval.high)>;
-          interval.low <= interval.high;
-          typename Interval::key_type;
-        };
+  concept IntervalConcept = requires(Interval const &interval) {
+    requires std::semiregular<Interval>;
+    requires std::movable<Interval>;
+    requires std::same_as<decltype(interval.low), decltype(interval.high)>;
+    interval.low <= interval.high;
+    typename Interval::key_type;
+  };
 
   template <typename Node>
   concept IntervalNodeConcept = requires(Node &node) {
-                                  requires NodeConcept<Node>;
-                                  typename Node::interval_type;
-                                  node.max;
-                                  node.interval;
-                                };
+    requires NodeConcept<Node>;
+    typename Node::interval_type;
+    node.max;
+    node.interval;
+  };
 
   /** Interval Tree node
    *
@@ -65,7 +64,7 @@ namespace binary::algorithm::tree {
     constexpr IntervalNode &operator=(IntervalNode &&other) noexcept = default;
 
     template <typename... Arg>
-      requires std::constructible_from<Interval, Arg...>
+    requires std::constructible_from<Interval, Arg...>
     explicit constexpr IntervalNode(Arg &&...args)
         : interval{std::forward<Arg>(args)...}, max{interval.high}, key{interval.low} {}
 
@@ -154,7 +153,7 @@ namespace binary::algorithm::tree {
         -> std::optional<interval_type>;
 
     template <typename... Args>
-      requires binary::concepts::ArgsConstructible<interval_type, Args...>
+    requires binary::concepts::ArgsConstructible<interval_type, Args...>
     [[nodiscard]] auto find_overlap(Args &&...args) const -> std::optional<interval_type> {
       return find_overlap(interval_type{std::forward<Args>(args)...});
     }
@@ -163,7 +162,7 @@ namespace binary::algorithm::tree {
         -> std::vector<interval_type>;
 
     template <typename... Args>
-      requires binary::concepts::ArgsConstructible<interval_type, Args...>
+    requires binary::concepts::ArgsConstructible<interval_type, Args...>
     [[nodiscard]] auto find_overlaps(Args &&...args) const -> std::vector<interval_type> {
       return find_overlaps(interval_type{std::forward<Args>(args)...});
     }

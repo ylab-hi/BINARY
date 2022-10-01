@@ -25,7 +25,7 @@ namespace sv2nl {
     }
 
     template <std::ranges::input_range Sv2nlRecordRange>
-      requires std::same_as<std::ranges::range_value_t<Sv2nlRecordRange>, Sv2nlVcfRecord>
+    requires std::same_as<std::ranges::range_value_t<Sv2nlRecordRange>, Sv2nlVcfRecord>
     void write(Sv2nlRecordRange&& records) {
       if (records.size() < 2) return;
       auto key_line = format_keys(records[0]);
@@ -38,7 +38,7 @@ namespace sv2nl {
     }
 
     template <std::ranges::input_range Sv2nlRecordRange>
-      requires std::same_as<std::ranges::range_value_t<Sv2nlRecordRange>, Sv2nlVcfRecord>
+    requires std::same_as<std::ranges::range_value_t<Sv2nlRecordRange>, Sv2nlVcfRecord>
     void write_trans(Sv2nlRecordRange&& records) {
       if (records.size() < 2) return;
       auto key_line = format_keys(records[0]);

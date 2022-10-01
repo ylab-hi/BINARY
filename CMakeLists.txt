@@ -10,6 +10,7 @@ include(cmake/tools.cmake)
 option(BINARY_BUILD_STANDALONE "Build standalone" ON)
 option(BINARY_BUILD_TESTS "Build tests" ON)
 option(BINARY_BUILD_DOCUMENTS "Build DOCUMENTS" OFF)
+option(BINARY_BUILD_DEPENDENCIES "Build dependencies" ON)
 
 if(BINARY_BUILD_STANDALONE)
   add_subdirectory(standalone ${CMAKE_BINARY_DIR}/standalone)
