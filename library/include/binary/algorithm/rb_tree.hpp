@@ -22,19 +22,19 @@ namespace binary::algorithm::tree {
 
   template <typename Node>
   concept NodeConcept = requires(Node &node) {
-                          requires std::movable<Node> && std::default_initializable<Node>;
-                          typename Node::key_type;
-                          typename Node::pointer;
-                          typename Node::reference_pointer;
-                          typename Node::raw_pointer;
-                          node.key;
-                          node.left;
-                          node.right;
-                          node.parent;
-                          node.color_;
-                          node.is_black();
-                          node.is_red();
-                        };
+    requires std::movable<Node> && std::default_initializable<Node>;
+    typename Node::key_type;
+    typename Node::pointer;
+    typename Node::reference_pointer;
+    typename Node::raw_pointer;
+    node.key;
+    node.left;
+    node.right;
+    node.parent;
+    node.color_;
+    node.is_black();
+    node.is_red();
+  };
 
   enum class Color { Red, Black };
 
@@ -109,7 +109,7 @@ namespace binary::algorithm::tree {
     virtual ~RbTree() = default;
 
     template <std::ranges::input_range R>
-      requires std::constructible_from<NodeType, std::ranges::range_value_t<R>>
+    requires std::constructible_from<NodeType, std::ranges::range_value_t<R>>
     void insert_node(R &&range) {
       for (auto &&item : range) {
         insert_node(std::forward<decltype(item)>(item));
@@ -143,7 +143,7 @@ namespace binary::algorithm::tree {
     [[maybe_unused]] void insert_node(pointer node);
 
     template <typename... Args>
-      requires std::constructible_from<NodeType, Args...>
+    requires std::constructible_from<NodeType, Args...>
     void insert_node(Args &&...args) {
       insert_node(std::make_unique<NodeType>(std::forward<Args>(args)...));
     }

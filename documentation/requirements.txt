@@ -9,3 +9,4 @@ sphinxcontrib-plantuml
 graphviz
 linkify-it-py
 poetry
+breathe
