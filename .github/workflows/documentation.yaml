@@ -29,6 +29,7 @@ jobs:
         run: |
           brew install doxygen
           pip3 install -r documentation/requirements.txt
+          curl -sSL https://install.python-poetry.org | python3 -
 
       - name: Build
         run: |
