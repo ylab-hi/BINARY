@@ -20,6 +20,7 @@ The current project is developing and evolving, and changes will be made to the 
 * [Installation]
 * [Algorithms](#algorithms)
 * [Tools](#tools)
+* [Documentation]
 * [Acknowledgements](#acknowledgements)
 * [Contributors](#contributors)
 
@@ -81,6 +82,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
+
+
+[documentation]: https://binary.readthedocs.io/en/latest/
 
 <!-- github-only -->
 

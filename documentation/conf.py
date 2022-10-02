@@ -68,7 +68,7 @@ source_suffix = ['.md']
 suppress_warnings = ['image.nonlocal_uri']
 
 extensions = ["breathe",
-              # "sphinx.ext.autodoc",
+              "sphinx.ext.autodoc",
               # https://www.sphinx-doc.org/en/master/usage/extensions/graphviz.html#module-sphinx.ext.graphviz
               "sphinx.ext.graphviz",
               # https://github.com/useblocks/sphinx-needs

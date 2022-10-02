@@ -60,10 +60,8 @@ See [Format.cmake] for details.
 
 ## Build the documentation
 
-The documentation is automatically built and [published] whenever
-a [GitHub Release] is
-created.
-To manually build documentation, call the following command.
+The documentation is automatically built and [published] whenever a [GitHub Release] is created. To manually build
+documentation, call the following command.
 
 ```console
 cmake -S documentation -B build/doc

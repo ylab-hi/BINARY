@@ -1,11 +1,9 @@
 # Namespace
 
 ```{eval-rst}
-.. doxygennamespace:: binary
+.. doxygennamespace:: binary::algorithm
     :outline:
     :members:
     :protected-members:
     :private-members:
-    :undoc-members:
-    :no-link:
 ```
