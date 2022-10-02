@@ -23,13 +23,6 @@ CPMAddPackage(
   OPTIONS "CXXOPTS_BUILD_EXAMPLES NO" "CXXOPTS_BUILD_TESTS NO" "CXXOPTS_ENABLE_INSTALL YES"
 )
 
-CPMAddPackage(
-  GITHUB_REPOSITORY DeveloperPaul123/thread-pool
-  GIT_TAG 67c4c65ff739b7c06a78f9f54bd2c2baec8560ee
-  OPTIONS "TP_BUILD_TESTS OFF" "TP_BUILD_EXAMPLES OFF" "TP_BUILD_BENCHMARKS  OFF"
-          "TP_EXPERIMENTAL OFF"
-)
-
 CPMAddPackage(NAME binary SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../library)
 
 function(add_standalone targetName source)
@@ -39,7 +32,7 @@ function(add_standalone targetName source)
   )
   add_executable(${targetName} ${source} ${${targetName}_source})
   target_compile_features(${targetName} PRIVATE cxx_std_20)
-  target_link_libraries(${targetName} PRIVATE binary::binary cxxopts stdc++fs ThreadPool)
+  target_link_libraries(${targetName} PRIVATE binary::binary cxxopts stdc++fs)
   target_include_directories(
     ${targetName} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/include
                           ${CMAKE_CURRENT_LIST_DIR}/${targetName}/include

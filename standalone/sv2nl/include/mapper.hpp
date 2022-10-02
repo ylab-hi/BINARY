@@ -5,11 +5,9 @@
 #ifndef BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
 #define BUILDALL_STANDALONE_SV2NL_DETECT_MAPPING_HPP_
 
-#include <thread_pool/thread_pool.h>
-
+// #include <thread_pool/thread_pool.h>
 #include <array>
 #include <filesystem>
-#include <functional>
 #include <initializer_list>
 #include <string>
 #include <utility>
@@ -17,6 +15,7 @@
 
 #include "helper.hpp"
 #include "options.hpp"
+#include "thread_pool.hpp"
 #include "threadsafe_map.hpp"
 #include "vcf_info.hpp"
 #include "writer.hpp"
