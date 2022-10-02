@@ -27,9 +27,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+          python -V
+          #          curl -sSL https://install.python-poetry.org | python -
           brew install doxygen
-          pip3 install -r documentation/requirements.txt
+          pip install -r documentation/requirements.txt
 
       - name: Build
         run: |
