@@ -35,7 +35,7 @@ Usage:
   -v, --version         Print the current version number
 ```
 
-- Example 1
+### Example 1
 
 `example.sv.vcf` is the DNA structural variation file from `delly`. `example.non-linear.vcf` is the non-linear
 transcript. Option `-t` define the number of threads. Option `-o` define the output file prefix. If you don't provide
@@ -47,13 +47,6 @@ $ sv2nl example.sv.vcf example.non-linear.vcf -o example.tsv -t 4
 ```
 
 ## Performance
-
-total runtime: 417.94s.
-calls to allocation functions: 222033991 (531256/s)
-temporary memory allocations: 8531158 (20412/s)
-peak heap memory consumption: 25.66MB
-peak RSS (including heaptrack overhead): 77.19MB
-total memory leaked: 0B
 
 The performance is tested simply by `time` and `heapstack` command. It is not a benchmark.
 The slowest part is the gzip decompression and compression.

@@ -10,6 +10,7 @@ from datetime import datetime
 
 import subprocess
 import os
+import shutil
 
 logger = logging.getLogger("sphinx")
 logger.log("info", f"sphinx version: {sphinx.__version__}")
@@ -17,6 +18,13 @@ logger.log("info", f"python version: {sys.executable}")
 
 
 # -- doxygen setup in rtd------------------------------------------------------------
+
+def install_poetry():
+    if shutil.which("poetry") is None:
+        subprocess.call('curl -sSL https://install.python-poetry.org | python3 -',
+                        shell=True)
+
+
 def configure_doxyfile(input_dir, output_dir):
     with open('Doxyfile.in', 'r') as file:
         file_data = file.read()
@@ -41,6 +49,8 @@ def run_doxygen():
 
 # Breathe Configuration
 breathe_default_project = "binary"
+
+install_poetry()
 run_doxygen()
 
 # -- doxygen setup in rtd------------------------------------------------------------

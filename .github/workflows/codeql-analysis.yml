@@ -71,8 +71,8 @@ jobs:
       # If this step fails, then you should remove it and run the build manually (see below)
       - name: Autobuild
         env:
-          CXX: g++-10
-          CC: gcc-10
+          CXX: g++-11
+          CC: gcc-11
         uses: github/codeql-action/autobuild@v2
 
       # ℹ️ Command-line programs to run using the OS shell.
