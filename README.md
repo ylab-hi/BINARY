@@ -85,4 +85,4 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 [installation]: documentation/installation.md
 
-[sv2nl]: documentation/tools/sv2nl.md
+[sv2nl]: documentation/current_tools/sv2nl.md
