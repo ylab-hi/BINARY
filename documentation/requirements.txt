@@ -182,7 +182,7 @@ pkginfo==1.8.3
     # via
     #   -r documentation/requirements.txt
     #   poetry
-poetry==1.0.10
+poetry==1.1.9
     # via -r documentation/requirements.txt
 ptyprocess==0.7.0
     # via
