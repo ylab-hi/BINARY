@@ -8,3 +8,4 @@ sphinx-needs
 sphinxcontrib-plantuml
 graphviz
 linkify-it-py
+poetry

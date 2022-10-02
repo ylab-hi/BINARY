@@ -49,7 +49,7 @@ The library contains algorithms for:
 
 The library contains applications for:
 
-1. Mapping Structural Variants to Non-Linear Transcripts Variants
+1. [sv2nl] Mapping Structural Variants to Non-Linear Transcripts Variants
 
 ```console
 $ sv2nl -h
@@ -84,3 +84,5 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- github-only -->
 
 [installation]: documentation/installation.md
+
+[sv2nl]: documentation/tools/sv2nl.md
