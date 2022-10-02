@@ -33,6 +33,7 @@ hidden:
 caption: Reference
 ---
 
+Changelog <changelog>
 Code of Conduct <codeofconduct>
 License <license>
 ```
