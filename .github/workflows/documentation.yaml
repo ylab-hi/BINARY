@@ -29,12 +29,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: "3.10"
 
       - name: Upgrade pip
         run: |
-          #          pip install --constraint=.github/workflows/constraints.txt pip
-               pip --version
+          pip install  pip
+          pip --version
 
       - name: Upgrade pip in virtual environments
         shell: python
@@ -48,7 +48,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -V
-          brew install doxygen
+          brew install doxygen portaudio
           pip install -r documentation/requirements.txt
 
       - name: Build

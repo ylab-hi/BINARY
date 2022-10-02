@@ -1,5 +1,6 @@
 [![Ubuntu](https://github.com/ylab-hi/BINARY/actions/workflows/linux.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/linux.yml)
 [![Style](https://github.com/ylab-hi/BINARY/actions/workflows/style.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/style.yml)
+[![Documentation Status](https://readthedocs.org/projects/binary/badge/?version=latest)](https://binary.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/ylab-hi/BINARY/branch/main/graph/badge.svg?token=RWC5iqNPVi)](https://codecov.io/gh/ylab-hi/BINARY)
 [![c++20](https://img.shields.io/badge/C++-c%2B%2B20-green)](https://en.cppreference.com/w/cpp/20)
 [![CodeQL](https://github.com/ylab-hi/BINARY/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ylab-hi/BINARY/actions/workflows/codeql-analysis.yml)

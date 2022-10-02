@@ -6,7 +6,9 @@ message(STATUS "Building BinaryDocs")
 
 # ---- Dependencies ----
 
-include(../cmake/CPM.cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+
+include(CPM)
 
 # look for Doxygen package
 find_package(Doxygen REQUIRED)
