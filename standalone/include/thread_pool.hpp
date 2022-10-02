@@ -19,7 +19,7 @@
 namespace dp {
   namespace details {
     // leave clang detection out for now as there is not support for std::move_only_function
-#if defined(__cpp_lib_move_only_function)
+#if __cpp_lib_move_only_function
     using default_function_type = std::move_only_function<void()>;
 #else
     using default_function_type = std::function<void()>;
@@ -97,7 +97,7 @@ namespace dp {
               typename ReturnType = std::invoke_result_t<Function &&, Args &&...>>
     requires std::invocable<Function, Args...>
     [[nodiscard]] std::future<ReturnType> enqueue(Function f, Args... args) {
-#if defined(__cpp_lib_move_only_function)
+#if __cpp_lib_move_only_function
       // we can do this in C++23 because we now have support for move only functions
       std::promise<ReturnType> promise;
       auto future = promise.get_future();
