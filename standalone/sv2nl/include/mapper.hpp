@@ -9,6 +9,7 @@
 
 #include <array>
 #include <filesystem>
+#include <functional>
 #include <initializer_list>
 #include <string>
 #include <utility>
