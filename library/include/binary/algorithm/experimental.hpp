@@ -74,7 +74,7 @@ namespace binary::algorithm::tree::v1_shared_ptr {
     void insert_node(pointer_type node);
 
     template <typename... Args>
-    requires std::constructible_from<node_type, Args...>
+      requires std::constructible_from<node_type, Args...>
     void insert_node(Args &&...args) {
       insert_node(std::make_shared<node_type>(std::forward<Args>(args)...));
     }

@@ -16,7 +16,7 @@ The current project is developing and evolving, and changes will be made to the 
 
 * [News](#news)
 * [Features](#features)
-* [Installation](documentation/pages/installations.md)
+* [Installation]
 * [Algorithms](#algorithms)
 * [Tools](#tools)
 * [Acknowledgements](#acknowledgements)
@@ -63,7 +63,7 @@ $ sv2nl -h
 - https://github.com/gabime/spdlog
 - https://github.com/TheLartians/ModernCppStarter
 
-## Contributors ✨
+## Contributors
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
@@ -80,3 +80,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
+
+<!-- github-only -->
+
+[installation]: documentation/installation.md

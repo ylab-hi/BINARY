@@ -7,6 +7,8 @@ project(BINARY_All LANGUAGES CXX)
 message(STATUS "Building all subprojects for BINARY")
 include(cmake/tools.cmake)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 option(BINARY_BUILD_STANDALONE "Build standalone" ON)
 option(BINARY_BUILD_TESTS "Build tests" ON)
 option(BINARY_BUILD_DOCUMENTS "Build DOCUMENTS" OFF)

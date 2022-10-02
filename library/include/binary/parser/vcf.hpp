@@ -72,7 +72,7 @@ namespace binary::parser::vcf {
     constexpr int BINARY_BCF_HT_LONG = (BINARY_BCF_HT_INT | 0x100);
 
     template <typename Datatype>
-    requires binary::concepts::IsAnyOf<Datatype, int, float, char, pos_t, int64_t>
+      requires binary::concepts::IsAnyOf<Datatype, int, float, char, pos_t, int64_t>
     struct InfoGetter {
       Datatype* data{nullptr};
       int32_t count{};
@@ -161,20 +161,20 @@ namespace binary::parser::vcf {
 
     template <typename T>
     concept InfoFieldConcept = requires(T t) {
-      requires std::semiregular<T>;
-      requires std::movable<T>;
-      requires std::derived_from<T, details::BaseInfoField>;
-      t.update(std::shared_ptr<details::DataImpl>{});
-      std::cout << t;
-    };
+                                 requires std::semiregular<T>;
+                                 requires std::movable<T>;
+                                 requires std::derived_from<T, details::BaseInfoField>;
+                                 t.update(std::shared_ptr<details::DataImpl>{});
+                                 std::cout << t;
+                               };
 
     template <typename... T> struct InfoFieldFactory : public details::BaseInfoField {
       std::tuple<decltype(InfoGetter<T>::result_type())...> data_tuple{};
       std::array<std::string, sizeof...(T)> keys_array{};
 
       template <typename... U>
-      requires(std::convertible_to<U, std::string>&&...) explicit InfoFieldFactory(U... args)
-          : keys_array{args...} {
+        requires(std::convertible_to<U, std::string> && ...)
+      explicit InfoFieldFactory(U... args) : keys_array{args...} {
         static_assert(sizeof...(T) == sizeof...(U), "Number of keys and values do not match");
       }
       InfoFieldFactory(InfoFieldFactory const&) = default;
@@ -305,14 +305,14 @@ namespace binary::parser::vcf {
 
   template <typename T>
   concept RecordConcept = requires(T record) {
-    requires std::semiregular<T>;
-    requires std::movable<T>;
-    record.chrom;
-    record.pos;
-    record.rlen;
-    record.info;
-    std::cout << record;
-  };
+                            requires std::semiregular<T>;
+                            requires std::movable<T>;
+                            record.chrom;
+                            record.pos;
+                            record.rlen;
+                            record.info;
+                            std::cout << record;
+                          };
 
   template <RecordConcept RecordType> class VcfRanges {
   public:
@@ -395,17 +395,17 @@ namespace binary::parser::vcf {
      * Get file path
      * @return vcf file path
      */
-    [[nodiscard]] constexpr auto file_path() const -> const std::string&;
+    [[nodiscard]] constexpr auto file_path() const -> std::string_view;
 
     /**
      * Check if vcf file has read index
-     * @return bool
+     * @return true if has  read index
      */
     [[nodiscard]] constexpr auto has_read_index() const -> bool;
 
     /**
      * Check if  vcf file has index file
-     * @return
+     * @return  true if has index file
      */
     [[nodiscard]] constexpr auto has_index_file() const -> bool;
 
@@ -441,7 +441,7 @@ namespace binary::parser::vcf {
    * @return  vcf file path
    */
   template <RecordConcept RecordType> constexpr auto VcfRanges<RecordType>::file_path() const
-      -> const std::string& {
+      -> std::string_view {
     return file_path_;
   }
 

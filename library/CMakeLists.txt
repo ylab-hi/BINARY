@@ -47,7 +47,6 @@ CPMAddPackage(
 add_library(
   ${PROJECT_NAME}
   # headers
-  include/binary/parser/csv.hpp
   include/binary/exception.hpp
   include/binary/utils.hpp
   include/binary/algorithm/interval_tree.hpp

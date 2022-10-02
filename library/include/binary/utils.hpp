@@ -15,7 +15,7 @@ namespace binary::utils {
 
   // TODO: use binary search if range is sorted
   template <std::ranges::input_range Container, typename Value>
-  requires std::equality_comparable_with<std::ranges::range_value_t<Container>, Value>
+    requires std::equality_comparable_with<std::ranges::range_value_t<Container>, Value>
   auto index(Container const& container, Value&& value) -> std::size_t {
     auto it = std::ranges::find(container, std::forward<Value>(value));
     if (it == std::ranges::end(container)) {
@@ -39,7 +39,7 @@ namespace binary::utils {
   }
 
   template <std::ranges::input_range StringRange>
-  requires std::convertible_to<std::ranges::range_value_t<StringRange>, std::string>
+    requires std::convertible_to<std::ranges::range_value_t<StringRange>, std::string>
   void merge_files(StringRange&& files, std::string_view output_file, std::string_view header = "",
                    bool is_deleted = true, bool is_skipped_header = true) {
     auto output = std::ofstream(output_file.data());
