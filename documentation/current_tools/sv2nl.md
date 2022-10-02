@@ -49,7 +49,6 @@ $ sv2nl example.sv.vcf example.non-linear.vcf -o example.tsv -t 4
 ## Performance
 
 The performance is tested simply by `time` and `heapstack` command. It is not a benchmark.
-The slowest part is the gzip decompression and compression.
 
 | SV File Size | SV Records | NL File Size | NL Records | Time | Peak Memory Usage |
 |:------------:|:----------:|:------------:|:----------:|:----:|:-----------------:|
