@@ -41,7 +41,7 @@ void submit_task(sv2nl::DupMapper const& dup, sv2nl::InvMapper const& inv,
 }
 
 void run(std::string_view nl_, std::string_view sv_, std::string_view output_, uint32_t diff_,
-         int num_threads) {
+         int num_threads, bool use_strand) {
   auto files = creat_files_name(output_);
 
   auto dup_mapper = sv2nl::DupMapper(sv2nl::mapper_options()
@@ -51,13 +51,15 @@ void run(std::string_view nl_, std::string_view sv_, std::string_view output_, u
                                          .nl_type("TDUP")
                                          .sv_type("DUP")
                                          .diff(diff_));
+
   auto inv_mapper = sv2nl::InvMapper(sv2nl::mapper_options()
                                          .nl_file(nl_)
                                          .sv_file(sv_)
                                          .output_file(*(files.begin() + 1))
                                          .nl_type("INV")
                                          .sv_type("INV")
-                                         .diff(diff_));
+                                         .diff(diff_)
+                                         .use_strand(use_strand));
 
   auto tra_mapper = sv2nl::TraMapper(sv2nl::mapper_options()
                                          .nl_file(nl_)
@@ -84,6 +86,7 @@ int main(int argc, char* argv[]) {
   ("dis", "The distance threshold for trans mapper", cxxopts::value<uint32_t>()->default_value("1000000"))
   ("o,output", "The file path of output", cxxopts::value<std::string>()->default_value("output.tsv"))
   ("t,thread", "The number of thread program use", cxxopts::value<int32_t>()->default_value(std::to_string(NUM_THREADS)))
+  ("s,short", "If running in short read and do not use strand", cxxopts::value<bool>()->default_value("false"))
   ("m,merge", "If provided only merge outputs into one file", cxxopts::value<bool>()->default_value("false"))
   ("d,debug", "Print debug info", cxxopts::value<bool>()->default_value("false"))
   ("h,help", "Print help")
@@ -115,6 +118,7 @@ int main(int argc, char* argv[]) {
     auto output_path = result["output"].as<std::string>();
     auto is_merged = result["merge"].as<bool>();
     auto num_threads = result["thread"].as<int32_t>();
+    auto use_strand = !result["short"].as<bool>();
 
     if (!binary::utils::check_file_path({segment_path, nonlinear_path})) {
       std::exit(1);
@@ -131,9 +135,10 @@ int main(int argc, char* argv[]) {
     spdlog::info("struct variation file path: {}", segment_path);
     spdlog::info("distance threshold: {} bp", diff);
     spdlog::info("the number of threads: {}", num_threads);
+    spdlog::info("use strand: ", use_strand);
 
     Timer timer{};
-    run(nonlinear_path, segment_path, output_path, diff, num_threads);
+    run(nonlinear_path, segment_path, output_path, diff, num_threads, use_strand);
 
     if (is_merged) {
       binary::utils::merge_files(creat_files_name(output_path), output_path, sv2nl::HEADER);

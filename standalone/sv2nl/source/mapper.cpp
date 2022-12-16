@@ -42,6 +42,11 @@ namespace sv2nl {
     return *this;
   }
 
+  mapper_options& mapper_options::use_strand(bool use) {
+    use_strand_ = use;
+    return *this;
+  }
+
   bool DupMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
                                   const Sv2nlVcfRecord& sv_vcf_record) const {
     spdlog::debug("check condition with {}", sv_vcf_record);
@@ -54,6 +59,9 @@ namespace sv2nl {
     if (is_contained(sv_vcf_record, nl_vcf_record) || is_contained(nl_vcf_record, sv_vcf_record)
         || distance_larger(nl_vcf_record, sv_vcf_record, diff_))
       return false;
+
+    // if not use strand
+    if (!use_strand_) return true;
 
     // overlap left side of sv_vcf record
     if (nl_vcf_record.pos <= sv_vcf_record.pos) {

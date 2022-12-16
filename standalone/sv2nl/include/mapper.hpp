@@ -48,7 +48,8 @@ namespace sv2nl {
     std::string_view output_file_;
     std::string_view nl_type_;
     std::string_view sv_type_;
-    uint32_t diff_;
+    uint32_t diff_{0};
+    bool use_strand_{true};
 
     mapper_options& nl_file(std::string_view file);
 
@@ -61,6 +62,8 @@ namespace sv2nl {
     mapper_options& sv_type(std::string_view type);
 
     mapper_options& diff(uint32_t num);
+
+    mapper_options& use_strand(bool use);
   };
 
   template <typename Derived> class Mapper {
@@ -73,7 +76,8 @@ namespace sv2nl {
           writer_(opts.output_file_, HEADER),
           nl_type_(opts.nl_type_),
           sv_type_(opts.sv_type_),
-          diff_(opts.diff_) {}
+          diff_(opts.diff_),
+          use_strand_(opts.use_strand_) {}
 
     Mapper(std::string_view non_linear_file, std::string_view sv_file, std::string_view output_file,
            std::string_view nl_type, std::string_view sv_type)
@@ -119,6 +123,7 @@ namespace sv2nl {
     std::string nl_type_;
     std::string sv_type_;
     uint32_t diff_;
+    bool use_strand_;
     mutable ThreadSafeMap<std::string, std::vector<Sv2nlVcfRecord>> cache_{};
   };
 
@@ -187,8 +192,8 @@ namespace sv2nl {
 
   template <typename Derived> void Mapper<Derived>::map_impl(std::string_view chrom) const {
     // avoid data trace cause now vcf ranges is not thread safe
-    auto&& nl_vcf_ranges = Sv2nlVcfRanges(nl_vcf_file_.string());
-    auto sv_vcf_ranges = Sv2nlVcfRanges(sv_vcf_file_.string());
+    auto&& nl_vcf_ranges = Sv2nlVcfRanges(nl_vcf_file_.string(), "nls");
+    auto sv_vcf_ranges = Sv2nlVcfRanges(sv_vcf_file_.string(), "delly");
 
     auto interval_tree = build_tree(chrom, sv_vcf_ranges, sv_type_);
 
@@ -229,7 +234,7 @@ namespace sv2nl {
   }
 
   template <typename Derived> auto Mapper<Derived>::map_delegate(ThreadPool& pool) const -> void {
-    auto&& nl_chroms = Sv2nlVcfRanges(nl_vcf_file_.string()).chroms();
+    auto&& nl_chroms = Sv2nlVcfRanges(nl_vcf_file_.string(), "nls").chroms();
 
     for (auto chrom : nl_chroms | std::views::filter([](auto it) {
                         return std::ranges::find(it, '_') == it.end();
@@ -258,8 +263,8 @@ namespace sv2nl {
     ~InvMapper() override = default;
 
   private:
-    bool check_condition(Sv2nlVcfRecord const& nl_vcf_record,
-                         Sv2nlVcfRecord const& sv_vcf_record) const;
+    bool check_condition(const Sv2nlVcfRecord& nl_vcf_record,
+                         const Sv2nlVcfRecord& sv_vcf_record) const;
   };
 
   class TraMapper : public Mapper<TraMapper> {

@@ -26,7 +26,8 @@ namespace sv2nl {
     Sv2nlInfoField& operator=(Sv2nlInfoField&&) = default;
     ~Sv2nlInfoField() override = default;
 
-    void update(std::shared_ptr<vcf::details::DataImpl> const& data) override;
+    void update(const std::shared_ptr<vcf::details::DataImpl>& data,
+                std::string_view source_) override;
 
     friend auto operator<<(std::ostream& os, Sv2nlInfoField const& info) -> std::ostream& {
       os << "svtype: " << info.svtype << " svend: " << info.svend;

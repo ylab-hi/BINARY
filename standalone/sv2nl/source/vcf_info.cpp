@@ -6,7 +6,8 @@
 
 namespace sv2nl {
 
-  void Sv2nlInfoField::update(const std::shared_ptr<vcf::details::DataImpl>& data) {
+  void Sv2nlInfoField::update(const std::shared_ptr<vcf::details::DataImpl>& data,
+                              std::string_view source) {
     svtype = vcf::get_info_field<char>("SVTYPE", data->header.get(), data->record.get());
 
     if (svtype == "TRA" || svtype == "BND") {
@@ -29,9 +30,14 @@ namespace sv2nl {
       }
     }
 
-    try {
+    if (svtype == "BND") {
+      // delly tra result
+      svend = vcf::get_info_field<vcf::pos_t>("POS2", data->header.get(), data->record.get());
+    } else if (source == "nls") {
+      // nls result
       svend = vcf::get_info_field<vcf::pos_t>("SVEND", data->header.get(), data->record.get());
-    } catch (...) {
+    } else {
+      // delly other results
       svend = vcf::get_info_field<vcf::pos_t>("END", data->header.get(), data->record.get());
     }
   }
