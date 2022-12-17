@@ -66,10 +66,18 @@ namespace sv2nl {
                                : std::make_pair(record.chrom, chr2);
   }
 
+  inline std::tuple<std::string, vcf::pos_t, std::string, vcf::pos_t> get_2chroms_with_pos(
+      const Sv2nlVcfRecord& record) {
+    auto chr2 = get_chr2(record);
+    return record.chrom > chr2
+               ? std::make_tuple(chr2, record.info->svend, record.chrom, record.pos)
+               : std::make_tuple(record.chrom, record.pos, chr2, record.info->svend);
+  }
+
   inline std::string format_map_key(const Sv2nlVcfRecord& record) {
     if (record.info->svtype == "TRA" || record.info->svtype == "BND") {
-      auto [chr1, chr2] = get_2chroms(record);
-      return fmt::format("{}-{}-{}-{}", chr1, chr2, record.pos, record.info->svend);
+      auto [chr1, pos1, chr2, pos2] = get_2chroms_with_pos(record);
+      return fmt::format("{}-{}-{}-{}", chr1, chr2, pos1, pos2);
     } else {
       return fmt::format("{}-{}-{}", record.chrom, record.pos, record.info->svend);
     }

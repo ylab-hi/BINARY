@@ -5,18 +5,18 @@ project(
   VERSION 1.0
   LANGUAGES CXX
 )
-# SET(CMAKE_CXX_STANDARD 20)
+#SET(CMAKE_CXX_STANDARD 20)
 message(STATUS "Building BinaryStandalone")
 
-# --- Import tools ----
+#-- - Import tools -- --
 
 include(../cmake/tools.cmake)
 
-# ---- Dependencies ----
+#-- -- Dependencies -- --
 
 include(../cmake/CPM.cmake)
 include(../cmake/functions.cmake)
-# installation
+#installation
 CPMAddPackage(
   GITHUB_REPOSITORY jarro2783/cxxopts
   VERSION 3.0.0

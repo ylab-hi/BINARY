@@ -101,6 +101,7 @@ TEST_SUITE("parser-vcf") {
   }
 
   TEST_CASE("testing read all record") {
+    spdlog::set_level(spdlog::level::debug);
     for (auto record : vcf_ranges) {
       spdlog::debug("[testing read all record] {}", record);
     }

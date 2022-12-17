@@ -72,7 +72,7 @@ namespace binary::parser::vcf {
     constexpr int BINARY_BCF_HT_LONG = (BINARY_BCF_HT_INT | 0x100);
 
     template <typename Datatype>
-    requires binary::concepts::IsAnyOf<Datatype, int, float, char, pos_t, int64_t>
+      requires binary::concepts::IsAnyOf<Datatype, int, float, char, pos_t, int64_t>
     struct InfoGetter {
       Datatype* data{nullptr};
       int32_t count{};
@@ -162,20 +162,20 @@ namespace binary::parser::vcf {
 
     template <typename T>
     concept InfoFieldConcept = requires(T t) {
-      requires std::semiregular<T>;
-      requires std::movable<T>;
-      requires std::derived_from<T, details::BaseInfoField>;
-      t.update(std::shared_ptr<details::DataImpl>{}, "");
-      std::cout << t;
-    };
+                                 requires std::semiregular<T>;
+                                 requires std::movable<T>;
+                                 requires std::derived_from<T, details::BaseInfoField>;
+                                 t.update(std::shared_ptr<details::DataImpl>{}, std::string_view{});
+                                 std::cout << t;
+                               };
 
     template <typename... T> struct InfoFieldFactory : public details::BaseInfoField {
       std::tuple<decltype(InfoGetter<T>::result_type())...> data_tuple{};
       std::array<std::string, sizeof...(T)> keys_array{};
 
       template <typename... U>
-      requires(std::convertible_to<U, std::string>&&...) explicit InfoFieldFactory(U... args)
-          : keys_array{args...} {
+        requires(std::convertible_to<U, std::string> && ...)
+      explicit InfoFieldFactory(U... args) : keys_array{args...} {
         static_assert(sizeof...(T) == sizeof...(U), "Number of keys and values do not match");
       }
       InfoFieldFactory(InfoFieldFactory const&) = default;
@@ -193,8 +193,7 @@ namespace binary::parser::vcf {
         data_tuple = [&]<std::size_t... I>(std::index_sequence<I...>) {
           return std::tuple(
               get_info_field<T>(keys_array[I], data->header.get(), data->record.get())...);
-        }
-        (std::make_index_sequence<sizeof...(T)>{});
+        }(std::make_index_sequence<sizeof...(T)>{});
       }
     };
 
@@ -236,7 +235,12 @@ namespace binary::parser::vcf {
     constexpr BaseVcfRecord() = default;
     explicit BaseVcfRecord(std::shared_ptr<details::DataImpl> const& data)
         : data_{data}, eof_{false} {
-      next(std::string_view());
+      next();
+    }
+
+    BaseVcfRecord(std::shared_ptr<details::DataImpl> const& data, std::string_view source)
+        : data_{data}, eof_{false}, source_{source} {
+      next();
     }
 
     BaseVcfRecord(BaseVcfRecord const& other) { clone(other); }
@@ -256,14 +260,14 @@ namespace binary::parser::vcf {
       info->init_keys(std::forward<T>(args)...);
     }
 
-    void next(std::string_view source_) {
+    void next() {
       if (auto data = data_.lock()) {
         if (int ret = bcf_read(data->fp.get(), data->header.get(), data->record.get()); ret < -1) {
           throw VcfReaderError("Failed to read line in vcf ");
         } else if (ret == -1) {
           set_eof();
         } else {
-          update(data, source_);
+          update(data);
         }
       } else {
         throw VcfReaderError("Using dangling VcfRecord");
@@ -286,6 +290,7 @@ namespace binary::parser::vcf {
     std::string chrom{};
     pos_t pos{};
     pos_t rlen{};
+    std::string source_{};
     std::unique_ptr<InfoType> info{std::make_unique<InfoType>()};
 
   protected:
@@ -293,10 +298,11 @@ namespace binary::parser::vcf {
       chrom = other.chrom;
       pos = other.pos;
       rlen = other.rlen;
+      source_ = other.source_;
       info = std::make_unique<InfoType>(*other.info);
     }
 
-    void update(std::shared_ptr<details::DataImpl> const& data, std::string_view source_) {
+    void update(std::shared_ptr<details::DataImpl> const& data) {
       chrom = bcf_seqname_safe(data->header.get(), data->record.get());
       pos = static_cast<pos_t>(data->record->pos);
       rlen = static_cast<pos_t>(data->record->rlen);
@@ -306,14 +312,14 @@ namespace binary::parser::vcf {
 
   template <typename T>
   concept RecordConcept = requires(T record) {
-    requires std::semiregular<T>;
-    requires std::movable<T>;
-    record.chrom;
-    record.pos;
-    record.rlen;
-    record.info;
-    std::cout << record;
-  };
+                            requires std::semiregular<T>;
+                            requires std::movable<T>;
+                            record.chrom;
+                            record.pos;
+                            record.rlen;
+                            record.info;
+                            std::cout << record;
+                          };
 
   template <RecordConcept RecordType> class VcfRanges {
   public:
@@ -324,6 +330,7 @@ namespace binary::parser::vcf {
     VcfRanges(VcfRanges const& other) : VcfRanges(other.file_path_) {}
     auto operator=(VcfRanges const& other) -> VcfRanges& {
       file_path_ = other.file_path_;
+      source_ = other.source_;
       pdata_.reset();
       return *this;
     }
@@ -348,7 +355,7 @@ namespace binary::parser::vcf {
           : value_{std::make_unique<value_type>(data)} {}
 
       constexpr iterator(std::shared_ptr<details::DataImpl> const& data, std::string_view source)
-          : value_{std::make_unique<value_type>(data)}, source_{source} {}
+          : value_{std::make_unique<value_type>(data, source)} {}
 
       constexpr iterator(iterator const& other) { clone(other); };
 
@@ -366,7 +373,7 @@ namespace binary::parser::vcf {
       auto operator->() const -> pointer { return value_.get(); }
       auto operator*() const -> value_type { return *value_; }
       auto operator++() -> iterator& {
-        value_->next(source_);
+        value_->next();
         return *this;
       }
 
@@ -389,7 +396,6 @@ namespace binary::parser::vcf {
       void clone(iterator const& other) { value_ = std::make_unique<value_type>(*(other.value_)); }
 
       std::unique_ptr<value_type> value_{};
-      std::string_view source_{};
     };
 
     /**
@@ -434,7 +440,7 @@ namespace binary::parser::vcf {
     }
 
     [[maybe_unused]] const std::string& get_source() const;
-    [[maybe_unused]] void set_source(std::string_view source);
+    [[maybe_unused]] void set_source(std::string source);
 
   private:
     constexpr void seek() const;
@@ -450,8 +456,8 @@ namespace binary::parser::vcf {
       : file_path_{std::move(file_path)}, source_{std::move(source)} {}
 
   template <RecordConcept RecordType>
-  [[maybe_unused]] void VcfRanges<RecordType>::set_source(std::string_view source) {
-    source_ = source;
+  [[maybe_unused]] void VcfRanges<RecordType>::set_source(std::string source) {
+    source_ = std::move(source);
   }
 
   template <RecordConcept RecordType>

@@ -35,14 +35,19 @@ void submit_task(sv2nl::DupMapper const& dup, sv2nl::InvMapper const& inv,
                  sv2nl::TraMapper const& tra, int num_threads) {
   auto thread_pool = dp::thread_pool(num_threads);
 
-  dup.map(thread_pool);
+  spdlog::debug("dup use strand {}", dup.use_strand());
+  spdlog::debug("inv use strand {}", inv.use_strand());
+  spdlog::debug("tra use strand {}", tra.use_strand());
+//  dup.map(thread_pool);
   inv.map(thread_pool);
-  tra.map(thread_pool);
+//  tra.map(thread_pool);
 }
 
 void run(std::string_view nl_, std::string_view sv_, std::string_view output_, uint32_t diff_,
          int num_threads, bool use_strand) {
   auto files = creat_files_name(output_);
+
+  auto nl_vcf = sv2nl::Sv2nlVcfRanges{std::string(nl_), "nls"};
 
   auto dup_mapper = sv2nl::DupMapper(sv2nl::mapper_options()
                                          .nl_file(nl_)
@@ -135,7 +140,7 @@ int main(int argc, char* argv[]) {
     spdlog::info("struct variation file path: {}", segment_path);
     spdlog::info("distance threshold: {} bp", diff);
     spdlog::info("the number of threads: {}", num_threads);
-    spdlog::info("use strand: ", use_strand);
+    spdlog::info("use strand: {} ", use_strand);
 
     Timer timer{};
     run(nonlinear_path, segment_path, output_path, diff, num_threads, use_strand);

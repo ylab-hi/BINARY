@@ -83,7 +83,7 @@ namespace sv2nl {
     // avoid data trace cause now vcf ranges is not thread safe
     spdlog::debug("[tra] chrom {} interval tree size: {}", chrom, vcf_tree_ptr->size());
 
-    auto nl_vcf_ranges = Sv2nlVcfRanges(nl_vcf_file_.string());
+    auto nl_vcf_ranges = Sv2nlVcfRanges(nl_vcf_file_.string(), "nls");
 
     auto nl_chrom_view
         = nl_vcf_ranges | std::views::filter([&](auto const& nl_vcf_record) {
@@ -92,7 +92,6 @@ namespace sv2nl {
 
     for (auto nl_vcf_record : nl_chrom_view) {
       spdlog::debug("[tra] process nl vcf {}", nl_vcf_record);
-      auto nl_2chroms = get_2chroms(nl_vcf_record);
       std::vector<Sv2nlVcfRecord> overlaps_vector{};
 
       // check if the result of the record is  cached
@@ -106,8 +105,7 @@ namespace sv2nl {
 
         auto res_view
             = res | std::views::filter([&](auto const& vcf_interval) {
-                return (nl_2chroms == get_2chroms(vcf_interval.record))
-                       && check_condition(validated_nl_vcf_record, vcf_interval.record);
+                return check_condition(validated_nl_vcf_record, vcf_interval.record);
               })
               | std::views::transform([](auto const& vcf_interval) { return vcf_interval.record; });
 
@@ -127,7 +125,7 @@ namespace sv2nl {
   }
 
   auto TraMapper::map_delegate(ThreadPool& pool) const -> void {
-    auto&& nl_chroms = Sv2nlVcfRanges(nl_vcf_file_.string()).chroms();
+    auto&& nl_chroms = Sv2nlVcfRanges(nl_vcf_file_.string(), "nls").chroms();
 
     auto sv_tree_pointer = build_sv_tree();
 
@@ -145,13 +143,20 @@ namespace sv2nl {
 
   bool TraMapper::check_condition(const Sv2nlVcfRecord& nl_vcf_record,
                                   const Sv2nlVcfRecord& sv_vcf_record) const {
-    spdlog::debug("[tra] check condition with {}", sv_vcf_record);
+    auto [nl_chr1, nl_pos1, nl_chr2, nl_pos2] = get_2chroms_with_pos(nl_vcf_record);
+    auto [sv_chr1, sv_pos1, sv_chr2, sv_pos2] = get_2chroms_with_pos(sv_vcf_record);
 
-    return distance_less(nl_vcf_record, sv_vcf_record, diff_);
+    if (nl_chr1 == sv_chr1 && nl_chr2 == sv_chr2) {
+      spdlog::debug("[tra] check condition with {}", sv_vcf_record);
+      auto diff1 = nl_pos1 > sv_pos1 ? nl_pos1 - sv_pos1 : sv_pos1 - nl_pos1;
+      auto diff2 = nl_pos2 > sv_pos2 ? nl_pos2 - sv_pos2 : sv_pos2 - nl_pos2;
+      return diff1 <= diff_ && diff2 <= diff_;
+    }
+    return false;
   }
 
   std::shared_ptr<Sv2nlVcfIntervalTree> TraMapper::build_sv_tree() const {
-    auto sv_vcf_ranges = Sv2nlVcfRanges(sv_vcf_file_.string());
+    auto sv_vcf_ranges = Sv2nlVcfRanges(sv_vcf_file_.string(), "delly");
 
     auto sv_trans_view = sv_vcf_ranges | std::views::filter([&](auto const sv_vcf_record) {
                            return sv_vcf_record.info->svtype == sv_type_;

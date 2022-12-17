@@ -92,6 +92,7 @@ namespace sv2nl {
     Derived const* derived() const { return static_cast<Derived const*>(this); }
 
     void close_writer() const noexcept { writer_.close(); }
+    [[maybe_unused]] bool use_strand() const noexcept { return use_strand_; }
 
     auto map(ThreadPool& pool) const -> void { return derived()->map_delegate(pool); }
 
@@ -192,10 +193,11 @@ namespace sv2nl {
 
   template <typename Derived> void Mapper<Derived>::map_impl(std::string_view chrom) const {
     // avoid data trace cause now vcf ranges is not thread safe
-    auto&& nl_vcf_ranges = Sv2nlVcfRanges(nl_vcf_file_.string(), "nls");
+    auto nl_vcf_ranges = Sv2nlVcfRanges(nl_vcf_file_.string(), "nls");
     auto sv_vcf_ranges = Sv2nlVcfRanges(sv_vcf_file_.string(), "delly");
 
     auto interval_tree = build_tree(chrom, sv_vcf_ranges, sv_type_);
+    spdlog::debug("{} interval tree size {}", chrom, interval_tree.size());
 
     auto chrom_view
         = nl_vcf_ranges | std::views::filter([&](auto const& nl_vcf_record) {
