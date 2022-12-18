@@ -38,9 +38,9 @@ void submit_task(sv2nl::DupMapper const& dup, sv2nl::InvMapper const& inv,
   spdlog::debug("dup use strand {}", dup.use_strand());
   spdlog::debug("inv use strand {}", inv.use_strand());
   spdlog::debug("tra use strand {}", tra.use_strand());
-//  dup.map(thread_pool);
+  dup.map(thread_pool);
   inv.map(thread_pool);
-//  tra.map(thread_pool);
+  tra.map(thread_pool);
 }
 
 void run(std::string_view nl_, std::string_view sv_, std::string_view output_, uint32_t diff_,
