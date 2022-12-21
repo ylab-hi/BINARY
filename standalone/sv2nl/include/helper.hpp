@@ -51,7 +51,14 @@ namespace sv2nl {
    */
   inline Sv2nlVcfRecord validate_record(const Sv2nlVcfRecord& record) noexcept {
     auto res = record;
-    if (res.pos > res.info->svend) std::swap(res.pos, res.info->svend);
+
+    if (res.pos > res.info->svend) {
+      std::swap(res.pos, res.info->svend);
+      if (record.info->svtype == "BND" || record.info->svtype == "TRA") {
+        std::swap(res.chrom, res.info->chr2);
+      }
+    }
+
     return res;
   }
 
